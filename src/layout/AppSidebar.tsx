@@ -4,19 +4,28 @@ import { Link, useLocation } from "react-router";
 // Assume these icons are imported from an icon library
 import {
   BoxCubeIcon,
-  CalenderIcon,
-  ChevronDownIcon,
   GridIcon,
+  ChevronDownIcon,
   HorizontaLDots,
   ListIcon,
-  PageIcon,
-  PieChartIcon,
+  BoxIconLine,
+  GroupIcon,
+  LockIcon,
+  FileIcon,
+  DollarLineIcon,
+  BoxIcon,
+  PaperPlaneIcon,
+  AlertIcon,
+  DocsIcon,
+  DownloadIcon,
   PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
+  ArrowDownIcon,
+  PageIcon,
+  ShootingStarIcon,
+  MailIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import SidebarWidget from "./SidebarWidget";
+import logoFinal from "../icons/logofinal.png";
 
 type NavItem = {
   name: string;
@@ -24,70 +33,206 @@ type NavItem = {
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
+const sidebarSections: { title: string; items: NavItem[] }[] = [
+  {
+    title: "Dashboard",
+    items: [
+      {
+        name: "Dashboard Overview",
+        icon: <GridIcon />,
+        subItems: [{ name: "Ecommerce", path: "/" }],
+      },
+    ],
+  },
+  {
+    title: "Customer Management",
+    items: [
+      { name: "Customers", icon: <GroupIcon />, 
+        
+           subItems: [
+          { name: "All Customers", path: "/customers/allcustomers" },
+          { name: "Active Customers", path: "/customers/approved" },
+           { name: "Closed Customers", path: "/customers/rejected" },
+            { name: "Disabled Customers", path: "/customers/approved" },
+                   { name: "Add New Customers", path: "/customers/approved" },
+                          { name: "Notifications", path: "/customers/approved" },
+                                 { name: "Send Email to All", path: "/customers/approved" },
+        ],
+      },
+      {
+        name: "KYC Management",
+        icon: <ListIcon />,
+        subItems: [
+          { name: "Pending KYC", path: "/kyc/pending" },
+          { name: "Approved KYC", path: "/kyc/approved" },
+           { name: "Rejected KYC", path: "/kyc/rejected" },
+            { name: "All KYC Logs", path: "/kyc/approved" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Access Management",
+    items: [
+      { name: "System Access", icon: <LockIcon />, subItems: [{ name: "Manage Roles", path: "/access/roles" }, { name: "Manage Staff", path: "/access/permissions" }] },
+    ],
+  },
+  {
+    title: "Manage Bank Branches",
+    items: [{ name: "Manage Branches", icon: <BoxIconLine />, path: "/branches" ,
+   subItems: [
+          { name: "All Branch", path: "/kyc/pending" },
+          { name: "Branch Staff", path: "/kyc/approved" },
+          //  { name: "Rejected KYC", path: "/kyc/rejected" },
+          //   { name: "All KYC Logs", path: "/kyc/approved" },
+        ],
 
-const navItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    }],
   },
   {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/profile",
-  },
-  {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
-  {
-    name: "Tables",
-    icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  },
-  {
-    name: "Pages",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-    ],
-  },
-];
+    title: "Transactions",
+    items: [
+      { name: "Transactions", icon: <FileIcon />, path: "/transactions" },
+      { name: "Wallets", icon: <DollarLineIcon />, path: "/wallets" },
+      { name: "Virtual Cards", icon: <BoxIcon />, path: "/virtual-cards" },
+      {
+        name: "Profits",
+        icon: <DollarLineIcon />,
+        subItems: [
+          { name: "User Paybacks", path: "/profits/paybacks" },
+          { name: "Bank Profits", path: "/profits/bankprofit" },
+        ],
+      },
+      {
+        name: "Fund Transfer",
+        icon: <PaperPlaneIcon />,
+        subItems: [
+          { name: "Pending Transfer", path: "/fund-transfer/Pending" },
+          { name: "Rejected Transfer", path: "/fund-transfer/Rejected" },
+           { name: "All Transfer", path: "/fund-transfer/all-transfer" },
+            { name: "Own Bank Transfer", path: "/fund-transfer/ownbanktransfer" },
+              { name: "Other Bank Transfer", path: "/fund-transfer/otherbanktransfer" },
+                { name: "Wire Transfer", path: "/fund-transfer/wire-transfer" },
+                  { name: "Others Bank", path: "/fund-transfer/othersbank" },
+        ],
+      },
+      { name: "DPS", icon: <BoxCubeIcon />, subItems: [{ name: "DPS List", path: "/dps" }] },
+      { name: "FDR", icon: <BoxCubeIcon />, subItems: [{ name: "FDR List", path: "/fdr" }] },
+      { name: "Loan", icon: <AlertIcon />, 
+        subItems: [
+          { name: "Request Loan", path: "/loan/requestloan" },
+{ name: "Approved Loan", path: "/loan/approveloan" },
+{ name: "Payable Installments", path: "/loan/payableinstallments  " },
+{ name: "Completed Loan", path: "/loan/completedloan" },
+{ name: "Rejected Loan", path: "/loan/rejectedloan" },
+{ name: "All Loan", path: "/loan/all-loan" },
+{ name: "Loan Plans", path: "/loan/loan-plans" }
 
-const othersItems: NavItem[] = [
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
+        ] },
+        
     ],
   },
   {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
+    title: "Bill Management",
+    items: [
+      {
+        name: "Bill Management",
+        icon: <DocsIcon />,
+        subItems: [
+          { name: "Import Services", path: "/bill/import-services" },
+          { name: "Convert Rate", path: "/bill/convert-rate" },
+          { name: "Bill Services list", path: "/bill/billservices-list" },
+        ],
+      },
+      {
+        name: "Bill History",
+        icon: <DownloadIcon />,
+        subItems: [
+          { name: "Pending Bill", path: "/bill/history/bendingbills" },
+          { name: "Complete Bill", path: "/bill/history/complete-bill" },
+               { name: "Returned Bill", path: "/bill/history/returned-bill" },
+                    { name: "All Bill", path: "/bill/history/all-bill" },
+        ],
+      },
     ],
   },
   {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
+    title: "Essentials",
+    items: [
+      {
+        name: "Automatic Gateways",
+        icon: <PlugInIcon />,
+        subItems: [
+          { name: "Gateway List", path: "/gateways" },
+          // { name: "Add Gateway", path: "/gateways/add" },
+        ],
+      },
+      {
+        name: "Deposits",
+        icon: <DownloadIcon />,
+        subItems: [
+          { name: "Automatic Methods", path: "/deposits/automatic-methods" },
+          { name: "Manual Methods", path: "/deposits/manual-methods" },
+             { name: "Pending Manual Deposits", path: "/deposits/pendin-manual-deposits" },
+                { name: "Deposit History", path: "/deposits/deposit-history" },
+        ],
+      },
+      {
+        name: "Withdraw",
+        icon: <ArrowDownIcon />,
+        subItems: [
+          { name: "Automatic Methods", path: "/withdraw/automatic-methods" },
+          { name: "Manual Methods", path: "/withdraw/manualmethods" },
+           { name: "Pending Withdraws", path: "/withdraw/pending-withdraws" },
+           { name: "Withdraw Schedule", path: "/withdraw/withdraw-Schedule" },
+           { name: "Withdraw History", path: "/withdraw/withdraw-history" },
+        ],
+      },
+      { name: "Referral", icon: <MailIcon />, subItems: [{ name: "Referral Settings", path: "/referral/settings" },{ name: "Referral Reports", path: "/referral/reports" }] },
+      { name: "Portfolios", icon: <PageIcon />, subItems: [{ name: "All Portfolios", path: "/portfolios" }, { name: "Create Portfolio", path: "/portfolios/new" }] },
+      {
+        name: "Manage Reward Point",
+        icon: <ShootingStarIcon />,
+        subItems: [
+          { name: "Reward Earnings", path: "/rewards/rewardsearnings" },
+          { name: "Reward Redeems", path: "/rewards/rewardredeems" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "Site Settings",
+    items: [
+      {
+        name: "Settings",
+        icon: <BoxIcon />,
+        subItems: [
+          { name: "Site Settings", path: "/settings/sitesetting" },
+          { name: "Email Settings", path: "/settings/email-setting" },
+          { name: "SEO Meta Settings", path: "/settings/seo-meta-settings" },
+           { name: "Language Settings", path: "/settings/language-settings" },
+           { name: "Page Settings", path: "/settings/page-settings" },
+           { name: "Plugin Settings", path: "/settings/plugin-settings" },
+           { name: "Billing Service Settings", path: "/settings/billing-service-settings" },
+           { name: "Card Provider", path: "/settings/Card Provider" },
+           { name: "SMS Settings", path: "/settings/sms-settings" },
+           { name: "Push Notification", path: "/settings/push-notification" },
+           { name: "Notification Tune", path: "/settings/notification-tune" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "App Settings",
+    items: [
+      {
+        name: "App Settings",
+        icon: <BoxIconLine />,
+        subItems: [
+          { name: "Onboarding Screen", path: "/app-settings/mobile-onboarding" },
+          // { name: "Integrations", path: "/app-settings/integrations" },
+        ],
+      },
     ],
   },
 ];
@@ -97,7 +242,7 @@ const AppSidebar: React.FC = () => {
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
-    type: "main" | "others";
+    type: string;
     index: number;
   } | null>(null);
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
@@ -113,16 +258,12 @@ const AppSidebar: React.FC = () => {
 
   useEffect(() => {
     let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
-      items.forEach((nav, index) => {
+    sidebarSections.forEach((section, sIndex) => {
+      section.items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType as "main" | "others",
-                index,
-              });
+              setOpenSubmenu({ type: `${sIndex}`, index });
               submenuMatched = true;
             }
           });
@@ -147,28 +288,28 @@ const AppSidebar: React.FC = () => {
     }
   }, [openSubmenu]);
 
-  const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
+  const handleSubmenuToggle = (index: number, sectionKey: string) => {
     setOpenSubmenu((prevOpenSubmenu) => {
       if (
         prevOpenSubmenu &&
-        prevOpenSubmenu.type === menuType &&
+        prevOpenSubmenu.type === sectionKey &&
         prevOpenSubmenu.index === index
       ) {
         return null;
       }
-      return { type: menuType, index };
+      return { type: sectionKey, index };
     });
   };
 
-  const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
+  const renderMenuItems = (items: NavItem[], sectionKey: string) => (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => (
         <li key={nav.name}>
           {nav.subItems ? (
             <button
-              onClick={() => handleSubmenuToggle(index, menuType)}
+              onClick={() => handleSubmenuToggle(index, sectionKey)}
               className={`menu-item group ${
-                openSubmenu?.type === menuType && openSubmenu?.index === index
+                openSubmenu?.type === sectionKey && openSubmenu?.index === index
                   ? "menu-item-active"
                   : "menu-item-inactive"
               } cursor-pointer ${
@@ -179,7 +320,7 @@ const AppSidebar: React.FC = () => {
             >
               <span
                 className={`menu-item-icon-size  ${
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
+                  openSubmenu?.type === sectionKey && openSubmenu?.index === index
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
                 }`}
@@ -192,7 +333,7 @@ const AppSidebar: React.FC = () => {
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
                   className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                    openSubmenu?.type === menuType &&
+                    openSubmenu?.type === sectionKey &&
                     openSubmenu?.index === index
                       ? "rotate-180 text-brand-500"
                       : ""
@@ -226,13 +367,13 @@ const AppSidebar: React.FC = () => {
           {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
             <div
               ref={(el) => {
-                subMenuRefs.current[`${menuType}-${index}`] = el;
+                subMenuRefs.current[`${sectionKey}-${index}`] = el;
               }}
               className="overflow-hidden transition-all duration-300"
               style={{
                 height:
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? `${subMenuHeight[`${menuType}-${index}`]}px`
+                  openSubmenu?.type === sectionKey && openSubmenu?.index === index
+                    ? `${subMenuHeight[`${sectionKey}-${index}`]}px`
                     : "0px",
               }}
             >
@@ -285,7 +426,7 @@ const AppSidebar: React.FC = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`blood-sidebar fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 text-white h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -297,6 +438,8 @@ const AppSidebar: React.FC = () => {
         lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      aria-label="sidebar"
+      data-theme="blood"
     >
       <div
         className={`py-8 flex ${
@@ -306,69 +449,37 @@ const AppSidebar: React.FC = () => {
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
-              <img
-                className="dark:hidden"
-                src="/images/logo/logo.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-              <img
-                className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
+              <img src={logoFinal} alt="Logo" width={150} height={40} className=" ml-10" />
             </>
           ) : (
-            <img
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
-            />
+            <img src={logoFinal} alt="Logo" width={32} height={32} />
           )}
         </Link>
       </div>
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
-                ) : (
-                  <HorizontaLDots className="size-6" />
-                )}
-              </h2>
-              {renderMenuItems(navItems, "main")}
-            </div>
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(othersItems, "others")}
-            </div>
+            {sidebarSections.map((section, sIndex) => (
+              <div key={section.title}>
+                <h2
+                  className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                    !isExpanded && !isHovered
+                      ? "lg:justify-center"
+                      : "justify-start"
+                  }`}
+                >
+                  {isExpanded || isHovered || isMobileOpen ? (
+                    section.title
+                  ) : (
+                    <HorizontaLDots />
+                  )}
+                </h2>
+                {renderMenuItems(section.items, `${sIndex}`)}
+              </div>
+            ))}
           </div>
         </nav>
-        {isExpanded || isHovered || isMobileOpen ? <SidebarWidget /> : null}
+  {/* Sidebar widget removed per user request */}
       </div>
     </aside>
   );

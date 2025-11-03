@@ -773,6 +773,154 @@ span.flatpickr-weekday,
   @apply !bg-gray-700;
 }
 
+/* Blood red transparent sidebar theme */
+/* Add class `blood-sidebar` to the sidebar <aside> to enable this theme */
+.blood-sidebar {
+  /* primary accent color (was blood red) — now using #1E4A8B per user request */
+  /* --sidebar-blood-900:  rgba(30, 74, 139);
+  --sidebar-blood-700:  rgba(30, 74, 139);
+  --sidebar-blood-500:  rgba(30, 74, 139); */
+  background-color:rgba(30, 74, 139) !important;
+  color: #ffffff;
+}
+
+.blood-sidebar .menu-item {
+ color: #ffffff !important;
+}
+
+.blood-sidebar .menu-item-inactive {
+  /* white text slightly muted, subtle hover */
+  color: rgba(255, 255, 255, 0.92) !important;
+  background: transparent !important;
+}
+.blood-sidebar .menu-item-inactive:hover {
+  background: rgba(231, 229, 229, 0.06) !important;
+}
+
+.blood-sidebar .menu-item-active {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+
+.blood-sidebar .menu-item-icon-inactive,
+.blood-sidebar .menu-item-icon {
+  @apply text-white/90;
+}
+.blood-sidebar .menu-item-icon-active {
+  @apply text-white;
+}
+
+.blood-sidebar .menu-dropdown-item-inactive {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+.blood-sidebar .menu-dropdown-item-inactive:hover {
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+.blood-sidebar .menu-dropdown-item-active {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+}
+
+.blood-sidebar .menu-dropdown-badge,
+.blood-sidebar .menu-dropdown-badge-inactive,
+.blood-sidebar .menu-dropdown-badge-active {
+  background: rgba(255,255,255,0.08) !important;
+  color: #fff !important;
+}
+
+.blood-sidebar img {
+ color: #ffffff !important;
+}
+/* heading and muted text adjustments inside the blood sidebar */
+.blood-sidebar h2 {
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+.blood-sidebar .text-gray-400 {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+/* Icon color rules: default muted white, hover/active use blood accent */
+.blood-sidebar {
+  /* expose an accent color for icons */
+  --blood-accent: var(--sidebar-blood-500);
+}
+.blood-sidebar .menu-item-icon-inactive,
+.blood-sidebar .menu-item-icon {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+.blood-sidebar .menu-item-icon-active {
+  color: var(--blood-accent) !important;
+}
+/* on hover, icons get the blood accent color */
+.blood-sidebar .menu-item-inactive:hover .menu-item-icon-inactive,
+.blood-sidebar .menu-item.group:hover .menu-item-icon-inactive {
+  color: rgb(188, 188, 24) !important;
+}
+.blood-sidebar .menu-item-active .menu-item-icon-size svg,
+.blood-sidebar .menu-item-active .menu-item-icon-active {
+  color: white !important;
+}
+
+/* Header icons: muted white by default, blood accent on hover */
+.blood-header svg,
+.blood-header .fill-gray-500 {
+  color: rgba(255,255,255,0.95) !important;
+  fill: currentColor !important;
+}
+.blood-header button:hover svg,
+.blood-header button:focus svg,
+.blood-header .lg:hidden:hover svg {
+  color: var(--sidebar-blood-500) !important;
+  fill: currentColor !important;
+}
+
+/* make sure inline SVG paths that use hardcoded fills try to inherit color */
+.blood-header svg path,
+.blood-sidebar svg path,
+.blood-content svg path {
+  fill: currentColor !important;
+}
+
+/* Header and content blood theme adjustments */
+.blood-header {
+  /* header gradient using #1E4A8B */
+  background-color: 1E4A8B;
+  color: #fff;
+}
+.blood-header .text-gray-700,
+.blood-header .text-gray-500,
+.blood-header .fill-gray-500,
+.blood-header .dark\:text-gray-400 {
+  color: rgba(255,255,255,0.95) !important;
+}
+.blood-header .border-gray-200 {
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+.blood-content {
+  /* keep page background as default but change accent variables */
+  --blood-accent: rgba(139,0,0,0.85);
+}
+
+.blood-content a {
+  color: var(--blood-accent) !important;
+}
+.blood-content .text-brand-500,
+.blood-content .text-theme-primary {
+  color: var(--blood-accent) !important;
+}
+.blood-content .bg-brand-500 {
+  background-color: var(--blood-accent) !important;
+}
+.blood-content .border-brand-500 {
+  border-color: var(--blood-accent) !important;
+}
+
+/* subtle card tint for emphasis */
+.blood-content .bg-white {
+  box-shadow: 0 1px 2px rgba(139,0,0,0.03);
+}
+
 .simplebar-scrollbar.simplebar-visible:before {
   @apply opacity-100;
 }
