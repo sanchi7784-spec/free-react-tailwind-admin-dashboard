@@ -5,12 +5,15 @@ import PageMeta from "../../components/common/PageMeta";
 
 import { Customer, customers } from "../../data/customers";
 
-export default function AllCustomers() {
+export default function ClosedCustomers() {
   const [showMailModal, setShowMailModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+
+  // Filter only closed customers - you may need to add more customers with 'Closed' status to your data
+  const closedCustomers = customers.filter(c => c.status.toLowerCase() === 'closed');
 
   function openMailModal(c: Customer) {
     setSelectedCustomer(c);
@@ -26,15 +29,14 @@ export default function AllCustomers() {
 
   function handleSendMail(e: React.FormEvent) {
     e.preventDefault();
-    // TODO: wire to API. For now just log and close.
     console.log("Send mail to:", selectedCustomer, { subject, message });
     closeMailModal();
   }
 
   return (
     <>
-      <PageMeta title="All Customers - Admin" description="All customers listing" />
-      <PageBreadcrumb pageTitle="All Customers" />
+      <PageMeta title="Closed Customers - Admin" description="Closed customers listing" />
+      <PageBreadcrumb pageTitle="Closed Customers" />
 
       <div className="w-full max-w-full overflow-x-hidden">
         {/* Filters card */}
@@ -113,92 +115,92 @@ export default function AllCustomers() {
                   </th>
                 </tr>
               </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-              {customers.map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                  <td className="px-4 py-4">
-                    <div 
-                      className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm uppercase" 
-                      style={{ backgroundColor: c.avatarColor }}
-                    >
-                      {c.initials}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <a href={`#/user/${c.id}`} className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 font-medium text-sm">
-                      {c.name}
-                    </a>
-                  </td>
-                  <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 max-w-[200px] truncate">
-                    {c.email}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
-                    {c.account}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 font-medium">
-                    {c.balance}
-                  </td>
-                  <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 font-medium">
-                    {c.payback}
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="inline-block bg-amber-400 text-amber-900 px-3 py-1 rounded-full text-xs font-medium">
-                      {c.emailStatus}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="inline-block bg-amber-400 text-amber-900 px-3 py-1 rounded-full text-xs font-medium">
-                      {c.kyc}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="inline-block bg-teal-500 text-white px-4 py-1 rounded-full text-xs font-semibold">
-                      {c.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="flex items-center gap-2">
-                      <button 
-                        onClick={() => openMailModal(c)} 
-                        className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-900 text-white flex items-center justify-center transition-colors"
-                        title="Send Email"
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                {closedCustomers.map((c) => (
+                  <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <td className="px-4 py-4">
+                      <div 
+                        className="w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold text-sm uppercase" 
+                        style={{ backgroundColor: c.avatarColor }}
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                          <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                          <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-                        </svg>
-                      </button>
-                      <button 
-                        onClick={() => navigate(`/customers/edit/${c.id}`)} 
-                        className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors"
-                        title="Edit Customer"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path>
-                          <path d="m15 5 4 4"></path>
-                        </svg>
-                      </button>
-                      <button 
-                        className="w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-colors"
-                        title="Delete Customer"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18"></path>
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        {c.initials}
+                      </div>
+                    </td>
+                    <td className="px-4 py-4">
+                      <a href={`#/user/${c.id}`} className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 font-medium text-sm">
+                        {c.name}
+                      </a>
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 max-w-[200px] truncate">
+                      {c.email}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300">
+                      {c.account}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 font-medium">
+                      {c.balance}
+                    </td>
+                    <td className="px-4 py-4 text-sm text-gray-700 dark:text-gray-300 font-medium">
+                      {c.payback}
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="inline-block bg-amber-400 text-amber-900 px-3 py-1 rounded-full text-xs font-medium">
+                        {c.emailStatus}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="inline-block bg-amber-400 text-amber-900 px-3 py-1 rounded-full text-xs font-medium">
+                        {c.kyc}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="inline-block bg-amber-500 text-amber-900 px-4 py-1 rounded-full text-xs font-semibold">
+                        Closed
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => openMailModal(c)} 
+                          className="w-9 h-9 rounded-full bg-slate-800 hover:bg-slate-900 text-white flex items-center justify-center transition-colors"
+                          title="Send Email"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                          </svg>
+                        </button>
+                        <button 
+                          onClick={() => navigate(`/customers/edit/${c.id}`)} 
+                          className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors"
+                          title="Edit Customer"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"></path>
+                            <path d="m15 5 4 4"></path>
+                          </svg>
+                        </button>
+                        <button 
+                          className="w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-colors"
+                          title="Delete Customer"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           {/* Mobile cards */}
           <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
-            {customers.map((c) => (
+            {closedCustomers.map((c) => (
               <div key={c.id} className="p-4">
                 <div className="flex items-start gap-3">
                   <div 
@@ -212,8 +214,8 @@ export default function AllCustomers() {
                       <a className="text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300 font-medium text-sm break-words">
                         {c.name}
                       </a>
-                      <span className="inline-block bg-teal-500 text-white px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
-                        {c.status}
+                      <span className="inline-block bg-amber-500 text-amber-900 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
+                        Closed
                       </span>
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400 break-all mb-2">
@@ -282,6 +284,7 @@ export default function AllCustomers() {
             </ul>
           </nav>
         </div>
+
         {/* Mail modal */}
         {showMailModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">

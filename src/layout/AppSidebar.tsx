@@ -51,12 +51,12 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
         
            subItems: [
           { name: "All Customers", path: "/customers/allcustomers" },
-          { name: "Active Customers", path: "/customers/approved" },
-           { name: "Closed Customers", path: "/customers/rejected" },
-            { name: "Disabled Customers", path: "/customers/approved" },
-                   { name: "Add New Customers", path: "/customers/approved" },
-                          { name: "Notifications", path: "/customers/approved" },
-                                 { name: "Send Email to All", path: "/customers/approved" },
+          { name: "Active Customers", path: "/customers/activecustomers" },
+           { name: "Closed Customers", path: "/customers/closedcustomers" },
+            { name: "Disabled Customers", path: "/customers/disabledcustomers" },
+                   { name: "Add New Customers", path: "/customers/addnew" },
+                          { name: "Notifications", path: "/customers/notifications" },
+                                 { name: "Send Email to All", path: "/customers/sendemail" },
         ],
       },
       {
@@ -66,7 +66,7 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
           { name: "Pending KYC", path: "/kyc/pending" },
           { name: "Approved KYC", path: "/kyc/approved" },
            { name: "Rejected KYC", path: "/kyc/rejected" },
-            { name: "All KYC Logs", path: "/kyc/approved" },
+            { name: "All KYC Logs", path: "/kyc/all" },
         ],
       },
     ],
@@ -81,10 +81,8 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
     title: "Manage Bank Branches",
     items: [{ name: "Manage Branches", icon: <BoxIconLine />, path: "/branches" ,
    subItems: [
-          { name: "All Branch", path: "/kyc/pending" },
-          { name: "Branch Staff", path: "/kyc/approved" },
-          //  { name: "Rejected KYC", path: "/kyc/rejected" },
-          //   { name: "All KYC Logs", path: "/kyc/approved" },
+          { name: "All Branch", path: "/branches/all" },
+          { name: "Branch Staff", path: "/branches/staff" },
         ],
 
     }],

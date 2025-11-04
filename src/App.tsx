@@ -12,8 +12,17 @@ import Buttons from "./pages/UiElements/Buttons";
 import LineChart from "./pages/Charts/LineChart";
 import BarChart from "./pages/Charts/BarChart";
 import Calendar from "./pages/Calendar";
-import BasicTables from "./pages/Tables/BasicTables";
+import PendingKYC from "./pages/KYC/pendingkyc";
+import RejectedKYC from "./pages/KYC/rejectedkyc";
+import ApprovedKYC from "./pages/KYC/approvedkyc";
+import AllKYCLogs from "./pages/KYC/allkyc";
 import FormElements from "./pages/Customers/AllCustomers";
+import ActiveCustomers from "./pages/Customers/ActiveCustomers";
+import ClosedCustomers from "./pages/Customers/ClosedCustomers";
+import DisabledCustomers from "./pages/Customers/DisabledCustomers";
+import AddNewCustomer from "./pages/Customers/AddNewCustomer";
+import Notifications from "./pages/Customers/Notifications";
+import SendEmailToAll from "./pages/Customers/SendEmailToAll";
 import EditCustomer from "./pages/Customers/EditCustomer";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
@@ -35,12 +44,21 @@ export default function App() {
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
 
-            {/* Forms */}
+            {/* Customers*/}
             <Route path="/customers/allcustomers" element={<FormElements />} />
+            <Route path="/customers/activecustomers" element={<ActiveCustomers />} />
+            <Route path="/customers/closedcustomers" element={<ClosedCustomers />} />
+            <Route path="/customers/disabledcustomers" element={<DisabledCustomers />} />
+            <Route path="/customers/addnew" element={<AddNewCustomer />} />
+            <Route path="/customers/notifications" element={<Notifications />} />
+            <Route path="/customers/sendemail" element={<SendEmailToAll />} />
             <Route path="/customers/edit/:id" element={<EditCustomer />} />
 
-            {/* Tables */}
-            <Route path="/basic-tables" element={<BasicTables />} />
+            {/* KYC */}
+            <Route path="/kyc/pending" element={<PendingKYC />} />
+            <Route path="/kyc/rejected" element={<RejectedKYC />} />
+            <Route path="/kyc/approved" element={<ApprovedKYC />} />
+            <Route path="/kyc/all" element={<AllKYCLogs />} />
 
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
