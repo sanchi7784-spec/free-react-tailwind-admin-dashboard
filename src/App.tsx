@@ -24,6 +24,10 @@ import AddNewCustomer from "./pages/Customers/AddNewCustomer";
 import Notifications from "./pages/Customers/Notifications";
 import SendEmailToAll from "./pages/Customers/SendEmailToAll";
 import EditCustomer from "./pages/Customers/EditCustomer";
+import GoldBuy from "./pages/Gold/GoldBuy";
+import GoldSell from "./pages/Gold/GoldSell";
+import GoldRedeem from "./pages/Gold/GoldRedeem";
+import GoldGift from "./pages/Gold/GoldGift";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
@@ -59,6 +63,12 @@ export default function App() {
             <Route path="/kyc/rejected" element={<RejectedKYC />} />
             <Route path="/kyc/approved" element={<ApprovedKYC />} />
             <Route path="/kyc/all" element={<AllKYCLogs />} />
+
+            {/* Gold */}
+            <Route path="/gold/buy" element={<GoldBuy />} />
+            <Route path="/gold/sell" element={<GoldSell />} />
+            <Route path="/gold/redeem" element={<GoldRedeem />} />
+            <Route path="/gold/gift" element={<GoldGift />} />
 
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />

@@ -23,6 +23,7 @@ import {
   PageIcon,
   ShootingStarIcon,
   MailIcon,
+  TimeIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import logoFinal from "../icons/logofinal.png";
@@ -114,6 +115,18 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
                   { name: "Others Bank", path: "/fund-transfer/othersbank" },
         ],
       },
+      // --- GOLD HISTORY DROPDOWN ---
+      {
+        name: "Gold History",
+        icon: <TimeIcon />,
+        subItems: [
+          { name: "Buy", path: "/gold/buy" },
+          { name: "Sell", path: "/gold/sell" },
+          { name: "Redeem", path: "/gold/redeem", new: true }, // badge example
+          { name: "Gift", path: "/gold/gift" },
+        ],
+      },
+      // --- END GOLD HISTORY ---
       { name: "DPS", icon: <BoxCubeIcon />, subItems: [{ name: "DPS List", path: "/dps" }] },
       { name: "FDR", icon: <BoxCubeIcon />, subItems: [{ name: "FDR List", path: "/fdr" }] },
       { name: "Loan", icon: <AlertIcon />, 
