@@ -28,10 +28,24 @@ import GoldBuy from "./pages/Gold/GoldBuy";
 import GoldSell from "./pages/Gold/GoldSell";
 import GoldRedeem from "./pages/Gold/GoldRedeem";
 import GoldGift from "./pages/Gold/GoldGift";
+import GoldCategory from "./pages/Gold/GoldCategory";
+import GoldChargeLimit from "./pages/Gold/GoldChargeLimit";
+import GoldRedeemUnits from "./pages/Gold/GoldRedeemUnits";
+import ManageRoles from "./pages/Access/ManageRoles";
+import AddNewRole from "./pages/Access/AddNewRole";
+import EditRole from "./pages/Access/EditRole";
+import ManageStaff from "./pages/Access/ManageStaff";
+import AllBranch from "./pages/Branch/AllBranch";
+import AddNewBranch from "./pages/Branch/AddNewBranch";
+import EditBranch from "./pages/Branch/EditBranch";
+import AllBranchStaff from "./pages/Staff/AllBranchStaff";
+import AddNewBranchStaff from "./pages/Staff/AddNewBranchStaff";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
+import BBPSDashboard from "./pages/Dashboard/BBPSDashboard";
+import GoldDashboard from "./pages/Dashboard/GoldDashboard";
 
 export default function App() {
   return (
@@ -42,6 +56,8 @@ export default function App() {
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
             <Route index path="/" element={<Home />} />
+            <Route path="/dashboard-overview/bbps" element={<BBPSDashboard />} />
+            <Route path="/dashboard-overview/Gold" element={<GoldDashboard />} />
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
@@ -64,11 +80,29 @@ export default function App() {
             <Route path="/kyc/approved" element={<ApprovedKYC />} />
             <Route path="/kyc/all" element={<AllKYCLogs />} />
 
+            {/* Access Management */}
+            <Route path="/access/roles" element={<ManageRoles />} />
+            <Route path="/access/roles/add" element={<AddNewRole />} />
+            <Route path="/access/roles/edit/:id" element={<EditRole />} />
+            <Route path="/access/permissions" element={<ManageStaff />} />
+
             {/* Gold */}
             <Route path="/gold/buy" element={<GoldBuy />} />
             <Route path="/gold/sell" element={<GoldSell />} />
             <Route path="/gold/redeem" element={<GoldRedeem />} />
             <Route path="/gold/gift" element={<GoldGift />} />
+            <Route path="/gold/category" element={<GoldCategory />} />
+            <Route path="/gold/chargelimit" element={<GoldChargeLimit />} />
+            <Route path="/gold/redeemunits" element={<GoldRedeemUnits />} />
+
+            {/* Branch */}
+            <Route path="/branch/all" element={<AllBranch />} />
+            <Route path="/branch/add" element={<AddNewBranch />} />
+            <Route path="/branch/edit/:id" element={<EditBranch />} />
+
+            {/* Staff */}
+            <Route path="/staff/all" element={<AllBranchStaff />} />
+            <Route path="/staff/add" element={<AddNewBranchStaff />} />
 
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-
+import logo from '../icons/ChatGPT Image Nov 5, 2025, 12_41_38 PM.png'
 // Assume these icons are imported from an icon library
 import {
   BoxCubeIcon,
@@ -26,7 +26,6 @@ import {
   TimeIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import logoFinal from "../icons/logofinal.png";
 
 type NavItem = {
   name: string;
@@ -41,7 +40,11 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
       {
         name: "Dashboard Overview",
         icon: <GridIcon />,
-        subItems: [{ name: "Ecommerce", path: "/" }],
+        subItems: [{ name: "Ecommerce", path: "/" }
+          ,
+          { name: "BBPS", path: "/dashboard-overview/bbps" },
+          { name: "Gold", path: "/dashboard-overview/Gold" }
+        ],
       },
     ],
   },
@@ -82,8 +85,8 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
     title: "Manage Bank Branches",
     items: [{ name: "Manage Branches", icon: <BoxIconLine />, path: "/branches" ,
    subItems: [
-          { name: "All Branch", path: "/branches/all" },
-          { name: "Branch Staff", path: "/branches/staff" },
+          { name: "All Branch", path: "/branch/all" },
+          { name: "Branch Staff", path: "/staff/all" },
         ],
 
     }],
@@ -124,6 +127,9 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
           { name: "Sell", path: "/gold/sell" },
           { name: "Redeem", path: "/gold/redeem", new: true }, // badge example
           { name: "Gift", path: "/gold/gift" },
+          { name: "Category", path: "/gold/category" },
+          { name: "Charge Limit", path: "/gold/chargelimit" },
+          { name: "Manage Redeem Units", path: "/gold/redeemunits" },
         ],
       },
       // --- END GOLD HISTORY ---
@@ -460,10 +466,10 @@ const AppSidebar: React.FC = () => {
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
-              <img src={logoFinal} alt="Logo" width={150} height={40} className=" ml-10" />
+              <img src={logo} alt="Logo" width={150} height={40} className=" ml-10" />
             </>
           ) : (
-            <img src={logoFinal} alt="Logo" width={32} height={32} />
+            <img src={logo} alt="Logo" width={32} height={32} />
           )}
         </Link>
       </div>
