@@ -298,7 +298,7 @@ const AllTransactions: React.FC = () => {
                     <td className="px-4 py-4">
                       <Link
                         to={`/customers/${transaction.userId}/edit`}
-                        className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline dark:text-primary-400"
+                        className="text-sm font-medium text-gray-900 hover:text-primary-700 hover:underline dark:text-white dark:hover:text-primary-400"
                       >
                         {transaction.user}
                       </Link>
@@ -307,7 +307,7 @@ const AllTransactions: React.FC = () => {
                       {transaction.transactionId}
                     </td>
                     <td className="px-4 py-4">
-                      <span className="inline-flex rounded-full bg-primary-100 px-3 py-1 text-xs font-medium text-primary-800 dark:bg-primary-900/30 dark:text-primary-400">
+                      <span className="inline-flex rounded-full bg-primary-100 px-3 py-1 text-xs font-medium text-primary-800 dark:bg-primary-900/30 dark:text-white">
                         {transaction.type}
                       </span>
                     </td>
