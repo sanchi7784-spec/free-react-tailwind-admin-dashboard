@@ -47,6 +47,7 @@ import Home from "./pages/Dashboard/Home";
 import BBPSDashboard from "./pages/Dashboard/BBPSDashboard";
 import GoldDashboard from "./pages/Dashboard/GoldDashboard";
 import AllTransactions from "./pages/Transactions/AllTransactions";
+import AllWallets from "./pages/Wallet/AllWallets";
 
 export default function App() {
   return (
@@ -98,6 +99,9 @@ export default function App() {
 
             {/* Transactions */}
             <Route path="/Transactions" element={<AllTransactions />} />
+
+            {/* Wallet */}
+            <Route path="/wallet/all" element={<AllWallets />} />
 
             {/* Branch */}
             <Route path="/branch/all" element={<AllBranch />} />
