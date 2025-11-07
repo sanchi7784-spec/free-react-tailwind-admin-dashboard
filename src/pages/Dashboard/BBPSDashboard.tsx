@@ -222,7 +222,7 @@ const AnnouncementButton: React.FC<AnnouncementButtonProps> = ({
   return (
     <Link
       to={href}
-      className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white transition-all hover:opacity-90 ${className}`}
+      className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-white transition-all hover:opacity-90 shadow-sm ${className}`}
     >
       <span className="animate-spin">
         <Loader />
@@ -250,8 +250,8 @@ export default function BBPSDashboard() {
 
       <div className="space-y-6">
         {/* Important Announcements */}
-        <div className="rounded-lg border border-warning bg-warning/10 p-4 dark:border-warning dark:bg-warning/20">
-          <div className="mb-4 flex items-center gap-2 text-warning">
+        <div className="rounded-2xl border border-warning bg-warning/10 p-4 dark:border-warning/50 dark:bg-warning/5">
+          <div className="mb-4 flex items-center gap-2 text-warning dark:text-white">
             <Zap />
             <span className="font-medium">
               Explore the important Requests to review first
@@ -262,37 +262,37 @@ export default function BBPSDashboard() {
               href="/fund-transfer/Pending"
               label="Fund Transfer"
               count={49}
-              className="bg-blue-500"
+              className="bg-blue-500 dark:bg-blue-600"
             />
             <AnnouncementButton
               href="/withdraw/pending-withdraws"
               label="Withdraw"
               count={9}
-              className="bg-red-500"
+              className="bg-red-500 dark:bg-red-600"
             />
             <AnnouncementButton
               href="/kyc/pending"
               label="KYC"
               count={21}
-              className="bg-green-500"
+              className="bg-green-500 dark:bg-green-600"
             />
             <AnnouncementButton
               href="/deposits/pendin-manual-deposits"
               label="Deposit"
               count={104}
-              className="bg-purple-800"
+              className="bg-purple-800 dark:bg-purple-700"
             />
             <AnnouncementButton
               href="#"
               label="Ticket"
               count={8}
-              className="bg-green-500"
+              className="bg-green-500 dark:bg-green-600"
             />
             <AnnouncementButton
               href="/loan/requestloan"
               label="Loan"
               count={12}
-              className="bg-red-500"
+              className="bg-red-500 dark:bg-red-600"
             />
           </div>
         </div>
@@ -304,103 +304,103 @@ export default function BBPSDashboard() {
             count="1653"
             label="Total Users"
             link="/customers/allcustomers"
-            gradient="bg-gradient-to-br from-purple-500 to-purple-700"
+            gradient="bg-gradient-to-br from-purple-500 to-purple-700 dark:from-purple-600 dark:to-purple-800"
           />
           <DataCard
             icon={<UserCheck />}
             count="1036"
             label="Active Users"
             link="/customers/activecustomers"
-            gradient="bg-gradient-to-br from-teal-500 to-teal-700"
+            gradient="bg-gradient-to-br from-teal-500 to-teal-700 dark:from-teal-600 dark:to-teal-800"
           />
           <DataCard
             icon={<UserX />}
             count="605"
             label="Disabled Users"
             link="/customers/disabledcustomers"
-            gradient="bg-gradient-to-br from-blue-600 to-blue-800"
+            gradient="bg-gradient-to-br from-blue-600 to-blue-800 dark:from-blue-700 dark:to-blue-900"
           />
           <DataCard
             icon={<Settings />}
             count="1"
             label="Total Staff"
             link="/staff/all"
-            gradient="bg-gradient-to-br from-slate-700 to-slate-900"
+            gradient="bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-800 dark:to-black"
           />
           <DataCard
             icon={<Wallet />}
             count="$0"
             label="Total Deposits"
             link="/deposits/deposit-history"
-            gradient="bg-gradient-to-br from-green-700 to-green-900"
+            gradient="bg-gradient-to-br from-green-700 to-green-900 dark:from-green-800 dark:to-green-950"
           />
           <DataCard
             icon={<Landmark />}
             count="$600"
             label="Total Withdraw"
             link="/withdraw/withdraw-history"
-            gradient="bg-gradient-to-br from-orange-500 to-orange-700"
+            gradient="bg-gradient-to-br from-orange-500 to-orange-700 dark:from-orange-600 dark:to-orange-800"
           />
           <DataCard
             icon={<LinkIcon />}
             count="20"
             label="Total Referral"
-            gradient="bg-gradient-to-br from-purple-600 to-purple-800"
+            gradient="bg-gradient-to-br from-purple-600 to-purple-800 dark:from-purple-700 dark:to-purple-900"
           />
           <DataCard
             icon={<Send />}
             count="$8866"
             label="Total Fund Transfer"
-            gradient="bg-gradient-to-br from-slate-700 to-slate-900"
+            gradient="bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-800 dark:to-black"
           />
           <DataCard
             icon={<Archive />}
             count="$11328000"
             label="Total DPS"
-            gradient="bg-gradient-to-br from-teal-600 to-teal-800"
+            gradient="bg-gradient-to-br from-teal-600 to-teal-800 dark:from-teal-700 dark:to-teal-900"
           />
           <DataCard 
             icon={<Book />} 
             count="$5471.89" 
             label="Total FDR"
-            gradient="bg-gradient-to-br from-purple-600 to-purple-800"
+            gradient="bg-gradient-to-br from-purple-600 to-purple-800 dark:from-purple-700 dark:to-purple-900"
           />
           <DataCard
             icon={<AlertTriangle />}
             count="$5405.00"
             label="Total Loan"
-            gradient="bg-gradient-to-br from-blue-700 to-blue-900"
+            gradient="bg-gradient-to-br from-blue-700 to-blue-900 dark:from-blue-800 dark:to-blue-950"
           />
           <DataCard
             icon={<CreditCard />}
             count="$0"
             label="Total Pay Bill"
-            gradient="bg-gradient-to-br from-pink-500 to-pink-700"
+            gradient="bg-gradient-to-br from-pink-500 to-pink-700 dark:from-pink-600 dark:to-pink-800"
           />
           <DataCard
             icon={<Gift />}
             count="1668"
             label="Total Reward Points"
-            gradient="bg-gradient-to-br from-purple-600 to-purple-800"
+            gradient="bg-gradient-to-br from-purple-600 to-purple-800 dark:from-purple-700 dark:to-purple-900"
           />
           <DataCard
             icon={<PackagePlus />}
             count="$0"
             label="Deposit Bonus"
-            gradient="bg-gradient-to-br from-teal-500 to-teal-700"
+            gradient="bg-gradient-to-br from-teal-500 to-teal-700 dark:from-teal-600 dark:to-teal-800"
           />
           <DataCard
             icon={<Webhook />}
             count="25"
             label="Total Automatic Gateways"
             link="/gateways"
-            gradient="bg-gradient-to-br from-purple-600 to-purple-800"
+            gradient="bg-gradient-to-br from-purple-600 to-purple-800 dark:from-purple-700 dark:to-purple-900"
           />
           <DataCard
             icon={<HelpCircle />}
             count="19"
             label="Total Ticket"
-            gradient="bg-gradient-to-br from-blue-700 to-blue-900"
+            gradient="bg-gradient-to-br from-blue-700 to-blue-900 dark:from-blue-800 dark:to-blue-950"
           />
         </div>
 
@@ -408,9 +408,9 @@ export default function BBPSDashboard() {
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           {/* Site Statistics Chart - Larger */}
           <div className="lg:col-span-2">
-            <div className="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-default dark:border-gray-800 dark:bg-white/[0.03]">
               <div className="mb-4 flex items-center justify-between">
-                <h3 className="text-xl font-semibold text-black dark:text-white">
+                <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90">
                   Site Statistics
                 </h3>
                 <div className="w-64">
@@ -491,8 +491,8 @@ export default function BBPSDashboard() {
 
           {/* Fund Transfer Statistics */}
           <div className="lg:col-span-1">
-            <div className="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-              <h3 className="mb-4 text-xl font-semibold text-black dark:text-white">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-default dark:border-gray-800 dark:bg-white/[0.03]">
+              <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white/90">
                 Fund Transfer Statistics
               </h3>
               <Chart
@@ -531,8 +531,8 @@ export default function BBPSDashboard() {
 
         {/* Additional Charts Row */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-            <h3 className="mb-4 text-xl font-semibold text-black dark:text-white">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-default dark:border-gray-800 dark:bg-white/[0.03]">
+            <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white/90">
               Top Country Statistics
             </h3>
             <Chart
@@ -565,8 +565,8 @@ export default function BBPSDashboard() {
             />
           </div>
 
-          <div className="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-            <h3 className="mb-4 text-xl font-semibold text-black dark:text-white">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-default dark:border-gray-800 dark:bg-white/[0.03]">
+            <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white/90">
               Top Browser Statistics
             </h3>
             <Chart
@@ -606,8 +606,8 @@ export default function BBPSDashboard() {
             />
           </div>
 
-          <div className="rounded-sm border border-stroke bg-white p-6 shadow-default dark:border-strokedark dark:bg-boxdark">
-            <h3 className="mb-4 text-xl font-semibold text-black dark:text-white">
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-default dark:border-gray-800 dark:bg-white/[0.03]">
+            <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white/90">
               Top OS Statistics
             </h3>
             <Chart
@@ -642,32 +642,32 @@ export default function BBPSDashboard() {
         </div>
 
         {/* Latest Users Table */}
-        <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-          <div className="border-b border-stroke px-6 py-4 dark:border-strokedark">
-            <h3 className="text-xl font-semibold text-black dark:text-white">
+        <div className="rounded-2xl border border-gray-200 bg-white shadow-default dark:border-gray-800 dark:bg-white/[0.03]">
+          <div className="border-b border-gray-200 px-6 py-4 dark:border-gray-800">
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-white/90">
               Latest Users
             </h3>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full table-auto">
               <thead>
-                <tr className="bg-gray-50 text-left dark:bg-meta-4">
-                  <th className="px-4 py-4 font-semibold text-black dark:text-white uppercase text-xs">
+                <tr className="bg-gray-50 text-left dark:bg-white/5">
+                  <th className="px-4 py-4 font-semibold text-gray-800 dark:text-white/90 uppercase text-xs">
                     Avatar
                   </th>
-                  <th className="px-4 py-4 font-semibold text-black dark:text-white uppercase text-xs">
+                  <th className="px-4 py-4 font-semibold text-gray-800 dark:text-white/90 uppercase text-xs">
                     User
                   </th>
-                  <th className="px-4 py-4 font-semibold text-black dark:text-white uppercase text-xs">
+                  <th className="px-4 py-4 font-semibold text-gray-800 dark:text-white/90 uppercase text-xs">
                     Email
                   </th>
-                  <th className="px-4 py-4 font-semibold text-black dark:text-white uppercase text-xs">
+                  <th className="px-4 py-4 font-semibold text-gray-800 dark:text-white/90 uppercase text-xs">
                     Balance
                   </th>
-                  <th className="px-4 py-4 font-semibold text-black dark:text-white uppercase text-xs">
+                  <th className="px-4 py-4 font-semibold text-gray-800 dark:text-white/90 uppercase text-xs">
                     KYC
                   </th>
-                  <th className="px-4 py-4 font-semibold text-black dark:text-white uppercase text-xs">
+                  <th className="px-4 py-4 font-semibold text-gray-800 dark:text-white/90 uppercase text-xs">
                     Status
                   </th>
                 </tr>
@@ -717,7 +717,7 @@ export default function BBPSDashboard() {
                 ].map((user) => (
                   <tr
                     key={user.id}
-                    className="border-b border-stroke hover:bg-gray-50 dark:border-strokedark dark:hover:bg-meta-4"
+                    className="border-b border-gray-200 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-white/5"
                   >
                     <td className="px-4 py-4">
                       <div className={`flex h-10 w-10 items-center justify-center rounded-full ${user.bgColor} text-sm font-semibold text-white`}>
@@ -727,15 +727,15 @@ export default function BBPSDashboard() {
                     <td className="px-4 py-4">
                       <Link
                         to={`/customers/${user.id}/edit`}
-                        className="font-medium text-purple-600 hover:text-purple-800 hover:underline"
+                        className="font-medium text-purple-600 hover:text-purple-800 hover:underline dark:text-purple-400 dark:hover:text-purple-300"
                       >
                         {user.name}
                       </Link>
                     </td>
-                    <td className="px-4 py-4 font-medium text-black dark:text-white">
+                    <td className="px-4 py-4 font-medium text-gray-800 dark:text-white/90">
                       {user.email}
                     </td>
-                    <td className="px-4 py-4 font-bold text-black dark:text-white">
+                    <td className="px-4 py-4 font-bold text-gray-800 dark:text-white/90">
                       {user.balance}
                     </td>
                     <td className="px-4 py-4">
