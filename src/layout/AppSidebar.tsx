@@ -96,7 +96,7 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
     items: [
       { name: "Transactions", icon: <FileIcon />, path: "/Transactions" },
       { name: "Wallets", icon: <DollarLineIcon />, path: "/wallet/all" },
-      { name: "Virtual Cards", icon: <BoxIcon />, path: "/Virtual-cards" },
+      { name: "Virtual Cards", icon: <BoxIcon />, path: "/wallet/virtual-cards" },
       {
         name: "Profits",
         icon: <DollarLineIcon />,
