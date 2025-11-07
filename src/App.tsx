@@ -46,6 +46,7 @@ import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import BBPSDashboard from "./pages/Dashboard/BBPSDashboard";
 import GoldDashboard from "./pages/Dashboard/GoldDashboard";
+import AllTransactions from "./pages/Transactions/AllTransactions";
 
 export default function App() {
   return (
@@ -94,6 +95,9 @@ export default function App() {
             <Route path="/gold/category" element={<GoldCategory />} />
             <Route path="/gold/chargelimit" element={<GoldChargeLimit />} />
             <Route path="/gold/redeemunits" element={<GoldRedeemUnits />} />
+
+            {/* Transactions */}
+            <Route path="/Transactions" element={<AllTransactions />} />
 
             {/* Branch */}
             <Route path="/branch/all" element={<AllBranch />} />
