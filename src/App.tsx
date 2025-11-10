@@ -49,7 +49,21 @@ import GoldDashboard from "./pages/Dashboard/GoldDashboard";
 import AllTransactions from "./pages/Transactions/AllTransactions";
 import AllWallets from "./pages/Wallet/AllWallets";
 import VirtualCards from "./pages/Wallet/VirtualCards";
-
+import UserPaybacks from "./pages/Transactions/UserPaybacks";
+import BankProfits from "./pages/Transactions/BankProfits";
+import PendingTransfer from "./pages/FundTransfer/pendingtransfer";
+import RejectedTransfers from "./pages/FundTransfer/RejectedTransfers";
+import AllTransfers from "./pages/FundTransfer/alltransfers";
+import OwnBankTransfer from "./pages/FundTransfer/OwnBankTransfer";
+import OtherBankTransfer from "./pages/FundTransfer/OtherBankTransfer";
+import WireTransfer from "./pages/FundTransfer/WireTransfer";
+import WireTransferSettings from "./pages/FundTransfer/WireTransferSettings";
+import OthersBank from "./pages/FundTransfer/OthersBank";
+import Requestloan from "./pages/Loan/Requestloan";
+import LoanDetails from "./pages/Loan/LoanDetails";
+import ImportServices from "./pages/Bill/ImportServices";
+import BillServicesList from "./pages/Bill/BillServicesList";
+import ApprovedLoan from "./pages/Loan/ApprovedLoan";
 export default function App() {
   return (
     <>
@@ -114,6 +128,29 @@ export default function App() {
             <Route path="/staff/all" element={<AllBranchStaff />} />
             <Route path="/staff/add" element={<AddNewBranchStaff />} />
 
+{/* loan */}
+ <Route path="/loan/requestloan" element={<Requestloan />} />
+ <Route path="/loan/details/:id" element={<LoanDetails />} />
+  {/* <Route path="/loan/approved-loan" element={<ApprovedLoan/>} /> */}
+
+            {/* Profits*/}
+        <Route path="/profits/paybacks" element={<UserPaybacks />} />
+   <Route path="/profits/bankprofit" element={<BankProfits />} />
+
+
+  {/* Bill Management */}
+        <Route path="/bill/import-services" element={<ImportServices />} />
+        <Route path="/bill/billservices-list" element={<BillServicesList />} />
+        
+{/* Fund Transfer */}
+ <Route path="/fund-transfer/Pending" element={<PendingTransfer />} />
+ <Route path="/fund-transfer/Rejected" element={<RejectedTransfers />} />
+ <Route path="/fund-transfer/all-transfer" element={<AllTransfers />} />
+ <Route path="/fund-transfer/ownbanktransfer" element={<OwnBankTransfer />} />
+ <Route path="/fund-transfer/otherbanktransfer" element={<OtherBankTransfer />} />
+ <Route path="/fund-transfer/wire-transfer" element={<WireTransfer />} />
+ <Route path="/fund-transfer/wire" element={<WireTransferSettings />} />
+ <Route path="/fund-transfer/othersbank" element={<OthersBank />} />
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
             <Route path="/avatars" element={<Avatars />} />
@@ -121,12 +158,10 @@ export default function App() {
             <Route path="/buttons" element={<Buttons />} />
             <Route path="/images" element={<Images />} />
             <Route path="/videos" element={<Videos />} />
-
             {/* Charts */}
             <Route path="/line-chart" element={<LineChart />} />
             <Route path="/bar-chart" element={<BarChart />} />
           </Route>
-
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />

@@ -132,18 +132,19 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
           { name: "Manage Redeem Units", path: "/gold/redeemunits" },
         ],
       },
+  
       // --- END GOLD HISTORY ---
-      { name: "DPS", icon: <BoxCubeIcon />, subItems: [{ name: "DPS List", path: "/dps" }] },
-      { name: "FDR", icon: <BoxCubeIcon />, subItems: [{ name: "FDR List", path: "/fdr" }] },
+      // { name: "DPS", icon: <BoxCubeIcon />, subItems: [{ name: "DPS List", path: "/dps" }] },
+      // { name: "FDR", icon: <BoxCubeIcon />, subItems: [{ name: "FDR List", path: "/fdr" }] },
       { name: "Loan", icon: <AlertIcon />, 
         subItems: [
           { name: "Request Loan", path: "/loan/requestloan" },
-{ name: "Approved Loan", path: "/loan/approveloan" },
-{ name: "Payable Installments", path: "/loan/payableinstallments  " },
+{ name: "Approved Loan", path: "/loan/approved-loan" },
+{ name: "Payable Installments", path: "/loan/payableinstallments"},
 { name: "Completed Loan", path: "/loan/completedloan" },
-{ name: "Rejected Loan", path: "/loan/rejectedloan" },
+{ name: "Rejected Loan", path: "/loan/rejectedloan-Loans" },
 { name: "All Loan", path: "/loan/all-loan" },
-{ name: "Loan Plans", path: "/loan/loan-plans" }
+{ name: "Loan Plans", path: "/loan/loan-plans"}
 
         ] },
         
@@ -156,7 +157,8 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
         name: "Bill Management",
         icon: <DocsIcon />,
         subItems: [
-          { name: "Import Services", path: "/bill/import-services" },
+          // Path should match route: leading slash and hyphen
+          { name: "Recharge Services", path: "/bill/import-services" },
           { name: "Convert Rate", path: "/bill/convert-rate" },
           { name: "Bill Services list", path: "/bill/billservices-list" },
         ],
@@ -165,10 +167,10 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
         name: "Bill History",
         icon: <DownloadIcon />,
         subItems: [
-          { name: "Pending Bill", path: "/bill/history/bendingbills" },
-          { name: "Complete Bill", path: "/bill/history/complete-bill" },
-               { name: "Returned Bill", path: "/bill/history/returned-bill" },
-                    { name: "All Bill", path: "/bill/history/all-bill" },
+          { name: "Pending Bill", path: "/bill/history/pendingbills" },
+          { name: "Complete Bill", path: "/bill/history/completed-bills" },
+               { name: "Returned Bill", path: "/bill/history/returned-bills" },
+                    { name: "All Bill", path: "/bill/history/all-bills" },
         ],
       },
     ],
