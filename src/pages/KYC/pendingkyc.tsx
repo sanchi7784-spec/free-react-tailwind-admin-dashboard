@@ -1,7 +1,6 @@
 import { useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-
 interface KYCRecord {
   id: string;
   date: string;
@@ -19,13 +18,11 @@ interface KYCRecord {
   cancelledCheckSubmissionDate: string;
   cancelledCheck: string;
 }
-
 export default function PendingKYC() {
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(15);
   const [selectedKYC, setSelectedKYC] = useState<KYCRecord | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
   const kycRecords: KYCRecord[] = [
     {
       id: "1",
@@ -181,24 +178,20 @@ export default function PendingKYC() {
       cancelledCheck: "/images/user/user-09.png",
     },
   ];
-
   const handleViewDetails = (kyc: KYCRecord) => {
     setSelectedKYC(kyc);
     setIsModalOpen(true);
   };
-
   const filteredRecords = kycRecords.filter(
     (record) =>
       record.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.aadhaarNumber.includes(searchTerm) ||
       record.panNumber.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
   return (
     <>
       <PageMeta title="Pending KYC - Admin" description="View and manage pending KYC submissions" />
       <PageBreadcrumb pageTitle="Pending KYC" />
-
       <div className="w-full max-w-full overflow-x-hidden">
         {/* Header */}
         <div className="mb-6">
@@ -206,7 +199,6 @@ export default function PendingKYC() {
             Pending KYC
           </h1>
         </div>
-
         {/* Search and Filter */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -248,7 +240,6 @@ export default function PendingKYC() {
             </select>
           </div>
         </div>
-
         {/* Desktop Table */}
         <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="overflow-x-auto">
@@ -319,7 +310,6 @@ export default function PendingKYC() {
             </table>
           </div>
         </div>
-
         {/* Mobile Cards */}
         <div className="md:hidden space-y-4">
           {filteredRecords.slice(0, itemsPerPage).map((record) => (
@@ -376,7 +366,6 @@ export default function PendingKYC() {
             </div>
           ))}
         </div>
-
         {/* KYC Details Modal */}
         {isModalOpen && selectedKYC && (
           <div 
@@ -413,10 +402,7 @@ export default function PendingKYC() {
                   </svg>
                 </button>
               </div>
-
-              {/* Modal Body */}
               <div className="p-8">
-                {/* Status Badge */}
                 <div className="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border-l-4 border-amber-500 rounded-lg p-5 mb-8">
                   <div className="flex items-center gap-3">
                     <div className="flex-shrink-0 w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center">
@@ -446,7 +432,6 @@ export default function PendingKYC() {
                     </div>
                   </div>
                 </div>
-
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Aadhaar Card Section */}
                   <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
@@ -484,7 +469,6 @@ export default function PendingKYC() {
                             {selectedKYC.aadhaarSubmissionDate}
                           </p>
                         </div>
-                        
                         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
                           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                             Aadhaar Number
@@ -492,8 +476,7 @@ export default function PendingKYC() {
                           <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
                             {selectedKYC.aadhaarNumber}
                           </p>
-                        </div>
-                        
+                        </div>                        
                         <div className="space-y-3">
                           <div>
                             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
@@ -531,8 +514,7 @@ export default function PendingKYC() {
                                 </div>
                               </div>
                             </a>
-                          </div>
-                          
+                          </div>                          
                           <div>
                             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
                               Back Page
@@ -572,7 +554,6 @@ export default function PendingKYC() {
                           </div>
                         </div>
                       </div>
-
                       <div className="mb-4">
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                           Review Message (Optional)
@@ -583,7 +564,6 @@ export default function PendingKYC() {
                           placeholder="Enter optional message for the customer..."
                         />
                       </div>
-
                       <div className="flex gap-3">
                         <button
                           onClick={() => {
@@ -633,7 +613,6 @@ export default function PendingKYC() {
                       </div>
                     </div>
                   </div>
-
                   {/* PAN Card Section */}
                   <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
                     <div className="bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-4 rounded-t-xl">
@@ -679,8 +658,7 @@ export default function PendingKYC() {
                           <p className="text-lg font-bold text-purple-600 dark:text-purple-400">
                             {selectedKYC.panNumber}
                           </p>
-                        </div>
-                        
+                        </div>                       
                         <div className="space-y-3">
                           <div>
                             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
@@ -718,8 +696,7 @@ export default function PendingKYC() {
                                 </div>
                               </div>
                             </a>
-                          </div>
-                          
+                          </div>                         
                           <div>
                             <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">
                               Back Page
@@ -759,7 +736,6 @@ export default function PendingKYC() {
                           </div>
                         </div>
                       </div>
-
                       <div className="mb-4">
                         <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                           Review Message (Optional)
@@ -770,7 +746,6 @@ export default function PendingKYC() {
                           placeholder="Enter optional message for the customer..."
                         />
                       </div>
-
                       <div className="flex gap-3">
                         <button
                           onClick={() => {
@@ -820,7 +795,6 @@ export default function PendingKYC() {
                       </div>
                     </div>
                   </div>
-
                   {/* Cancelled Cheque Section */}
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
                     {/* Header with Gradient */}
@@ -845,7 +819,6 @@ export default function PendingKYC() {
                         </h3>
                       </div>
                     </div>
-
                     <div className="p-6">
                       {/* Document Information Cards */}
                       <div className="space-y-4 mb-6">
@@ -858,7 +831,6 @@ export default function PendingKYC() {
                           </p>
                         </div>
                       </div>
-
                       {/* Cheque Image with Hover Effect */}
                       <div className="mb-6">
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -895,7 +867,6 @@ export default function PendingKYC() {
                           </div>
                         </a>
                       </div>
-
                       {/* Details/Rejection Reason */}
                       <div className="mb-6">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -907,7 +878,6 @@ export default function PendingKYC() {
                           placeholder="Enter optional message..."
                         />
                       </div>
-
                       {/* Action Buttons with Gradient */}
                       <div className="flex gap-3">
                         <button

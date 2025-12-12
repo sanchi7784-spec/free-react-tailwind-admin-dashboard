@@ -1,7 +1,6 @@
 import { useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-
 interface KYCRecord {
   id: string;
   date: string;
@@ -21,7 +20,6 @@ interface KYCRecord {
   approvalDate?: string;
   approvedBy?: string;
 }
-
 export default function ApprovedKYC() {
   const [searchTerm, setSearchTerm] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(15);
@@ -144,24 +142,20 @@ export default function ApprovedKYC() {
       approvedBy: "Admin User",
     },
   ];
-
   const handleViewDetails = (kyc: KYCRecord) => {
     setSelectedKYC(kyc);
     setIsModalOpen(true);
   };
-
   const filteredRecords = kycRecords.filter(
     (record) =>
       record.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
   return (
     <>
       <PageMeta title="Approved KYC - Admin" description="View all approved KYC submissions" />
       <div>
         <PageBreadcrumb pageTitle="Approved KYC" />
-        
         <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow">
           {/* Header */}
           <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-4">
@@ -200,7 +194,6 @@ export default function ApprovedKYC() {
               </div>
             </div>
           </div>
-
           {/* Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -288,7 +281,6 @@ export default function ApprovedKYC() {
                 ))}
               </tbody>
             </table>
-
             {filteredRecords.length === 0 && (
               <div className="text-center py-12">
                 <svg
@@ -314,7 +306,6 @@ export default function ApprovedKYC() {
               </div>
             )}
           </div>
-
           {/* Pagination Footer */}
           <div className="border-t border-gray-200 dark:border-gray-700 px-6 py-4">
             <div className="flex items-center justify-between">
@@ -339,7 +330,6 @@ export default function ApprovedKYC() {
             </div>
           </div>
         </div>
-
         {/* Beautiful Modal */}
         {isModalOpen && selectedKYC && (
           <div 
@@ -376,7 +366,6 @@ export default function ApprovedKYC() {
                   </svg>
                 </button>
               </div>
-
               {/* Modal Body */}
               <div className="p-8 overflow-y-auto max-h-[calc(95vh-80px)]">
                 {/* Status Banner with Icon */}
@@ -404,7 +393,6 @@ export default function ApprovedKYC() {
                     </div>
                   </div>
                 </div>
-
                 {/* Approval Info */}
                 {selectedKYC.approvalDate && (
                   <div className="mb-8 p-6 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl shadow-md">
@@ -471,7 +459,6 @@ export default function ApprovedKYC() {
                     </div>
                   </div>
                 )}
-
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Aadhaar Card Section */}
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
@@ -499,7 +486,6 @@ export default function ApprovedKYC() {
                         </h3>
                       </div>
                     </div>
-
                     <div className="p-6">
                       {/* Document Information Cards */}
                       <div className="space-y-4 mb-6">
@@ -511,7 +497,6 @@ export default function ApprovedKYC() {
                             {selectedKYC.aadhaarSubmissionDate}
                           </p>
                         </div>
-
                         <div className="bg-white dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                             Aadhaar Number
@@ -521,7 +506,6 @@ export default function ApprovedKYC() {
                           </p>
                         </div>
                       </div>
-
                       {/* Front Page with Hover Effect */}
                       <div className="mb-4">
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -558,7 +542,6 @@ export default function ApprovedKYC() {
                           </div>
                         </a>
                       </div>
-
                       {/* Back Page with Hover Effect */}
                       <div>
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -597,7 +580,6 @@ export default function ApprovedKYC() {
                       </div>
                     </div>
                   </div>
-
                   {/* PAN Card Section */}
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
                     {/* Header with Gradient */}
@@ -622,7 +604,6 @@ export default function ApprovedKYC() {
                         </h3>
                       </div>
                     </div>
-
                     <div className="p-6">
                       {/* Document Information Cards */}
                       <div className="space-y-4 mb-6">
@@ -634,7 +615,6 @@ export default function ApprovedKYC() {
                             {selectedKYC.panSubmissionDate}
                           </p>
                         </div>
-
                         <div className="bg-white dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                             PAN Number
@@ -644,7 +624,6 @@ export default function ApprovedKYC() {
                           </p>
                         </div>
                       </div>
-
                       {/* Front Page with Hover Effect */}
                       <div className="mb-4">
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -681,7 +660,6 @@ export default function ApprovedKYC() {
                           </div>
                         </a>
                       </div>
-
                       {/* Back Page with Hover Effect */}
                       <div>
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -720,7 +698,6 @@ export default function ApprovedKYC() {
                       </div>
                     </div>
                   </div>
-
                   {/* Cancelled Cheque Section */}
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
                     {/* Header with Gradient */}
@@ -745,7 +722,6 @@ export default function ApprovedKYC() {
                         </h3>
                       </div>
                     </div>
-
                     <div className="p-6">
                       {/* Document Information Cards */}
                       <div className="space-y-4 mb-6">
@@ -758,7 +734,6 @@ export default function ApprovedKYC() {
                           </p>
                         </div>
                       </div>
-
                       {/* Cheque Image with Hover Effect */}
                       <div>
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">

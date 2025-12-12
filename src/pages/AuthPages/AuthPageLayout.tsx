@@ -2,7 +2,7 @@ import React from "react";
 import GridShape from "../../components/common/GridShape";
 import { Link } from "react-router";
 import ThemeTogglerTwo from "../../components/common/ThemeTogglerTwo";
-
+import logo from './../../icons/ChatGPT Image Nov 5, 2025, 12_41_38 PM.png'
 export default function AuthLayout({
   children,
 }: {
@@ -21,12 +21,12 @@ export default function AuthLayout({
                 <img
                   width={231}
                   height={48}
-                  src="/images/logo/auth-logo.svg"
+                  src={logo}
                   alt="Logo"
                 />
               </Link>
               <p className="text-center text-gray-400 dark:text-white/60">
-                Free and Open-Source Tailwind CSS Admin Dashboard Template
+                Mastropay Technologies Pvt.Ltd<br></br>Admin Dashboard
               </p>
             </div>
           </div>

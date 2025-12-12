@@ -1,4 +1,6 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
+import type { ReactNode } from "react";
+import { isAuthenticated } from "./utils/auth";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
@@ -64,14 +66,39 @@ import LoanDetails from "./pages/Loan/LoanDetails";
 import ImportServices from "./pages/Bill/ImportServices";
 import BillServicesList from "./pages/Bill/BillServicesList";
 import ApprovedLoan from "./pages/Loan/ApprovedLoan";
+import PayableLoan from "./pages/Loan/payableamount";
+import CompletedLoan from "./pages/Loan/CompletedLoan";
+import Rejectedloan from "./pages/Loan/rejectedloan";
+import AllLoans from "./pages/Loan/all-loan";
+import LoanPlans from "./pages/Loan/loanplans";
+import AddLoanPlan from "./pages/Loan/createloanplan";
+import ConvertRate from "./pages/Bill/convertrate";
+import PendingBills from "./pages/Billhistory/pendingbills";
+import Completedbills from "./pages/Billhistory/Completedbills";
+import ReturnedBills from "./pages/Billhistory/ReturnedBills";
+import AllBills from "./pages/Billhistory/Allbills";
+import AutomaticGateway from "./pages/AutomaticGateway/gatewaylist";
+import Pendingwithdraw from "./pages/Withdraw/Pendingwithdraw";
+import AutomaticWithdraw from "./pages/Withdraw/Automatic-withdraw";
+import WithdrawHistory from "./pages/Withdraw/withdrawhistory";
+import Allportfolio from "./pages/Portfolio/Allportfolio";
+import CreatePortfolios from "./pages/Portfolio/CreatePortfolios";
+import Uiforstafftochangeprofile from "./pages/Portfolio/Uiforstafftochangeprofile";
 export default function App() {
+  // Route-level guard component
+  function RequireAuth({ children }: { children: ReactNode }) {
+    if (!isAuthenticated()) {
+      return <Navigate to="/signin" replace />;
+    }
+    return children;
+  }
   return (
     <>
       <Router>
         <ScrollToTop />
         <Routes>
-          {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
+          {/* Dashboard Layout (protected) */}
+          <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
             <Route index path="/" element={<Home />} />
             <Route path="/dashboard-overview/bbps" element={<BBPSDashboard />} />
             <Route path="/dashboard-overview/Gold" element={<GoldDashboard />} />
@@ -131,6 +158,13 @@ export default function App() {
 {/* loan */}
  <Route path="/loan/requestloan" element={<Requestloan />} />
  <Route path="/loan/details/:id" element={<LoanDetails />} />
+  <Route path="/loan/approved-loan" element={<ApprovedLoan />} />
+   <Route path="/loan/payable-loan" element={<PayableLoan />} />
+   <Route path="/loan/completed-loan" element={<CompletedLoan />} />
+   <Route path="/loan/rejected-loan" element={<Rejectedloan />} />
+      <Route path="/loan/all-loans" element={<AllLoans />} />
+        <Route path="/loan/loan-plans" element={<LoanPlans />} />
+         <Route path="/loan/add-loan-plan" element={<AddLoanPlan />} />
   {/* <Route path="/loan/approved-loan" element={<ApprovedLoan/>} /> */}
 
             {/* Profits*/}
@@ -141,7 +175,24 @@ export default function App() {
   {/* Bill Management */}
         <Route path="/bill/import-services" element={<ImportServices />} />
         <Route path="/bill/billservices-list" element={<BillServicesList />} />
-        
+        <Route path="/bill/convertrate" element={<ConvertRate />} />
+{/* Gateway */}
+     <Route path="/gateway/gatewaylist" element={<AutomaticGateway />} />
+
+{/* Withdraw*/}
+
+<Route path="/withdraw/pending" element={<Pendingwithdraw />} />
+<Route path="/withdraw/automatic" element={<AutomaticWithdraw />} />
+            <Route path="/withdraw/withdraw-history" element={<WithdrawHistory />} />
+{/* Portfolio */}
+ <Route path="/portfolio/all" element={<Allportfolio />} />
+  <Route path="/portfolio/allprofileupdates" element={<CreatePortfolios />} />
+    <Route path="/portfolio/uiforstaffdetails" element={<Uiforstafftochangeprofile />} />
+        {/*Bill History  */}
+         <Route path="/bill/history/pendingbills" element={<PendingBills />} />
+        <Route path="/bill/history/completed-bills" element={<Completedbills />} />
+        <Route path="/bill/history/returned-bills" element={<ReturnedBills />} />
+        <Route path="/bill/history/all-bills" element={<AllBills />} />
 {/* Fund Transfer */}
  <Route path="/fund-transfer/Pending" element={<PendingTransfer />} />
  <Route path="/fund-transfer/Rejected" element={<RejectedTransfers />} />

@@ -3,8 +3,19 @@ import { Link } from 'react-router';
 import ReactApexChart from 'react-apexcharts';
 import { ApexOptions } from 'apexcharts';
 import PageMeta from '../../components/common/PageMeta';
-
 const GoldDashboard: React.FC = () => {
+  const formatRs = (val: number | string) => {
+    const n = Number(val) || 0;
+    try {
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 2,
+      }).format(n) + ' INR';
+    } catch (e) {
+      return '₹' + n.toFixed(2) + ' INR';
+    }
+  };
   // Deposit & Withdraw Chart Data
   const depositWithdrawOptions: ApexOptions = {
     chart: {
@@ -49,7 +60,7 @@ const GoldDashboard: React.FC = () => {
     },
     yaxis: {
       title: {
-        text: 'USD',
+        text: 'INR',
       },
     },
     fill: {
@@ -58,7 +69,7 @@ const GoldDashboard: React.FC = () => {
     tooltip: {
       y: {
         formatter: function (val) {
-          return '$ ' + val + ' USD';
+          return formatRs(val);
         },
       },
     },
@@ -67,7 +78,6 @@ const GoldDashboard: React.FC = () => {
       position: 'bottom',
     },
   };
-
   const depositWithdrawSeries = [
     {
       name: 'Deposited',
@@ -78,7 +88,6 @@ const GoldDashboard: React.FC = () => {
       data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     },
   ];
-
   // Transactions Chart Data
   const transactionsOptions: ApexOptions = {
     chart: {
@@ -338,7 +347,7 @@ const GoldDashboard: React.FC = () => {
                       <i className="las la-hand-holding-usd text-xl"></i>
                     </div>
                     <div>
-                      <h6 className="font-semibold text-gray-900 dark:text-white">$157,581.83 USD</h6>
+                      <h6 className="font-semibold text-gray-900 dark:text-white">{formatRs(157581.83)}</h6>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Total Deposited</p>
                     </div>
                   </div>
@@ -386,7 +395,7 @@ const GoldDashboard: React.FC = () => {
                       <i className="las la-percentage text-xl"></i>
                     </div>
                     <div>
-                      <h6 className="font-semibold text-gray-900 dark:text-white">$1,750.82 USD</h6>
+                      <h6 className="font-semibold text-gray-900 dark:text-white">{formatRs(1750.82)}</h6>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Deposited Charge</p>
                     </div>
                   </div>
@@ -408,7 +417,7 @@ const GoldDashboard: React.FC = () => {
                       <i className="lar la-credit-card text-xl"></i>
                     </div>
                     <div>
-                      <h6 className="font-semibold text-gray-900 dark:text-white">$602.00 USD</h6>
+                      <h6 className="font-semibold text-gray-900 dark:text-white">{formatRs(602)}</h6>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Total Withdrawn</p>
                     </div>
                   </div>
@@ -456,7 +465,7 @@ const GoldDashboard: React.FC = () => {
                       <i className="las la-percent text-xl"></i>
                     </div>
                     <div>
-                      <h6 className="font-semibold text-gray-900 dark:text-white">$15.75 USD</h6>
+                      <h6 className="font-semibold text-gray-900 dark:text-white">{formatRs(15.75)}</h6>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Withdrawal Charge</p>
                     </div>
                   </div>
@@ -553,7 +562,7 @@ const GoldDashboard: React.FC = () => {
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Buy</p>
             </div>
             <div className="flex items-end justify-between">
-              <h4 className="text-xl font-bold text-gray-900 dark:text-white">$170,207.61 USD</h4>
+              <h4 className="text-xl font-bold text-gray-900 dark:text-white">{formatRs(170207.61)}</h4>
               <Link to="/gold-history/buy" className="flex items-center gap-1 text-sm text-primary-500 hover:underline">
                 <span>View All</span>
                 <i className="las la-arrow-right"></i>
@@ -570,7 +579,7 @@ const GoldDashboard: React.FC = () => {
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Sell</p>
             </div>
             <div className="flex items-end justify-between">
-              <h4 className="text-xl font-bold text-gray-900 dark:text-white">$51,054.69 USD</h4>
+              <h4 className="text-xl font-bold text-gray-900 dark:text-white">{formatRs(51054.69)}</h4>
               <Link to="/gold-history/sell" className="flex items-center gap-1 text-sm text-primary-500 hover:underline">
                 <span>View All</span>
                 <i className="las la-arrow-right"></i>
@@ -587,7 +596,7 @@ const GoldDashboard: React.FC = () => {
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Redeem</p>
             </div>
             <div className="flex items-end justify-between">
-              <h4 className="text-xl font-bold text-gray-900 dark:text-white">$57,229.26 USD</h4>
+              <h4 className="text-xl font-bold text-gray-900 dark:text-white">{formatRs(57229.26)}</h4>
               <Link to="/gold-history/redeem" className="flex items-center gap-1 text-sm text-primary-500 hover:underline">
                 <span>View All</span>
                 <i className="las la-arrow-right"></i>
@@ -604,7 +613,7 @@ const GoldDashboard: React.FC = () => {
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Gift</p>
             </div>
             <div className="flex items-end justify-between">
-              <h4 className="text-xl font-bold text-gray-900 dark:text-white">$1,601.00 USD</h4>
+              <h4 className="text-xl font-bold text-gray-900 dark:text-white">{formatRs(1601)}</h4>
               <Link to="/gold-history/gift" className="flex items-center gap-1 text-sm text-primary-500 hover:underline">
                 <span>View All</span>
                 <i className="las la-arrow-right"></i>
@@ -620,7 +629,7 @@ const GoldDashboard: React.FC = () => {
             <div className="group flex items-center justify-between rounded-lg bg-yellow-600 p-6 shadow-md transition hover:shadow-lg">
               <div>
                 <p className="text-sm text-white/90">Buy Charge</p>
-                <h3 className="text-2xl font-bold text-white">$1,987.24 USD</h3>
+                <h3 className="text-2xl font-bold text-white">{formatRs(1987.24)}</h3>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/20 text-white">
                 <i className="las la-hand-holding-usd text-2xl"></i>
@@ -633,7 +642,7 @@ const GoldDashboard: React.FC = () => {
             <div className="group flex items-center justify-between rounded-lg bg-gradient-to-r from-red-500 to-red-600 p-6 shadow-md transition hover:shadow-lg">
               <div>
                 <p className="text-sm text-white/90">Sell Charge</p>
-                <h3 className="text-2xl font-bold text-white">$1,855.31 USD</h3>
+                <h3 className="text-2xl font-bold text-white">{formatRs(1855.31)}</h3>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/20 text-white">
                 <i className="las la-hand-holding-usd text-2xl"></i>
@@ -646,7 +655,7 @@ const GoldDashboard: React.FC = () => {
             <div className="group flex items-center justify-between rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 p-6 shadow-md transition hover:shadow-lg">
               <div>
                 <p className="text-sm text-white/90">Redeem Charge</p>
-                <h3 className="text-2xl font-bold text-white">$1,385.83 USD</h3>
+                <h3 className="text-2xl font-bold text-white">{formatRs(1385.83)}</h3>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/20 text-white">
                 <i className="las la-hand-holding-usd text-2xl"></i>
@@ -659,7 +668,7 @@ const GoldDashboard: React.FC = () => {
             <div className="group flex items-center justify-between rounded-lg bg-gradient-to-r from-green-500 to-green-600 p-6 shadow-md transition hover:shadow-lg">
               <div>
                 <p className="text-sm text-white/90">Gift Charge</p>
-                <h3 className="text-2xl font-bold text-white">$81.02 USD</h3>
+                <h3 className="text-2xl font-bold text-white">{formatRs(81.02)}</h3>
               </div>
               <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/20 text-white">
                 <i className="las la-hand-holding-usd text-2xl"></i>

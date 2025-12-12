@@ -103,12 +103,10 @@ export default function RejectedKYC() {
       rejectionDate: "20 Jun 2024 02:30 PM",
     },
   ];
-
   const handleViewDetails = (kyc: KYCRecord) => {
     setSelectedKYC(kyc);
     setIsModalOpen(true);
   };
-
   const filteredRecords = kycRecords.filter(
     (record) =>
       record.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -119,7 +117,6 @@ export default function RejectedKYC() {
     <>
       <PageMeta title="Rejected KYC - Admin" description="View rejected KYC submissions" />
       <PageBreadcrumb pageTitle="Rejected KYC" />
-
       <div className="w-full max-w-full overflow-x-hidden">
         {/* Header */}
         <div className="mb-6">
@@ -372,7 +369,6 @@ export default function RejectedKYC() {
                     </div>
                   </div>
                 </div>
-
                 {/* Rejection Info */}
                 {selectedKYC.rejectionReason && (
                   <div className="mb-8 p-6 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl shadow-md">
@@ -425,7 +421,6 @@ export default function RejectedKYC() {
                     </div>
                   </div>
                 )}
-
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   {/* Aadhaar Card Section */}
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
@@ -453,7 +448,6 @@ export default function RejectedKYC() {
                         </h3>
                       </div>
                     </div>
-
                     <div className="p-6">
                       {/* Document Information Cards */}
                       <div className="space-y-4 mb-6">
@@ -465,7 +459,6 @@ export default function RejectedKYC() {
                             {selectedKYC.aadhaarSubmissionDate}
                           </p>
                         </div>
-
                         <div className="bg-white dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                             Aadhaar Number
@@ -475,7 +468,6 @@ export default function RejectedKYC() {
                           </p>
                         </div>
                       </div>
-
                       {/* Front Page with Hover Effect */}
                       <div className="mb-4">
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -487,7 +479,7 @@ export default function RejectedKYC() {
                           rel="noopener noreferrer"
                           className="block relative group rounded-xl overflow-hidden"
                         >
-                          <img
+                         <img
                             src={selectedKYC.aadhaarFrontPage}
                             alt="Aadhaar Front"
                             className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105"
@@ -512,7 +504,6 @@ export default function RejectedKYC() {
                           </div>
                         </a>
                       </div>
-
                       {/* Back Page with Hover Effect */}
                       <div>
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -551,7 +542,6 @@ export default function RejectedKYC() {
                       </div>
                     </div>
                   </div>
-
                   {/* PAN Card Section */}
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
                     {/* Header with Gradient */}
@@ -576,7 +566,6 @@ export default function RejectedKYC() {
                         </h3>
                       </div>
                     </div>
-
                     <div className="p-6">
                       {/* Document Information Cards */}
                       <div className="space-y-4 mb-6">
@@ -588,7 +577,6 @@ export default function RejectedKYC() {
                             {selectedKYC.panSubmissionDate}
                           </p>
                         </div>
-
                         <div className="bg-white dark:bg-gray-700/50 p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                             PAN Number
@@ -598,7 +586,6 @@ export default function RejectedKYC() {
                           </p>
                         </div>
                       </div>
-
                       {/* Front Page with Hover Effect */}
                       <div className="mb-4">
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -635,7 +622,6 @@ export default function RejectedKYC() {
                           </div>
                         </a>
                       </div>
-
                       {/* Back Page with Hover Effect */}
                       <div>
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
@@ -674,7 +660,6 @@ export default function RejectedKYC() {
                       </div>
                     </div>
                   </div>
-
                   {/* Cancelled Cheque Section */}
                   <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
                     {/* Header with Gradient */}
@@ -699,7 +684,6 @@ export default function RejectedKYC() {
                         </h3>
                       </div>
                     </div>
-
                     <div className="p-6">
                       {/* Document Information Cards */}
                       <div className="space-y-4 mb-6">
@@ -712,7 +696,6 @@ export default function RejectedKYC() {
                           </p>
                         </div>
                       </div>
-
                       {/* Cheque Image with Hover Effect */}
                       <div>
                         <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">

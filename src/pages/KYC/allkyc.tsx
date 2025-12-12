@@ -1,342 +1,79 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-
-interface KYCRecord {
-  id: string;
-  date: string;
-  username: string;
-  type: string;
-  status: "Pending" | "Approved" | "Rejected";
-  aadhaarNumber: string;
-  aadhaarSubmissionDate: string;
-  aadhaarFrontPage: string;
-  aadhaarBackPage: string;
-  panNumber: string;
-  panSubmissionDate: string;
-  panFrontPage: string;
-  panBackPage: string;
-  cancelledCheckSubmissionDate: string;
-  cancelledCheck: string;
-  approvalDate?: string;
-  approvedBy?: string;
-  rejectionReason?: string;
-  rejectionDate?: string;
-}
+import { fetchAllKycRecords, updateKycVerification } from "../../api/kyc";
+import type { KycRecordApi } from "../../types/kyc";
 
 export default function AllKYCLogs() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"All" | "Pending" | "Approved" | "Rejected">("All");
   const [itemsPerPage, setItemsPerPage] = useState(15);
-  const [selectedKYC, setSelectedKYC] = useState<KYCRecord | null>(null);
+  const [selectedKYC, setSelectedKYC] = useState<KycRecordApi | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [kycRecords, setKycRecords] = useState<KycRecordApi[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [showRejectReason, setShowRejectReason] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
-  const kycRecords: KYCRecord[] = [
-    // Pending Records
-    {
-      id: "1",
-      date: "June 16 2025 06:16",
-      username: "sagorkhan8196",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Pending",
-      aadhaarNumber: "1234-5678-9012",
-      aadhaarSubmissionDate: "16 Jun 2025 06:00 AM",
-      aadhaarFrontPage: "/images/user/user-01.png",
-      aadhaarBackPage: "/images/user/user-01.png",
-      panNumber: "ABCDE1234F",
-      panSubmissionDate: "16 Jun 2025 06:05 AM",
-      panFrontPage: "/images/user/user-01.png",
-      panBackPage: "/images/user/user-01.png",
-      cancelledCheckSubmissionDate: "16 Jun 2025 06:10 AM",
-      cancelledCheck: "/images/user/user-01.png",
-    },
-    {
-      id: "2",
-      date: "June 17 2024 11:34",
-      username: "admin",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Pending",
-      aadhaarNumber: "2345-6789-0123",
-      aadhaarSubmissionDate: "17 Jun 2024 11:00 AM",
-      aadhaarFrontPage: "/images/user/user-02.png",
-      aadhaarBackPage: "/images/user/user-02.png",
-      panNumber: "BCDEF2345G",
-      panSubmissionDate: "17 Jun 2024 11:15 AM",
-      panFrontPage: "/images/user/user-02.png",
-      panBackPage: "/images/user/user-02.png",
-      cancelledCheckSubmissionDate: "17 Jun 2024 11:25 AM",
-      cancelledCheck: "/images/user/user-02.png",
-    },
-    // Approved Records
-    {
-      id: "3",
-      date: "June 24 2024 01:45",
-      username: "Bhubai",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Approved",
-      aadhaarNumber: "3456-7890-1234",
-      aadhaarSubmissionDate: "24 Jun 2024 01:20 AM",
-      aadhaarFrontPage: "/images/user/user-03.png",
-      aadhaarBackPage: "/images/user/user-03.png",
-      panNumber: "CDEFG3456H",
-      panSubmissionDate: "24 Jun 2024 01:30 AM",
-      panFrontPage: "/images/user/user-03.png",
-      panBackPage: "/images/user/user-03.png",
-      cancelledCheckSubmissionDate: "24 Jun 2024 01:40 AM",
-      cancelledCheck: "/images/user/user-03.png",
-      approvalDate: "24 Jun 2024 10:15 AM",
-      approvedBy: "Admin User",
-    },
-    {
-      id: "4",
-      date: "June 20 2024 08:54",
-      username: "barbellajo",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Approved",
-      aadhaarNumber: "4567-8901-2345",
-      aadhaarSubmissionDate: "20 Jun 2024 08:30 AM",
-      aadhaarFrontPage: "/images/user/user-04.png",
-      aadhaarBackPage: "/images/user/user-04.png",
-      panNumber: "DEFGH4567I",
-      panSubmissionDate: "20 Jun 2024 08:40 AM",
-      panFrontPage: "/images/user/user-04.png",
-      panBackPage: "/images/user/user-04.png",
-      cancelledCheckSubmissionDate: "20 Jun 2024 08:50 AM",
-      cancelledCheck: "/images/user/user-04.png",
-      approvalDate: "20 Jun 2024 03:45 PM",
-      approvedBy: "Admin User",
-    },
-    // Rejected Records
-    {
-      id: "5",
-      date: "June 18 2024 03:22",
-      username: "johndoe",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Rejected",
-      aadhaarNumber: "5678-9012-3456",
-      aadhaarSubmissionDate: "18 Jun 2024 03:00 AM",
-      aadhaarFrontPage: "/images/user/user-05.png",
-      aadhaarBackPage: "/images/user/user-05.png",
-      panNumber: "EFGHI5678J",
-      panSubmissionDate: "18 Jun 2024 03:10 AM",
-      panFrontPage: "/images/user/user-05.png",
-      panBackPage: "/images/user/user-05.png",
-      cancelledCheckSubmissionDate: "18 Jun 2024 03:20 AM",
-      cancelledCheck: "/images/user/user-05.png",
-      rejectionReason: "Document clarity issue",
-      rejectionDate: "18 Jun 2024 11:30 AM",
-    },
-    {
-      id: "6",
-      date: "June 19 2024 09:15",
-      username: "maryjane",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Rejected",
-      aadhaarNumber: "6789-0123-4567",
-      aadhaarSubmissionDate: "19 Jun 2024 09:00 AM",
-      aadhaarFrontPage: "/images/user/user-06.png",
-      aadhaarBackPage: "/images/user/user-06.png",
-      panNumber: "FGHIJ6789K",
-      panSubmissionDate: "19 Jun 2024 09:05 AM",
-      panFrontPage: "/images/user/user-06.png",
-      panBackPage: "/images/user/user-06.png",
-      cancelledCheckSubmissionDate: "19 Jun 2024 09:10 AM",
-      cancelledCheck: "/images/user/user-06.png",
-      rejectionReason: "Information mismatch",
-      rejectionDate: "19 Jun 2024 04:20 PM",
-    },
-    {
-      id: "7",
-      date: "June 15 2024 02:30",
-      username: "robertsmith",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Pending",
-      aadhaarNumber: "7890-1234-5678",
-      aadhaarSubmissionDate: "15 Jun 2024 02:00 AM",
-      aadhaarFrontPage: "/images/user/user-01.png",
-      aadhaarBackPage: "/images/user/user-01.png",
-      panNumber: "GHIJK7890L",
-      panSubmissionDate: "15 Jun 2024 02:15 AM",
-      panFrontPage: "/images/user/user-01.png",
-      panBackPage: "/images/user/user-01.png",
-      cancelledCheckSubmissionDate: "15 Jun 2024 02:25 AM",
-      cancelledCheck: "/images/user/user-01.png",
-    },
-    {
-      id: "8",
-      date: "June 22 2024 07:45",
-      username: "emilyjones",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Approved",
-      aadhaarNumber: "8901-2345-6789",
-      aadhaarSubmissionDate: "22 Jun 2024 07:30 AM",
-      aadhaarFrontPage: "/images/user/user-02.png",
-      aadhaarBackPage: "/images/user/user-02.png",
-      panNumber: "HIJKL8901M",
-      panSubmissionDate: "22 Jun 2024 07:35 AM",
-      panFrontPage: "/images/user/user-02.png",
-      panBackPage: "/images/user/user-02.png",
-      cancelledCheckSubmissionDate: "22 Jun 2024 07:40 AM",
-      cancelledCheck: "/images/user/user-02.png",
-      approvalDate: "22 Jun 2024 02:15 PM",
-      approvedBy: "Admin User",
-    },
-    {
-      id: "9",
-      date: "June 21 2024 05:20",
-      username: "davidwilson",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Rejected",
-      aadhaarNumber: "9012-3456-7890",
-      aadhaarSubmissionDate: "21 Jun 2024 05:00 AM",
-      aadhaarFrontPage: "/images/user/user-03.png",
-      aadhaarBackPage: "/images/user/user-03.png",
-      panNumber: "IJKLM9012N",
-      panSubmissionDate: "21 Jun 2024 05:10 AM",
-      panFrontPage: "/images/user/user-03.png",
-      panBackPage: "/images/user/user-03.png",
-      cancelledCheckSubmissionDate: "21 Jun 2024 05:15 AM",
-      cancelledCheck: "/images/user/user-03.png",
-      rejectionReason: "Expired document",
-      rejectionDate: "21 Jun 2024 01:30 PM",
-    },
-    {
-      id: "10",
-      date: "June 23 2024 10:25",
-      username: "sarahparker",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Pending",
-      aadhaarNumber: "0123-4567-8901",
-      aadhaarSubmissionDate: "23 Jun 2024 10:00 AM",
-      aadhaarFrontPage: "/images/user/user-04.png",
-      aadhaarBackPage: "/images/user/user-04.png",
-      panNumber: "JKLMN0123O",
-      panSubmissionDate: "23 Jun 2024 10:10 AM",
-      panFrontPage: "/images/user/user-04.png",
-      panBackPage: "/images/user/user-04.png",
-      cancelledCheckSubmissionDate: "23 Jun 2024 10:20 AM",
-      cancelledCheck: "/images/user/user-04.png",
-    },
-    {
-      id: "11",
-      date: "June 25 2024 03:15",
-      username: "michaelbrown",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Rejected",
-      aadhaarNumber: "1234-5678-9013",
-      aadhaarSubmissionDate: "25 Jun 2024 03:00 AM",
-      aadhaarFrontPage: "/images/user/user-05.png",
-      aadhaarBackPage: "/images/user/user-05.png",
-      panNumber: "KLMNO1234P",
-      panSubmissionDate: "25 Jun 2024 03:05 AM",
-      panFrontPage: "/images/user/user-05.png",
-      panBackPage: "/images/user/user-05.png",
-      cancelledCheckSubmissionDate: "25 Jun 2024 03:10 AM",
-      cancelledCheck: "/images/user/user-05.png",
-      rejectionReason: "Incomplete documentation - Cancelled cheque is not clearly visible",
-      rejectionDate: "25 Jun 2024 11:45 AM",
-    },
-    {
-      id: "12",
-      date: "June 26 2024 08:40",
-      username: "lisaanderson",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Pending",
-      aadhaarNumber: "2345-6789-0124",
-      aadhaarSubmissionDate: "26 Jun 2024 08:20 AM",
-      aadhaarFrontPage: "/images/user/user-06.png",
-      aadhaarBackPage: "/images/user/user-06.png",
-      panNumber: "LMNOP2345Q",
-      panSubmissionDate: "26 Jun 2024 08:30 AM",
-      panFrontPage: "/images/user/user-06.png",
-      panBackPage: "/images/user/user-06.png",
-      cancelledCheckSubmissionDate: "26 Jun 2024 08:35 AM",
-      cancelledCheck: "/images/user/user-06.png",
-    },
-    {
-      id: "13",
-      date: "June 27 2024 01:50",
-      username: "jamesmartin",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Rejected",
-      aadhaarNumber: "3456-7890-1235",
-      aadhaarSubmissionDate: "27 Jun 2024 01:30 AM",
-      aadhaarFrontPage: "/images/user/user-01.png",
-      aadhaarBackPage: "/images/user/user-01.png",
-      panNumber: "MNOPQ3456R",
-      panSubmissionDate: "27 Jun 2024 01:40 AM",
-      panFrontPage: "/images/user/user-01.png",
-      panBackPage: "/images/user/user-01.png",
-      cancelledCheckSubmissionDate: "27 Jun 2024 01:45 AM",
-      cancelledCheck: "/images/user/user-01.png",
-      rejectionReason: "PAN Card name does not match with Aadhaar Card",
-      rejectionDate: "27 Jun 2024 09:20 AM",
-    },
-    {
-      id: "14",
-      date: "June 28 2024 06:30",
-      username: "jennifertaylor",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Pending",
-      aadhaarNumber: "4567-8901-2346",
-      aadhaarSubmissionDate: "28 Jun 2024 06:10 AM",
-      aadhaarFrontPage: "/images/user/user-02.png",
-      aadhaarBackPage: "/images/user/user-02.png",
-      panNumber: "NOPQR4567S",
-      panSubmissionDate: "28 Jun 2024 06:20 AM",
-      panFrontPage: "/images/user/user-02.png",
-      panBackPage: "/images/user/user-02.png",
-      cancelledCheckSubmissionDate: "28 Jun 2024 06:25 AM",
-      cancelledCheck: "/images/user/user-02.png",
-    },
-    {
-      id: "15",
-      date: "June 29 2024 04:45",
-      username: "danielthomas",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Rejected",
-      aadhaarNumber: "5678-9012-3457",
-      aadhaarSubmissionDate: "29 Jun 2024 04:20 AM",
-      aadhaarFrontPage: "/images/user/user-03.png",
-      aadhaarBackPage: "/images/user/user-03.png",
-      panNumber: "OPQRS5678T",
-      panSubmissionDate: "29 Jun 2024 04:30 AM",
-      panFrontPage: "/images/user/user-03.png",
-      panBackPage: "/images/user/user-03.png",
-      cancelledCheckSubmissionDate: "29 Jun 2024 04:40 AM",
-      cancelledCheck: "/images/user/user-03.png",
-      rejectionReason: "Poor image quality - Unable to read document details",
-      rejectionDate: "29 Jun 2024 02:10 PM",
-    },
-    {
-      id: "16",
-      date: "June 30 2024 09:55",
-      username: "patriciamoore",
-      type: "AADHAAR CARD, PAN CARD, CANCELLED CHEQUE",
-      status: "Pending",
-      aadhaarNumber: "6789-0123-4568",
-      aadhaarSubmissionDate: "30 Jun 2024 09:30 AM",
-      aadhaarFrontPage: "/images/user/user-04.png",
-      aadhaarBackPage: "/images/user/user-04.png",
-      panNumber: "PQRST6789U",
-      panSubmissionDate: "30 Jun 2024 09:40 AM",
-      panFrontPage: "/images/user/user-04.png",
-      panBackPage: "/images/user/user-04.png",
-      cancelledCheckSubmissionDate: "30 Jun 2024 09:50 AM",
-      cancelledCheck: "/images/user/user-04.png",
-    },
-  ];
+  useEffect(() => {
+    let mounted = true;
+    const load = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await fetchAllKycRecords();
+        if (!mounted) return;
+        setKycRecords(data.kyc_records || []);
+      } catch (err: any) {
+        setError(err?.detail || "Failed to fetch KYC records");
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-  const handleViewDetails = (kyc: KYCRecord) => {
+  const handleViewDetails = (kyc: KycRecordApi) => {
     setSelectedKYC(kyc);
     setIsModalOpen(true);
+    setShowRejectReason(false);
+    setRejectReason("");
+  };
+
+  const refreshKycList = async () => {
+    try {
+      const data = await fetchAllKycRecords();
+      setKycRecords(data.kyc_records || []);
+      if (selectedKYC) {
+        const updated = (data.kyc_records || []).find((r) => r.kyc_id === selectedKYC.kyc_id) || null;
+        setSelectedKYC(updated);
+      }
+    } catch (err: any) {
+      // keep existing error handling elsewhere
+    }
+  };
+
+  const mapStatus = (r: KycRecordApi) => {
+    if (r.is_verified === 1) return "Approved" as const;
+    if (r.is_verified === 0) return "Pending" as const;
+    if (r.is_verified === 2) return "Rejected" as const;
+    return "Pending" as const;
   };
 
   const filteredRecords = kycRecords.filter((record) => {
+    const q = searchTerm.trim().toLowerCase();
     const matchesSearch =
-      record.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.type.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "All" || record.status === statusFilter;
+      record.name?.toLowerCase().includes(q) ||
+      record.email?.toLowerCase().includes(q) ||
+      String(record.user_id).includes(q);
+    const mapped = mapStatus(record);
+    const matchesStatus = statusFilter === "All" || mapped === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -435,10 +172,12 @@ export default function AllKYCLogs() {
 
   const statusCounts = {
     All: kycRecords.length,
-    Pending: kycRecords.filter((r) => r.status === "Pending").length,
-    Approved: kycRecords.filter((r) => r.status === "Approved").length,
-    Rejected: kycRecords.filter((r) => r.status === "Rejected").length,
+    Pending: kycRecords.filter((r) => mapStatus(r) === "Pending").length,
+    Approved: kycRecords.filter((r) => mapStatus(r) === "Approved").length,
+    Rejected: kycRecords.filter((r) => mapStatus(r) === "Rejected").length,
   };
+
+  const modalStatus = selectedKYC ? mapStatus(selectedKYC) : "Pending";
 
   return (
     <>
@@ -508,9 +247,18 @@ export default function AllKYCLogs() {
               ))}
             </div>
           </div>
-
           {/* Table */}
           <div className="overflow-x-auto">
+            {loading && (
+              <div className="text-center py-6">
+                <div className="text-sm text-gray-600 dark:text-gray-300">Loading KYC records...</div>
+              </div>
+            )}
+            {error && (
+              <div className="text-center py-6">
+                <div className="text-sm text-red-600">{error}</div>
+              </div>
+            )}
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-700/30">
                 <tr>
@@ -534,32 +282,32 @@ export default function AllKYCLogs() {
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredRecords.map((record) => (
                   <tr
-                    key={record.id}
+                    key={record.kyc_id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors"
                   >
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
-                      {record.date}
-                    </td>
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {record.username}
-                    </td>
-                    <td className="hidden md:table-cell px-4 sm:px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                      {record.type}
-                    </td>
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(record.status)}
-                    </td>
-                    <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleViewDetails(record)}
-                        className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 ${
-                          record.status === "Pending"
-                            ? "bg-violet-600 hover:bg-violet-700"
-                            : record.status === "Approved"
-                            ? "bg-green-600 hover:bg-green-700"
-                            : "bg-red-600 hover:bg-red-700"
-                        }`}
-                      >
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-gray-100">
+                        {new Date(record.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {record.name}
+                      </td>
+                      <td className="hidden md:table-cell px-4 sm:px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                        KYC Documents
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(mapStatus(record))}
+                      </td>
+                      <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => handleViewDetails(record)}
+                          className={`inline-flex items-center gap-2 px-3 sm:px-4 py-2 text-white text-xs sm:text-sm font-medium rounded-lg transition-all duration-200 ${
+                            mapStatus(record) === "Pending"
+                              ? "bg-violet-600 hover:bg-violet-700"
+                              : mapStatus(record) === "Approved"
+                              ? "bg-green-600 hover:bg-green-700"
+                              : "bg-red-600 hover:bg-red-700"
+                          }`}
+                        >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="16"
@@ -581,7 +329,6 @@ export default function AllKYCLogs() {
                 ))}
               </tbody>
             </table>
-
             {filteredRecords.length === 0 && (
               <div className="text-center py-12">
                 <svg
@@ -607,7 +354,6 @@ export default function AllKYCLogs() {
               </div>
             )}
           </div>
-
           {/* Pagination Footer */}
           <div className="border-t border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -632,7 +378,6 @@ export default function AllKYCLogs() {
             </div>
           </div>
         </div>
-
         {/* Responsive Beautiful Modal */}
         {isModalOpen && selectedKYC && (
           <div
@@ -645,26 +390,63 @@ export default function AllKYCLogs() {
             >
               {/* Modal Header with Gradient */}
               <div
-                className={`sticky top-0 ${getStatusHeaderGradient(
-                  selectedKYC.status
-                )} px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between z-10 shadow-lg`}
+                className={
+                  "sticky top-0 " +
+                  getStatusHeaderGradient(modalStatus) +
+                  " px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between z-10 shadow-lg"
+                }
               >
                 <div className="flex-1 min-w-0">
                   <h2 className="text-lg sm:text-2xl font-bold text-white truncate">
                     KYC Document Review
                   </h2>
                   <p className="text-xs sm:text-sm text-white/90 mt-1">
-                    {selectedKYC.status === "Pending"
+                    {modalStatus === "Pending"
                       ? "Pending review"
-                      : selectedKYC.status === "Approved"
+                      : modalStatus === "Approved"
                       ? "Approved submission"
                       : "Rejected submission"}
                   </p>
                 </div>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="ml-4 text-white hover:bg-white/20 transition-all p-2 sm:p-2.5 rounded-full duration-200 flex-shrink-0"
-                >
+                <div className="flex items-center gap-2">
+                  {modalStatus !== "Approved" && (
+                    <button
+                      onClick={async () => {
+                        if (!selectedKYC) return;
+                        setActionLoading(true);
+                        setActionError(null);
+                        try {
+                          await updateKycVerification(selectedKYC.kyc_id, 1, null);
+                          await refreshKycList();
+                        } catch (err: any) {
+                          setActionError(err?.detail || "Approve failed");
+                        } finally {
+                          setActionLoading(false);
+                        }
+                      }}
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg"
+                      disabled={actionLoading}
+                    >
+                      Approve
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setShowRejectReason(true);
+                      setActionError(null);
+                    }}
+                    className={
+                      modalStatus === "Rejected"
+                        ? "inline-flex items-center gap-2 px-3 py-2 bg-white text-red-600 hover:bg-white/90 text-sm font-medium rounded-lg shadow"
+                        : "inline-flex items-center gap-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg"
+                    }
+                  >
+                    Reject
+                  </button>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="ml-2 text-white hover:bg-white/20 transition-all p-2 sm:p-2.5 rounded-full duration-200 flex-shrink-0"
+                  >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     width="20"
@@ -680,20 +462,21 @@ export default function AllKYCLogs() {
                     <line x1="18" y1="6" x2="6" y2="18" />
                     <line x1="6" y1="6" x2="18" y2="18" />
                   </svg>
-                </button>
+                  </button>
+                </div>
               </div>
-
               {/* Modal Body */}
               <div className="p-4 sm:p-6 lg:p-8 overflow-y-auto max-h-[calc(95vh-80px)]">
                 {/* Status Banner with Icon */}
                 <div
-                  className={`${getStatusBannerGradient(
-                    selectedKYC.status
-                  )} text-white rounded-lg sm:rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-lg`}
+                  className={
+                    getStatusBannerGradient(modalStatus) +
+                    " text-white rounded-lg sm:rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 shadow-lg"
+                  }
                 >
                   <div className="flex items-center gap-3 sm:gap-4">
                     <div className="flex-shrink-0 w-10 h-10 sm:w-14 sm:h-14 bg-white/20 rounded-full flex items-center justify-center">
-                      {selectedKYC.status === "Pending" ? (
+                      {modalStatus === "Pending" ? (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="20"
@@ -709,7 +492,7 @@ export default function AllKYCLogs() {
                           <circle cx="12" cy="12" r="10" />
                           <polyline points="12 6 12 12 16 14" />
                         </svg>
-                      ) : selectedKYC.status === "Approved" ? (
+                      ) : modalStatus === "Approved" ? (
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="20"
@@ -746,21 +529,20 @@ export default function AllKYCLogs() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="text-lg sm:text-2xl font-bold mb-0.5 sm:mb-1">
-                        {selectedKYC.status === "Pending"
+                        {modalStatus === "Pending"
                           ? "Waiting For Approval"
-                          : selectedKYC.status === "Approved"
+                          : modalStatus === "Approved"
                           ? "Application Approved"
                           : "Application Rejected"}
                       </h3>
                       <p className="text-xs sm:text-sm text-white/90 truncate">
-                        KYC submission for {selectedKYC.username}
+                        KYC submission for {selectedKYC.name} ({selectedKYC.email})
                       </p>
                     </div>
                   </div>
                 </div>
-
                 {/* Approval/Rejection Info */}
-                {selectedKYC.status === "Approved" && selectedKYC.approvalDate && (
+                {modalStatus === "Approved" && selectedKYC.verified_at && (
                   <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-lg sm:rounded-xl shadow-md">
                     <div className="flex items-start gap-3 sm:gap-4">
                       <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
@@ -800,36 +582,15 @@ export default function AllKYCLogs() {
                               <circle cx="12" cy="12" r="10" />
                               <polyline points="12 6 12 12 16 14" />
                             </svg>
-                            <span className="font-medium">Approved on:</span>{" "}
-                            <span className="truncate">{selectedKYC.approvalDate}</span>
+                            <span className="font-medium">Verified on:</span>{" "}
+                            <span className="truncate">{selectedKYC.verified_at}</span>
                           </p>
-                          {selectedKYC.approvedBy && (
-                            <p className="text-xs sm:text-sm text-green-800 dark:text-green-300 flex items-center gap-2">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth={2}
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="flex-shrink-0"
-                              >
-                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                                <circle cx="12" cy="7" r="4" />
-                              </svg>
-                              <span className="font-medium">Approved by:</span> {selectedKYC.approvedBy}
-                            </p>
-                          )}
                         </div>
                       </div>
                     </div>
                   </div>
                 )}
-
-                {selectedKYC.status === "Rejected" && selectedKYC.rejectionReason && (
+                {modalStatus === "Rejected" && selectedKYC.reason && (
                   <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg sm:rounded-xl shadow-md">
                     <div className="flex items-start gap-3 sm:gap-4">
                       <div className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
@@ -855,9 +616,9 @@ export default function AllKYCLogs() {
                           Rejection Reason
                         </h5>
                         <p className="text-xs sm:text-base text-red-800 dark:text-red-300 mb-3">
-                          {selectedKYC.rejectionReason}
+                          {selectedKYC.reason}
                         </p>
-                        {selectedKYC.rejectionDate && (
+                        {selectedKYC.verified_at && (
                           <p className="text-xs sm:text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
@@ -874,14 +635,64 @@ export default function AllKYCLogs() {
                               <circle cx="12" cy="12" r="10" />
                               <polyline points="12 6 12 12 16 14" />
                             </svg>
-                            <span>Rejected on: {selectedKYC.rejectionDate}</span>
+                            <span>Processed on: {selectedKYC.verified_at}</span>
                           </p>
                         )}
                       </div>
                     </div>
                   </div>
                 )}
-
+                {/* Reject reason input (shows only when rejecting) */}
+                {showRejectReason && (
+                  <div className="mb-6 sm:mb-8 p-4 sm:p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <h4 className="text-sm font-semibold mb-2 text-gray-900 dark:text-gray-100">Rejection Reason</h4>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      placeholder="Enter reason for rejection"
+                      className="w-full min-h-[100px] p-2 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    />
+                    <div className="mt-3 flex items-center gap-2">
+                      <button
+                        onClick={async () => {
+                          if (!selectedKYC) return;
+                          if (!rejectReason.trim()) {
+                            setActionError("Please enter a rejection reason.");
+                            return;
+                          }
+                          setActionLoading(true);
+                          setActionError(null);
+                          try {
+                            await updateKycVerification(selectedKYC.kyc_id, 2, rejectReason.trim());
+                            await refreshKycList();
+                            setShowRejectReason(false);
+                            setRejectReason("");
+                          } catch (err: any) {
+                            setActionError(err?.detail || "Reject failed");
+                          } finally {
+                            setActionLoading(false);
+                          }
+                        }}
+                        className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded"
+                        disabled={actionLoading}
+                      >
+                        Submit Rejection
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowRejectReason(false);
+                          setRejectReason("");
+                          setActionError(null);
+                        }}
+                        className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded"
+                        disabled={actionLoading}
+                      >
+                        Cancel
+                      </button>
+                      {actionError && <div className="text-sm text-red-600 ml-3">{actionError}</div>}
+                    </div>
+                  </div>
+                )}
                 {/* Document Sections - Responsive Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
                   {/* Aadhaar Card Section */}
@@ -909,7 +720,6 @@ export default function AllKYCLogs() {
                         <h3 className="text-base sm:text-xl font-bold text-white">Aadhaar Card</h3>
                       </div>
                     </div>
-
                     <div className="p-4 sm:p-6">
                       {/* Document Information Cards */}
                       <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
@@ -918,96 +728,99 @@ export default function AllKYCLogs() {
                             Submission Date
                           </p>
                           <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 break-words">
-                            {selectedKYC.aadhaarSubmissionDate}
+                            {selectedKYC.created_at}
                           </p>
                         </div>
-
                         <div className="bg-white dark:bg-gray-700/50 p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                             Aadhaar Number
                           </p>
                           <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">
-                            {selectedKYC.aadhaarNumber}
+                            {selectedKYC.aadhaar_number ?? "-"}
                           </p>
                         </div>
                       </div>
-
                       {/* Front Page with Hover Effect */}
                       <div className="mb-3 sm:mb-4">
                         <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
                           Front Page
                         </p>
-                        <a
-                          href={selectedKYC.aadhaarFrontPage}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block relative group rounded-lg sm:rounded-xl overflow-hidden"
-                        >
-                          <img
-                            src={selectedKYC.aadhaarFrontPage}
-                            alt="Aadhaar Front"
-                            className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                          {/* Hover Overlay */}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="36"
-                              height="36"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="white"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:w-12 sm:h-12"
-                            >
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                          </div>
-                        </a>
+                        {selectedKYC.aadhaar_front_url ? (
+                          <a
+                            href={selectedKYC.aadhaar_front_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block relative group rounded-lg sm:rounded-xl overflow-hidden"
+                          >
+                            <img
+                              src={selectedKYC.aadhaar_front_url}
+                              alt="Aadhaar Front"
+                              className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                            {/* Hover Overlay */}
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="36"
+                                height="36"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="white"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:w-12 sm:h-12"
+                              >
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                            </div>
+                          </a>
+                        ) : (
+                          <div className="w-full h-40 sm:h-56 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-sm text-gray-500">No image</div>
+                        )}
                       </div>
-
                       {/* Back Page with Hover Effect */}
                       <div>
                         <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
                           Back Page
                         </p>
-                        <a
-                          href={selectedKYC.aadhaarBackPage}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block relative group rounded-lg sm:rounded-xl overflow-hidden"
-                        >
-                          <img
-                            src={selectedKYC.aadhaarBackPage}
-                            alt="Aadhaar Back"
-                            className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                          {/* Hover Overlay */}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="36"
-                              height="36"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="white"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:w-12 sm:h-12"
-                            >
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                          </div>
-                        </a>
+                        {selectedKYC.aadhaar_back_url ? (
+                          <a
+                            href={selectedKYC.aadhaar_back_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block relative group rounded-lg sm:rounded-xl overflow-hidden"
+                          >
+                            <img
+                              src={selectedKYC.aadhaar_back_url}
+                              alt="Aadhaar Back"
+                              className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="36"
+                                height="36"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="white"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:w-12 sm:h-12"
+                              >
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                            </div>
+                          </a>
+                        ) : (
+                          <div className="w-full h-40 sm:h-56 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-sm text-gray-500">No image</div>
+                        )}
                       </div>
                     </div>
                   </div>
-
                   {/* PAN Card Section */}
                   <div className="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
                     {/* Header with Gradient */}
@@ -1031,7 +844,6 @@ export default function AllKYCLogs() {
                         <h3 className="text-base sm:text-xl font-bold text-white">PAN Card</h3>
                       </div>
                     </div>
-
                     <div className="p-4 sm:p-6">
                       {/* Document Information Cards */}
                       <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
@@ -1040,171 +852,58 @@ export default function AllKYCLogs() {
                             Submission Date
                           </p>
                           <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 break-words">
-                            {selectedKYC.panSubmissionDate}
+                            {selectedKYC.created_at}
                           </p>
                         </div>
-
                         <div className="bg-white dark:bg-gray-700/50 p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-gray-600">
                           <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                             PAN Number
                           </p>
                           <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">
-                            {selectedKYC.panNumber}
+                            {selectedKYC.pan_number ?? "-"}
                           </p>
                         </div>
                       </div>
-
                       {/* Front Page with Hover Effect */}
                       <div className="mb-3 sm:mb-4">
                         <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
                           Front Page
                         </p>
-                        <a
-                          href={selectedKYC.panFrontPage}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block relative group rounded-lg sm:rounded-xl overflow-hidden"
-                        >
-                          <img
-                            src={selectedKYC.panFrontPage}
-                            alt="PAN Front"
-                            className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                          {/* Hover Overlay */}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="36"
-                              height="36"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="white"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:w-12 sm:h-12"
-                            >
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                          </div>
-                        </a>
+                        {selectedKYC.pan_image_url ? (
+                          <a
+                            href={selectedKYC.pan_image_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block relative group rounded-lg sm:rounded-xl overflow-hidden"
+                          >
+                            <img
+                              src={selectedKYC.pan_image_url}
+                              alt="PAN Front"
+                              className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="36"
+                                height="36"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="white"
+                                strokeWidth={2}
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:w-12 sm:h-12"
+                              >
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                              </svg>
+                            </div>
+                          </a>
+                        ) : (
+                          <div className="w-full h-40 sm:h-56 bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center text-sm text-gray-500">No image</div>
+                        )}
                       </div>
-
-                      {/* Back Page with Hover Effect */}
-                      <div>
-                        <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
-                          Back Page
-                        </p>
-                        <a
-                          href={selectedKYC.panBackPage}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block relative group rounded-lg sm:rounded-xl overflow-hidden"
-                        >
-                          <img
-                            src={selectedKYC.panBackPage}
-                            alt="PAN Back"
-                            className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                          {/* Hover Overlay */}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="36"
-                              height="36"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="white"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:w-12 sm:h-12"
-                            >
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                          </div>
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Cancelled Cheque Section */}
-                  <div className="bg-white dark:bg-gray-800 rounded-lg sm:rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700">
-                    {/* Header with Gradient */}
-                    <div className="bg-gradient-to-r from-amber-600 to-orange-600 px-4 sm:px-6 py-3 sm:py-4">
-                      <div className="flex items-center gap-2 sm:gap-3">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="20"
-                          height="20"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="white"
-                          strokeWidth={2.5}
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="sm:w-7 sm:h-7 flex-shrink-0"
-                        >
-                          <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                          <line x1="1" y1="10" x2="23" y2="10" />
-                        </svg>
-                        <h3 className="text-base sm:text-xl font-bold text-white">
-                          Cancelled Cheque
-                        </h3>
-                      </div>
-                    </div>
-
-                    <div className="p-4 sm:p-6">
-                      {/* Document Information Cards */}
-                      <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
-                        <div className="bg-white dark:bg-gray-700/50 p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-gray-600">
-                          <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                            Submission Date
-                          </p>
-                          <p className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 break-words">
-                            {selectedKYC.cancelledCheckSubmissionDate}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Cheque Image with Hover Effect */}
-                      <div>
-                        <p className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 sm:mb-3">
-                          Cheque Image
-                        </p>
-                        <a
-                          href={selectedKYC.cancelledCheck}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block relative group rounded-lg sm:rounded-xl overflow-hidden"
-                        >
-                          <img
-                            src={selectedKYC.cancelledCheck}
-                            alt="Cancelled Cheque"
-                            className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                          {/* Hover Overlay */}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="36"
-                              height="36"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="white"
-                              strokeWidth={2}
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 sm:w-12 sm:h-12"
-                            >
-                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                              <circle cx="12" cy="12" r="3" />
-                            </svg>
-                          </div>
-                        </a>
-                      </div>
+                      {/* PAN back removed — API does not provide a separate PAN back image */}
                     </div>
                   </div>
                 </div>

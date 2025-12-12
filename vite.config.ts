@@ -15,4 +15,16 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    proxy: {
+      // Proxy API calls during development to avoid CORS issues.
+      // Requests to /dashboard/* will be forwarded to https://api.mastropaytech.com
+      "/dashboard": {
+        target: "https://api.mastropaytech.com",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path, // keep path as-is
+      },
+    },
+  },
 });

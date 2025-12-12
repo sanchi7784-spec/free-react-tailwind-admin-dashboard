@@ -94,7 +94,7 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
   {
     title: "Transactions",
     items: [
-      { name: "Transactions", icon: <FileIcon />, path: "/Transactions" },
+      { name: "Bank Accounts", icon: <FileIcon />, path: "/Transactions" },
       { name: "Wallets", icon: <DollarLineIcon />, path: "/wallet/all" },
       { name: "Virtual Cards", icon: <BoxIcon />, path: "/wallet/virtual-cards" },
       {
@@ -125,11 +125,11 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
         subItems: [
           { name: "Buy", path: "/gold/buy" },
           { name: "Sell", path: "/gold/sell" },
-          { name: "Redeem", path: "/gold/redeem", new: true }, // badge example
+          { name: "Gold Transactions", path: "/gold/redeem", new: true }, // badge example
           { name: "Gift", path: "/gold/gift" },
           { name: "Category", path: "/gold/category" },
           { name: "Charge Limit", path: "/gold/chargelimit" },
-          { name: "Manage Redeem Units", path: "/gold/redeemunits" },
+          { name: "Wallet Transactions", path: "/gold/redeemunits" },
         ],
       },
   
@@ -140,10 +140,10 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
         subItems: [
           { name: "Request Loan", path: "/loan/requestloan" },
 { name: "Approved Loan", path: "/loan/approved-loan" },
-{ name: "Payable Installments", path: "/loan/payableinstallments"},
-{ name: "Completed Loan", path: "/loan/completedloan" },
-{ name: "Rejected Loan", path: "/loan/rejectedloan-Loans" },
-{ name: "All Loan", path: "/loan/all-loan" },
+{ name: "Payable Installments", path: "/loan/payable-loan"},
+{ name: "Completed Loan", path: "/loan/completed-loan" },
+{ name: "Rejected Loan", path: "/loan/rejected-loan" },
+{ name: "All Loan", path: "/loan/all-loans" },
 { name: "Loan Plans", path: "/loan/loan-plans"}
 
         ] },
@@ -159,7 +159,7 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
         subItems: [
           // Path should match route: leading slash and hyphen
           { name: "Recharge Services", path: "/bill/import-services" },
-          { name: "Convert Rate", path: "/bill/convert-rate" },
+          { name: "Convert Rate", path: "/bill/convertrate" },
           { name: "Bill Services list", path: "/bill/billservices-list" },
         ],
       },
@@ -182,7 +182,7 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
         name: "Automatic Gateways",
         icon: <PlugInIcon />,
         subItems: [
-          { name: "Gateway List", path: "/gateways" },
+          { name: "Gateway List", path: "/gateway/gatewaylist" },
           // { name: "Add Gateway", path: "/gateways/add" },
         ],
       },
@@ -200,15 +200,17 @@ const sidebarSections: { title: string; items: NavItem[] }[] = [
         name: "Withdraw",
         icon: <ArrowDownIcon />,
         subItems: [
-          { name: "Automatic Methods", path: "/withdraw/automatic-methods" },
+          { name: "Automatic Methods", path: "/withdraw/automatic" },
           { name: "Manual Methods", path: "/withdraw/manualmethods" },
-           { name: "Pending Withdraws", path: "/withdraw/pending-withdraws" },
+           { name: "Pending Withdraws", path: "/withdraw/pending" },
            { name: "Withdraw Schedule", path: "/withdraw/withdraw-Schedule" },
            { name: "Withdraw History", path: "/withdraw/withdraw-history" },
         ],
       },
       { name: "Referral", icon: <MailIcon />, subItems: [{ name: "Referral Settings", path: "/referral/settings" },{ name: "Referral Reports", path: "/referral/reports" }] },
-      { name: "Portfolios", icon: <PageIcon />, subItems: [{ name: "All Portfolios", path: "/portfolios" }, { name: "Create Portfolio", path: "/portfolios/new" }] },
+      { name: "Portfolios", icon: <PageIcon />, subItems: [{ name: "All Portfolios", path: "/portfolio/all" }, { name: "Create Portfolio", path: "/portfolio/allprofileupdates" },
+        { name: "Staff Profile", path: "/portfolio/uiforstaffdetails" }
+      ] },
       {
         name: "Manage Reward Point",
         icon: <ShootingStarIcon />,

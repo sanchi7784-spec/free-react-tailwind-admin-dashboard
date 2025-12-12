@@ -1,32 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { fetchStaff, updateStaffRole, createStaff, StaffUser } from "../../api/staff";
 
 interface Staff {
   id: string;
   name: string;
   email: string;
   phone: string;
+  role_id?: number | null;
+  role_name?: string | null;
   role: string;
   status: "Active" | "Inactive";
 }
-
-const staffData: Staff[] = [
-  {
-    id: "1",
-    name: "Super Admin",
-    email: "admin@digibank.com",
-    phone: "+1 234 567 8900",
-    role: "Super-Admin",
-    status: "Active",
-  },
-  {
-    id: "2",
-    name: "John Doe",
-    email: "john.doe@digibank.com",
-    phone: "+1 555 123 4567",
-    role: "Tester",
-    status: "Active",
-  },
-];
+const staffData: Staff[] = [];
 
 const ManageStaff = () => {
   const [staff, setStaff] = useState<Staff[]>(staffData);
@@ -37,17 +22,14 @@ const ManageStaff = () => {
     name: "",
     email: "",
     phone: "",
-    password: "",
-    confirmPassword: "",
-    role: "Tester",
+    mpin: "",
+    role: "0",
   });
   const [editFormData, setEditFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    role: "Tester",
-    status: "Active" as "Active" | "Inactive",
+    role: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -55,100 +37,122 @@ const ManageStaff = () => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validate passwords match
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
-      return;
-    }
-
-    // Add new staff member
-    const newStaff: Staff = {
-      id: String(staff.length + 1),
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      role: formData.role,
-      status: "Active",
-    };
-
-    setStaff([...staff, newStaff]);
-    
-    // Reset form and close modal
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      password: "",
-      confirmPassword: "",
-      role: "Tester",
-    });
-    setIsModalOpen(false);
+    (async () => {
+      try {
+        const payload = {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          mpin: formData.mpin || undefined,
+          role_id: Number(formData.role),
+        };
+        const resp = await createStaff(payload as any);
+        const created: Staff = {
+          id: String(resp.user_id ?? (staff.length + 1)),
+          name: resp.name ?? formData.name,
+          email: resp.email ?? formData.email,
+          phone: formData.phone,
+          role_id: resp.role_id ?? Number(formData.role),
+          role_name: resp.role_name ?? null,
+          role: resp.role_name ?? String(resp.role_id ?? formData.role),
+          status: "Active",
+        };
+        setStaff((prev) => [...prev, created]);
+        // Reset form and close modal
+        setFormData({ name: "", email: "", phone: "", mpin: "", role: "0" });
+        setIsModalOpen(false);
+      } catch (err: any) {
+        console.error("Failed to create staff:", err);
+        alert(err?.detail || err?.message || "Failed to create staff");
+      }
+    })();
   };
-
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setFormData({
-      name: "",
-      email: "",
-      phone: "",
-      password: "",
-      confirmPassword: "",
-      role: "Tester",
-    });
+    setFormData({ name: "", email: "", phone: "", mpin: "", role: "0" });
   };
-
   const handleEditClick = (member: Staff) => {
     setEditingStaff(member);
     setEditFormData({
-      name: member.name,
-      email: member.email,
-      phone: member.phone,
-      role: member.role,
-      status: member.status,
+      role: member.role_id != null ? String(member.role_id) : (member.role || ""),
     });
     setIsEditModalOpen(true);
   };
-
   const handleEditInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setEditFormData((prev) => ({ ...prev, [name]: value }));
   };
-
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!editingStaff) return;
-
-    // Update staff member
-    const updatedStaff = staff.map((member) =>
-      member.id === editingStaff.id
-        ? {
-            ...member,
-            name: editFormData.name,
-            email: editFormData.email,
-            phone: editFormData.phone,
-            role: editFormData.role,
-            status: editFormData.status,
-          }
-        : member
-    );
-
-    setStaff(updatedStaff);
-    setIsEditModalOpen(false);
-    setEditingStaff(null);
+    (async () => {
+      const targetId = Number(editingStaff.id);
+      const prev = staff.find((m) => m.id === editingStaff.id);
+      const prevRoleId = prev?.role_id ?? null;
+      const newRoleId = editFormData.role ? Number(editFormData.role) : null;
+      try {
+        // If role changed and we have a numeric role id, call API to update
+        if (newRoleId != null && !Number.isNaN(newRoleId) && newRoleId !== prevRoleId) {
+          const resp = await updateStaffRole(targetId, newRoleId);
+          // resp contains updated user info (role_id, role_name, etc.) per API
+          const updatedStaff = staff.map((member) =>
+            member.id === editingStaff.id
+              ? {
+                  ...member,
+                  role_id: resp?.role_id ?? newRoleId,
+                  role_name: resp?.role_name ?? member.role_name ?? String(newRoleId),
+                  role: resp?.role_name ?? member.role_name ?? String(newRoleId),
+                }
+              : member
+          );
+          setStaff(updatedStaff);
+        } else {
+          // No role change; nothing to update on server
+          // simply close the modal
+        }
+        setIsEditModalOpen(false);
+        setEditingStaff(null);
+      } catch (err: any) {
+        console.error("Failed to update staff role:", err);
+        alert(err?.detail || err?.message || "Failed to update staff");
+      }
+    })();
   };
-
   const handleCloseEditModal = () => {
     setIsEditModalOpen(false);
     setEditingStaff(null);
   };
-
+  useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    setError(null);
+    fetchStaff()
+      .then((res) => {
+        if (!mounted) return;
+        const mapped: Staff[] = (res.staff_users || []).map((s: StaffUser) => ({
+          id: String(s.user_id),
+          name: s.name ?? "-",
+          email: s.email ?? "",
+          phone: s.phone ?? "",
+          role_id: s.role_id ?? null,
+          role_name: s.role_name ?? null,
+          role: s.role_name ?? (s.role_id != null ? String(s.role_id) : ""),
+          status: (s.status as "Active" | "Inactive") || "Inactive",
+        }));
+        setStaff(mapped);
+      })
+      .catch((err: any) => {
+        if (!mounted) return;
+        console.error("Failed to load staff:", err);
+        setError(err?.detail || err?.message || "Failed to load staff");
+      })
+      .finally(() => { if (mounted) setLoading(false); });
+    return () => { mounted = false; };
+  }, []);
   return (
     <>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 md:p-6 lg:p-8">
@@ -177,7 +181,16 @@ const ManageStaff = () => {
             ADD NEW STAFF
           </button>
         </div>
-
+        {loading && (
+          <div className="mb-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200">
+            Loading staff users...
+          </div>
+        )}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-sm text-red-700 dark:text-red-200">
+            Error: {error}
+          </div>
+        )}
       {/* Table Container */}
       <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden">
         {/* Desktop Table View */}
@@ -271,7 +284,6 @@ const ManageStaff = () => {
             </tbody>
           </table>
         </div>
-
         {/* Mobile Card View */}
         <div className="md:hidden">
           {staff.map((member) => (
@@ -307,7 +319,6 @@ const ManageStaff = () => {
                     {member.phone}
                   </div>
                 </div>
-
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
@@ -317,7 +328,6 @@ const ManageStaff = () => {
                       {member.role}
                     </span>
                   </div>
-
                   <div>
                     <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
                       Status
@@ -333,7 +343,6 @@ const ManageStaff = () => {
                     </span>
                   </div>
                 </div>
-
                 {/* Action Button */}
                 <div className="pt-2">
                   <button 
@@ -362,7 +371,6 @@ const ManageStaff = () => {
         </div>
       </div>
     </div>
-
     {/* Add New Staff Modal */}
     {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
@@ -391,7 +399,6 @@ const ManageStaff = () => {
                 </svg>
               </button>
             </div>
-
             {/* Modal Body */}
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               {/* Name Field */}
@@ -413,7 +420,6 @@ const ManageStaff = () => {
                   className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
               </div>
-
               {/* Email Field */}
               <div>
                 <label
@@ -433,7 +439,6 @@ const ManageStaff = () => {
                   className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
               </div>
-
               {/* Phone Field */}
               <div>
                 <label
@@ -453,47 +458,26 @@ const ManageStaff = () => {
                   className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
               </div>
-
               {/* Password Field */}
               <div>
                 <label
-                  htmlFor="password"
+                  htmlFor="mpin"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >
-                  Password:
+                  MPIN:
                 </label>
                 <input
                   type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
+                  id="mpin"
+                  name="mpin"
+                  value={formData.mpin}
                   onChange={handleInputChange}
                   required
-                  placeholder="Password"
+                  placeholder="4-digit MPIN"
                   className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
                 />
               </div>
-
-              {/* Confirm Password Field */}
-              <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Confirm Password:
-                </label>
-                <input
-                  type="password"
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  required
-                  placeholder="Confirm Password"
-                  className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
-              </div>
-
+              {/* (No confirm password field required) */}
               {/* Select Role Field */}
               <div>
                 <label
@@ -510,13 +494,14 @@ const ManageStaff = () => {
                   required
                   className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all cursor-pointer"
                 >
-                  <option value="Tester">Tester</option>
-                  <option value="Super-Admin">Super-Admin</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Support">Support</option>
+                  <option value="0">User</option>
+                  <option value="1">Admin</option>
+                  <option value="2">Gold Price Manager</option>
+                  <option value="3">Transaction Manager</option>
+                  <option value="4">Document Manager</option>
+                  <option value="5">User Manager</option>
                 </select>
               </div>
-
               {/* Action Buttons */}
               <div className="flex gap-3 pt-2">
                 <button
@@ -563,7 +548,6 @@ const ManageStaff = () => {
           </div>
         </div>
       )}
-
       {/* Edit Staff Modal */}
       {isEditModalOpen && editingStaff && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
@@ -592,69 +576,8 @@ const ManageStaff = () => {
                 </svg>
               </button>
             </div>
-
-            {/* Modal Body */}
+            {/* Modal Body (Roles-only edit) */}
             <form onSubmit={handleEditSubmit} className="p-6 space-y-5">
-              {/* Name Field */}
-              <div>
-                <label
-                  htmlFor="edit-name"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Name:
-                </label>
-                <input
-                  type="text"
-                  id="edit-name"
-                  name="name"
-                  value={editFormData.name}
-                  onChange={handleEditInputChange}
-                  required
-                  placeholder="Staff Name"
-                  className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
-              </div>
-
-              {/* Email Field */}
-              <div>
-                <label
-                  htmlFor="edit-email"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Email:
-                </label>
-                <input
-                  type="email"
-                  id="edit-email"
-                  name="email"
-                  value={editFormData.email}
-                  onChange={handleEditInputChange}
-                  required
-                  placeholder="Staff Email"
-                  className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
-              </div>
-
-              {/* Phone Field */}
-              <div>
-                <label
-                  htmlFor="edit-phone"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Phone Number:
-                </label>
-                <input
-                  type="tel"
-                  id="edit-phone"
-                  name="phone"
-                  value={editFormData.phone}
-                  onChange={handleEditInputChange}
-                  required
-                  placeholder="Phone Number"
-                  className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
-                />
-              </div>
-
               {/* Select Role Field */}
               <div>
                 <label
@@ -671,34 +594,14 @@ const ManageStaff = () => {
                   required
                   className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all cursor-pointer"
                 >
-                  <option value="Tester">Tester</option>
-                  <option value="Super-Admin">Super-Admin</option>
-                  <option value="Manager">Manager</option>
-                  <option value="Support">Support</option>
+                  <option value="0">User</option>
+                  <option value="1">Admin</option>
+                  <option value="2">Gold Price Manager</option>
+                  <option value="3">Transaction Manager</option>
+                  <option value="4">Document Manager</option>
+                  <option value="5">User Manager</option>
                 </select>
               </div>
-
-              {/* Select Status Field */}
-              <div>
-                <label
-                  htmlFor="edit-status"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Status:
-                </label>
-                <select
-                  id="edit-status"
-                  name="status"
-                  value={editFormData.status}
-                  onChange={handleEditInputChange}
-                  required
-                  className="w-full px-4 py-3 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all cursor-pointer"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-
               {/* Action Buttons */}
               <div className="flex gap-3 pt-2">
                 <button
@@ -718,7 +621,7 @@ const ManageStaff = () => {
                       d="M5 13l4 4L19 7"
                     />
                   </svg>
-                  Update Staff
+                  Update Role
                 </button>
                 <button
                   type="button"
@@ -748,5 +651,4 @@ const ManageStaff = () => {
     </>
   );
 };
-
 export default ManageStaff;

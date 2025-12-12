@@ -69,7 +69,7 @@ const BillServicesList: React.FC = () => {
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow-sm">
         <div className="p-4 border-b dark:border-gray-700">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-600">List of available bill services</div>
+            <div className="text-sm text-gray-600 dark:text-white">List of available bill services</div>
             <div className="flex items-center gap-3">
               <Link to="/bill/import-services" className="rounded-md bg-purple-600 px-3 py-2 text-sm font-medium text-white hover:bg-purple-700">Import Services</Link>
               <button className="rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-700 dark:border-gray-700">New Service</button>
@@ -81,19 +81,19 @@ const BillServicesList: React.FC = () => {
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50 dark:bg-gray-800">
               <tr className="text-left">
-                <th className="px-6 py-4">Name</th>
-                <th className="px-6 py-4">Code</th>
-                <th className="px-6 py-4">Type</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Action</th>
+                <th className="px-6 py-4 dark:text-white">Name</th>
+                <th className="px-6 py-4 dark:text-white">Code</th>
+                <th className="px-6 py-4 dark:text-white">Type</th>
+                <th className="px-6 py-4 dark:text-white">Status</th>
+                <th className="px-6 py-4 dark:text-white">Action</th>
               </tr>
             </thead>
             <tbody>
               {sampleServices.map((s) => (
                 <tr key={s.id} className="border-t hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800">
                   <td className="px-6 py-4 font-semibold text-gray-900 dark:text-gray-100">{s.name}</td>
-                  <td className="px-6 py-4">{s.code}</td>
-                  <td className="px-6 py-4">{s.type}</td>
+                  <td className="px-6 py-4 dark:text-white">{s.code}</td>
+                  <td className="px-6 py-4 dark:text-white">{s.type}</td>
                   <td className="px-6 py-4">
                     <span className={`inline-block px-3 py-1 rounded-full text-white text-xs ${s.status === 'Active' ? 'bg-emerald-500' : 'bg-gray-400'}`}>{s.status}</span>
                   </td>
@@ -134,13 +134,13 @@ const BillServicesList: React.FC = () => {
 
         {/* footer / pagination */}
         <div className="p-4 border-t flex items-center justify-between dark:border-gray-800">
-          <div className="text-sm text-gray-600">Showing {sampleServices.length} entries</div>
+          <div className="text-sm text-gray-600 dark:text-white">Showing {sampleServices.length} entries</div>
           <div>
             <nav className="inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-              <button className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-sm">‹</button>
-              <button className="px-3 py-2 bg-white dark:bg-gray-800 border-t border-b border-gray-200 dark:border-gray-800 text-sm">1</button>
-              <button className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-sm">2</button>
-              <button className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-sm">›</button>
+              <button className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-sm dark:text-white">‹</button>
+              <button className="px-3 py-2 bg-white dark:bg-gray-800 border-t border-b border-gray-200 dark:border-gray-800 text-sm dark:text-white">1</button>
+              <button className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-sm dark:text-white">2</button>
+              <button className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-800 text-sm dark:text-white">›</button>
             </nav>
           </div>
         </div>
