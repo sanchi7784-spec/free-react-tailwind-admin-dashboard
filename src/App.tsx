@@ -1,6 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import type { ReactNode } from "react";
 import { isAuthenticated } from "./utils/auth";
+import { isEcommerceAuthenticated } from "./utils/ecommerceAuth";
+import { DashboardProvider } from "./context/DashboardContext";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
@@ -32,6 +35,7 @@ import GoldRedeem from "./pages/Gold/GoldRedeem";
 import GoldGift from "./pages/Gold/GoldGift";
 import GoldCategory from "./pages/Gold/GoldCategory";
 import GoldChargeLimit from "./pages/Gold/GoldChargeLimit";
+import ChargeChangeHistory from "./pages/Gold/ChargeChangeHistory";
 import GoldRedeemUnits from "./pages/Gold/GoldRedeemUnits";
 import ManageRoles from "./pages/Access/ManageRoles";
 import AddNewRole from "./pages/Access/AddNewRole";
@@ -45,6 +49,7 @@ import AddNewBranchStaff from "./pages/Staff/AddNewBranchStaff";
 import Blank from "./pages/Blank";
 import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
+import DynamicDashboard from "./pages/Dashboard/DynamicDashboard";
 import Home from "./pages/Dashboard/Home";
 import BBPSDashboard from "./pages/Dashboard/BBPSDashboard";
 import GoldDashboard from "./pages/Dashboard/GoldDashboard";
@@ -84,6 +89,36 @@ import WithdrawHistory from "./pages/Withdraw/withdrawhistory";
 import Allportfolio from "./pages/Portfolio/Allportfolio";
 import CreatePortfolios from "./pages/Portfolio/CreatePortfolios";
 import Uiforstafftochangeprofile from "./pages/Portfolio/Uiforstafftochangeprofile";
+import Manualmethod from "./pages/Withdraw/Manualmethod";
+import WithdrawalMethodForm from "./pages/Withdraw/Withdrawalmethodform";
+import WithdrawSchedule from "./pages/Withdraw/WithdrawSchedule";
+
+// Ecommerce Pages
+import EcomAllUsers from "./pages/Ecommerce/Users/AllUsers";
+import EcomActiveUsers from "./pages/Ecommerce/Users/ActiveUsers";
+import EcomBannedUsers from "./pages/Ecommerce/Users/BannedUsers";
+import EcomAllProducts from "./pages/Ecommerce/Products/AllProducts";
+import EcomAddProduct from "./pages/Ecommerce/Products/AddProduct";
+import EcomProductCategories from "./pages/Ecommerce/Products/Categories";
+import EcomAllVendors from "./pages/Ecommerce/Vendors/AllVendors";
+import EcomAddVendor from "./pages/Ecommerce/Vendors/AddVendor";
+import EcomVendorRequests from "./pages/Ecommerce/Vendors/VendorRequests";
+import EcomVendorProducts from "./pages/Ecommerce/Vendors/VendorProducts";
+import EcomAllOrders from "./pages/Ecommerce/Orders/AllOrders";
+import EcomRefundRequests from "./pages/Ecommerce/Refunds/RefundRequests";
+import EcomPendingOrders from "./pages/Ecommerce/Orders/PendingOrders";
+import EcomCompletedOrders from "./pages/Ecommerce/Orders/CompletedOrders";
+import EcomCancelledOrders from "./pages/Ecommerce/Orders/CancelledOrders";
+import EcomAllCategories from "./pages/Ecommerce/Category/AllCategories";
+import EcomAddCategory from "./pages/Ecommerce/Category/AddCategory";
+import EcomSalesReport from "./pages/Ecommerce/Reports/SalesReport";
+import EcomRevenueReport from "./pages/Ecommerce/Reports/RevenueReport";
+import EcommerceLogin from "./pages/Ecommerce/EcommerceLogin";
+import EcomAllKYC from "./pages/Ecommerce/KYC/AllKYC";
+import BusinessSettings from "./pages/Ecommerce/BasicInfo/BusinessSettings";
+import DeliveryCharges from "./pages/Ecommerce/DeliveryCharges/DeliveryCharges";
+import VatTax from "./pages/Ecommerce/VatTax";
+
 export default function App() {
   // Route-level guard component
   function RequireAuth({ children }: { children: ReactNode }) {
@@ -92,19 +127,43 @@ export default function App() {
     }
     return children;
   }
+
+  // Ecommerce authentication guard
+  function RequireEcommerceAuth({ children }: { children: ReactNode }) {
+    if (!isAuthenticated()) {
+      return <Navigate to="/signin" replace />;
+    }
+    if (!isEcommerceAuthenticated()) {
+      return <Navigate to="/ecommerce/login" replace />;
+    }
+    return children;
+  }
   return (
     <>
       <Router>
-        <ScrollToTop />
-        <Routes>
-          {/* Dashboard Layout (protected) */}
-          <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
-            <Route index path="/" element={<Home />} />
-            <Route path="/dashboard-overview/bbps" element={<BBPSDashboard />} />
-            <Route path="/dashboard-overview/Gold" element={<GoldDashboard />} />
+        <DashboardProvider>
+          <ScrollToTop />
+          <Routes>
+            {/* Dashboard Layout (protected) */}
+            <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
+              {/* Dynamic Dashboard Route */}
+              <Route path="/dashboard" element={<DynamicDashboard />} />
+              
+              {/* Legacy routes for backward compatibility */}
+              <Route index path="/ecom" element={<Home />} />
+              <Route path="/bbps" element={<BBPSDashboard />} />
+              <Route path="/" element={<GoldDashboard />} />
 
             {/* Others Page */}
-            <Route path="/profile" element={<UserProfiles />} />
+            {/* Profile - Only for Gold/MPay users (domain 0 & 1) */}
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute requireGold>
+                  <UserProfiles />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
 
@@ -137,7 +196,33 @@ export default function App() {
             <Route path="/gold/gift" element={<GoldGift />} />
             <Route path="/gold/category" element={<GoldCategory />} />
             <Route path="/gold/chargelimit" element={<GoldChargeLimit />} />
+            <Route path="/gold/charge-history" element={<ChargeChangeHistory />} />
             <Route path="/gold/redeemunits" element={<GoldRedeemUnits />} />
+
+            {/* Ecommerce Routes - Protected */}
+            <Route path="/ecommerce/users/all" element={<RequireEcommerceAuth><EcomAllUsers /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/users/active" element={<RequireEcommerceAuth><EcomActiveUsers /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/users/banned" element={<RequireEcommerceAuth><EcomBannedUsers /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/products/all" element={<RequireEcommerceAuth><EcomAllProducts /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/products/add" element={<RequireEcommerceAuth><EcomAddProduct /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/products/categories" element={<RequireEcommerceAuth><EcomProductCategories /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/vendors/all" element={<RequireEcommerceAuth><EcomAllVendors /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/vendors/add" element={<RequireEcommerceAuth><EcomAddVendor /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/vendors/requests" element={<RequireEcommerceAuth><EcomVendorRequests /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/vendors/products" element={<RequireEcommerceAuth><EcomVendorProducts /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/orders/all" element={<RequireEcommerceAuth><EcomAllOrders /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/refunds" element={<RequireEcommerceAuth><EcomRefundRequests /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/orders/pending" element={<RequireEcommerceAuth><EcomPendingOrders /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/orders/completed" element={<RequireEcommerceAuth><EcomCompletedOrders /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/orders/cancelled" element={<RequireEcommerceAuth><EcomCancelledOrders /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/banners/all" element={<RequireEcommerceAuth><EcomAllCategories /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/category/add" element={<RequireEcommerceAuth><EcomAddCategory /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/kyc/all" element={<RequireEcommerceAuth><EcomAllKYC /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/reports/sales" element={<RequireEcommerceAuth><EcomSalesReport /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/reports/revenue" element={<RequireEcommerceAuth><EcomRevenueReport /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/basicinfo/business-settings" element={<RequireEcommerceAuth><BusinessSettings /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/delivery-charges" element={<RequireEcommerceAuth><DeliveryCharges /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/vat-tax" element={<RequireEcommerceAuth><VatTax /></RequireEcommerceAuth>} />
 
             {/* Transactions */}
             <Route path="/Transactions" element={<AllTransactions />} />
@@ -178,12 +263,14 @@ export default function App() {
         <Route path="/bill/convertrate" element={<ConvertRate />} />
 {/* Gateway */}
      <Route path="/gateway/gatewaylist" element={<AutomaticGateway />} />
-
 {/* Withdraw*/}
 
 <Route path="/withdraw/pending" element={<Pendingwithdraw />} />
 <Route path="/withdraw/automatic" element={<AutomaticWithdraw />} />
+<Route path="/withdraw/manual" element={<Manualmethod />} />
             <Route path="/withdraw/withdraw-history" element={<WithdrawHistory />} />
+             <Route path="/withdraw/withdraw-method-form" element={<WithdrawalMethodForm />} />
+              <Route path="/withdraw/withdraw-schedule" element={<WithdrawSchedule />} />
 {/* Portfolio */}
  <Route path="/portfolio/all" element={<Allportfolio />} />
   <Route path="/portfolio/allprofileupdates" element={<CreatePortfolios />} />
@@ -216,10 +303,12 @@ export default function App() {
           {/* Auth Layout */}
           <Route path="/signin" element={<SignIn />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/ecommerce/login" element={<EcommerceLogin />} />
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </DashboardProvider>
       </Router>
     </>
   );

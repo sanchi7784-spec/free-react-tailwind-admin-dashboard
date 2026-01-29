@@ -63,9 +63,11 @@ const ManageStaff = () => {
         // Reset form and close modal
         setFormData({ name: "", email: "", phone: "", mpin: "", role: "0" });
         setIsModalOpen(false);
+        alert("Staff created successfully!");
       } catch (err: any) {
         console.error("Failed to create staff:", err);
-        alert(err?.detail || err?.message || "Failed to create staff");
+        const errorMessage = err?.detail || "Failed to create staff";
+        alert(errorMessage);
       }
     })();
   };
@@ -118,7 +120,8 @@ const ManageStaff = () => {
         setEditingStaff(null);
       } catch (err: any) {
         console.error("Failed to update staff role:", err);
-        alert(err?.detail || err?.message || "Failed to update staff");
+        const errorMessage = err?.detail || "Failed to update staff";
+        alert(errorMessage);
       }
     })();
   };
@@ -148,7 +151,7 @@ const ManageStaff = () => {
       .catch((err: any) => {
         if (!mounted) return;
         console.error("Failed to load staff:", err);
-        setError(err?.detail || err?.message || "Failed to load staff");
+        setError(err?.detail || "Failed to load staff");
       })
       .finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
@@ -373,7 +376,7 @@ const ManageStaff = () => {
     </div>
     {/* Add New Staff Modal */}
     {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue bg-opacity-50">
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700">
@@ -550,7 +553,7 @@ const ManageStaff = () => {
       )}
       {/* Edit Staff Modal */}
       {isEditModalOpen && editingStaff && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-blue bg-opacity-50">
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-slate-700">

@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router";
 import EcommerceMetrics from "../../components/ecommerce/EcommerceMetrics";
 import MonthlySalesChart from "../../components/ecommerce/MonthlySalesChart";
 import StatisticsChart from "../../components/ecommerce/StatisticsChart";
@@ -5,7 +7,19 @@ import MonthlyTarget from "../../components/ecommerce/MonthlyTarget";
 import RecentOrders from "../../components/ecommerce/RecentOrders";
 import DemographicCard from "../../components/ecommerce/DemographicCard";
 import PageMeta from "../../components/common/PageMeta";
+import { canAccessEcommerce, isEcommerceAuthenticated } from "../../utils/ecommerceAuth";
+
 export default function Home() {
+  const navigate = useNavigate();
+
+  // Check domain access before loading
+  useEffect(() => {
+    if (isEcommerceAuthenticated() && !canAccessEcommerce()) {
+      // Redirect Gold/BBPS-only users to their dashboard
+      navigate('/', { replace: true });
+    }
+  }, [navigate]);
+
   return (
     <>
       <PageMeta

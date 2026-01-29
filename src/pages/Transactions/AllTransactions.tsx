@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Eye } from 'lucide-react';
 import { fetchBankAccounts, BankAccount, patchBankAccountVerification } from '../../api/bankAccounts';
-
 const AllTransactions = () => {
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -12,7 +11,16 @@ const AllTransactions = () => {
   const [verifyReason, setVerifyReason] = useState<string>('');
   const [updateLoading, setUpdateLoading] = useState<boolean>(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
-
+  const formatError = (e: any) => {
+    const d = e?.detail ?? e;
+    if (d == null) return String(e ?? 'Unknown error');
+    if (typeof d === 'string') return d;
+    try {
+      return JSON.stringify(d);
+    } catch (_) {
+      return String(d);
+    }
+  };
   // When a modal is opened, initialise the verification controls from selected
   React.useEffect(() => {
     if (selected) {
@@ -29,12 +37,11 @@ const AllTransactions = () => {
       setVerifyStatus(code);
       setVerifyReason(selected.reason ?? '');
     } else {
-      setVerifyStatus(0);
+      setVerifyStatus(null);
       setVerifyReason('');
       setUpdateError(null);
     }
   }, [selected]);
-
   useEffect(() => {
     let mounted = true;
     setLoading(true);
@@ -46,16 +53,14 @@ const AllTransactions = () => {
       })
       .catch(err => {
         if (!mounted) return;
-        setError(err.detail || String(err));
+        setError(formatError(err));
         setLoading(false);
       });
     return () => { mounted = false };
   }, []);
-
   return (
     <div>
-      <h1 className='text-3xl dark:text-white font-extrabold'>Bank Accounts</h1>
-
+      <h1 className='text-3xl dark:text-white font-extrabold dark:bg-gray-800 '>Bank Accounts</h1>
       <div className='overflow-x-auto mt-6'>
         <table className='w-full border-collapse mt-4'>
           <thead className='bg-purple-50 text-gray-700'>
@@ -76,7 +81,6 @@ const AllTransactions = () => {
               <th className='py-3 px-3 text-left'>Action</th>
             </tr>
           </thead>
-
           <tbody>
             {loading ? (
               <tr><td colSpan={14} className='py-5 px-4'>Loading...</td></tr>
@@ -86,7 +90,7 @@ const AllTransactions = () => {
               <tr><td colSpan={14} className='py-5 px-4'>No bank accounts found</td></tr>
             ) : (
               accounts.map((a, i) => (
-                <tr key={a.bank_id} className='border-t hover:bg-gray-50'>
+                <tr key={a.bank_id} className='border-t hover:bg-gray-50 dark:hover:bg-gray-900'>
                   <td className='py-3 px-3 dark:text-white'>{a.bank_id}</td>
                   <td className='py-3 px-3 dark:text-white'>{a.user_id}</td>
                   <td className='py-3 px-3 dark:text-white'>{a.user_name}</td>
@@ -127,9 +131,8 @@ const AllTransactions = () => {
           </tbody>
         </table>
       </div>
-
       {selected && (
-        <div className='fixed inset-0 bg-black/50 bg-opacity-40 flex items-center justify-center z-50'>
+        <div className='fixed inset-0 bg-blue/50 bg-opacity-40 flex items-center justify-center z-50'>
           <div className='bg-white w-[700px] rounded-lg shadow-lg p-6 relative'>
             <button onClick={() => setSelected(null)} className='absolute top-4 right-4 text-gray-500 hover:text-gray-700 text-xl'>×</button>
             <h2 className='text-xl font-bold mb-4'>Bank Account Details</h2>
@@ -170,23 +173,26 @@ const AllTransactions = () => {
                     <button disabled={updateLoading} onClick={async () => {
                       setUpdateError(null);
                       // Validation: if rejecting, reason required
+                      // Require explicit selection of Verified (1) or Rejected (2)
+                      if (verifyStatus !== 1 && verifyStatus !== 2) {
+                        setUpdateError('Select Verified or Rejected');
+                        return;
+                      }
+                      // If rejecting, reason is required
                       if (verifyStatus === 2 && verifyReason.trim() === '') {
                         setUpdateError('Reason is required when rejecting');
                         return;
                       }
-                      if (verifyStatus === null) {
-                        setUpdateError('Select Verified or Rejected');
-                        return;
-                      }
                       try {
                         setUpdateLoading(true);
-                        const resp = await patchBankAccountVerification(selected.bank_id, { is_verified: verifyStatus, reason: verifyReason });
+                        const payload = verifyStatus === 2 ? { is_verified: verifyStatus, reason: verifyReason } : { is_verified: verifyStatus };
+                        const resp = await patchBankAccountVerification(selected.bank_id, payload);
                         // update accounts state
                         setAccounts(prev => prev.map(p => (String(p.bank_id) === String(resp.bank_id) ? { ...p, is_verified: resp.is_verified, reason: resp.reason } : p)));
                         // update selected
                         setSelected(prev => prev ? { ...prev, is_verified: resp.is_verified, reason: resp.reason } : prev);
                       } catch (err: any) {
-                        setUpdateError(err.detail || String(err));
+                        setUpdateError(formatError(err));
                       } finally {
                         setUpdateLoading(false);
                       }
@@ -232,13 +238,13 @@ const AllTransactions = () => {
 
         {/* Full-size image viewer modal */}
         {imageUrlToView && (
-          <div className='fixed inset-0 bg-black/80 flex items-center justify-center z-60' onClick={() => setImageUrlToView(null)}>
+          <div className='fixed inset-0 bg-blue/80 flex items-center justify-center z-60' onClick={() => setImageUrlToView(null)}>
             <div className='relative max-w-[95%] max-h-[95%]' onClick={(e) => e.stopPropagation()}>
-              <button onClick={() => setImageUrlToView(null)} className='absolute top-2 right-2 z-50 text-white bg-black/40 rounded-full p-2'>×</button>
+              <button onClick={() => setImageUrlToView(null)} className='absolute top-2 right-2 z-50 text-white bg-blue/40 rounded-full p-2'>×</button>
               <img src={imageUrlToView} alt='full-passbook' className='w-full h-auto max-h-[90vh] object-contain rounded' />
               <div className='mt-2 flex justify-center gap-4'>
-                <a href={imageUrlToView} target='_blank' rel='noreferrer' className='text-sm text-white underline bg-black/30 px-3 py-1 rounded'>Open in new tab</a>
-                {/* <a href={imageUrlToView} download className='text-sm text-white underline bg-black/30 px-3 py-1 rounded'>Download</a> */}
+                <a href={imageUrlToView} target='_blank' rel='noreferrer' className='text-sm text-white underline bg-blue/30 px-3 py-1 rounded'>Open in new tab</a>
+                {/* <a href={imageUrlToView} download className='text-sm text-white underline bg-blue/30 px-3 py-1 rounded'>Download</a> */}
               </div>
             </div>
           </div>

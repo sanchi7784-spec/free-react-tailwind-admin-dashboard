@@ -7,7 +7,7 @@ import { useState } from "react";
 
 export default function MonthlySalesChart() {
   const options: ApexOptions = {
-    colors: ["#465fff"],
+    colors: ["#FF6B9A"],
     chart: {
       fontFamily: "Outfit, sans-serif",
       type: "bar",
@@ -73,7 +73,17 @@ export default function MonthlySalesChart() {
       },
     },
     fill: {
-      opacity: 1,
+      type: "gradient",
+      gradient: {
+        shade: "light",
+        type: "vertical",
+        shadeIntensity: 0.5,
+        gradientToColors: ["#FFB86B"],
+        inverseColors: false,
+        opacityFrom: 0.95,
+        opacityTo: 0.7,
+        stops: [0, 100],
+      },
     },
 
     tooltip: {

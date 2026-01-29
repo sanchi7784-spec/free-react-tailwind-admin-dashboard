@@ -36,11 +36,9 @@ export default function AllCustomers() {
   const [allCustomers, setAllCustomers] = useState<DisplayCustomer[]>([]);
   // Filters / sorting
   const [query, setQuery] = useState("");
-  const [filterEmail, setFilterEmail] = useState<string>("all");
   const [filterKyc, setFilterKyc] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("id");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   function openMailModal(c: DisplayCustomer) {
     setSelectedCustomer(c);
     setSubject("");
@@ -113,27 +111,14 @@ export default function AllCustomers() {
         status: mapStatus(editingCustomer.status),
       } : c)));
 
+      // celebration: confetti + pop sound
+      try { triggerDenseConfetti(); } catch (e) {}
+      try { playGunshotSequence(); } catch (e) {}
+
       closeEditModal();
     } catch (err: any) {
       console.error(err);
-      // Extract error message from API response or error object
-      let errorMsg = 'Update failed';
-      if (err?.detail) {
-        // Parse JSON detail from error message if present
-        try {
-          const match = err.detail.match(/\{.*\}/);
-          if (match) {
-            const jsonErr = JSON.parse(match[0]);
-            errorMsg = jsonErr.detail || err.detail;
-          } else {
-            errorMsg = err.detail;
-          }
-        } catch {
-          errorMsg = err.detail;
-        }
-      } else if (err?.detail) {
-        errorMsg = err.detail;
-      }
+      const errorMsg = err?.detail || err?.message || 'Update failed';
       setEditError(errorMsg);
     } finally {
       setEditSaving(false);
@@ -161,7 +146,6 @@ export default function AllCustomers() {
   }
   function applyFilters() {
     let list = allCustomers.slice();
-
     // Query search (name, email, phone)
     const q = query.trim().toLowerCase();
     if (q) {
@@ -173,39 +157,27 @@ export default function AllCustomers() {
         );
       });
     }
-    // Email filter
-    if (filterEmail === "verified") {
-      list = list.filter((c) => !!c.email);
-    } else if (filterEmail === "unverified") {
-      list = list.filter((c) => !c.email);
-    }
-
     // KYC filter
     if (filterKyc !== "all") {
       list = list.filter((c) => String(c.kyc) === filterKyc);
     }
-
     // Status filter
     if (filterStatus !== "all") {
       list = list.filter((c) => String(c.status) === filterStatus);
     }
-
     // Sorting
     list.sort((a, b) => {
       let cmp = 0;
       if (sortBy === "name") cmp = String(a.name ?? "").localeCompare(String(b.name ?? ""));
       else if (sortBy === "balance") cmp = (Number(a.balanceNumber ?? 0) - Number(b.balanceNumber ?? 0));
       else cmp = (Number(a.id) - Number(b.id));
-
-      if (sortDir === "desc") cmp = -cmp;
       return cmp;
     });
-
     setRemoteCustomers(list);
   }
   useEffect(() => {
     const q = query.trim();
-    const filtersAreDefault = filterEmail === "all" && filterKyc === "all" && filterStatus === "all";
+    const filtersAreDefault = filterKyc === "all" && filterStatus === "all";
     if (q === "") {
       if (filtersAreDefault) {
         setRemoteCustomers(allCustomers);
@@ -213,13 +185,139 @@ export default function AllCustomers() {
         applyFilters();
       }
     }
-  }, [query, filterEmail, filterKyc, filterStatus, allCustomers]);
-
+  }, [query, filterKyc, filterStatus, allCustomers]);
   function colorFromId(id: number) {
     const colors = ["#1e3a5f", "#6b7d4f", "#dc5656", "#6b5d99", "#3b5366", "#2b7a8b", "#d14d72"];
     return colors[id % colors.length];
   }
 
+  // Dense confetti: create many small pieces and animate on a canvas overlay
+  function triggerDenseConfetti() {
+    try {
+      const colors = ['#ff4d4f','#ffd666','#73d13d','#36cfc9','#40a9ff','#9254de','#ff85c0','#ffa940'];
+      const canvas = document.createElement('canvas');
+      canvas.style.position = 'fixed';
+      canvas.style.top = '0';
+      canvas.style.left = '0';
+      canvas.style.width = '100%';
+      canvas.style.height = '100%';
+      canvas.style.pointerEvents = 'none';
+      canvas.style.zIndex = '9999';
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(window.innerWidth * dpr);
+      canvas.height = Math.floor(window.innerHeight * dpr);
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.scale(dpr, dpr);
+      document.body.appendChild(canvas);
+
+      const pieces: Array<{x:number,y:number,vx:number,vy:number,size:number,color:string,rot:number,vr:number,shape:number}> = [];
+      const count = 160; // dense
+      for (let i=0;i<count;i++) {
+        pieces.push({
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * -window.innerHeight * 0.6,
+          vx: (Math.random()-0.5) * 8,
+          vy: 2 + Math.random() * 8,
+          size: 4 + Math.random() * 10,
+          color: colors[Math.floor(Math.random()*colors.length)],
+          rot: Math.random()*Math.PI*2,
+          vr: (Math.random()-0.5)*0.3,
+          shape: Math.random() > 0.5 ? 0 : 1,
+        });
+      }
+
+      let frame = 0;
+      const raf = () => {
+        frame++;
+        ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+        for (let p of pieces) {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.vy += 0.15; // gravity
+          p.rot += p.vr;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          if (p.shape === 0) ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size*0.6);
+          else {
+            ctx.beginPath();
+            ctx.ellipse(0,0,p.size/2,p.size*0.35,0,0,Math.PI*2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
+        if (frame < 220) requestAnimationFrame(raf);
+        else { try { document.body.removeChild(canvas); } catch(e){} }
+      };
+      requestAnimationFrame(raf);
+    } catch (e) {
+      console.error('confetti failed', e);
+    }
+  }
+
+  // Gunshot-like sound using WebAudio API (synthesized noise + low thump)
+  function playGunshotSound() {
+    try {
+      const Ctx = (window.AudioContext || (window as any).webkitAudioContext);
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      const now = ctx.currentTime;
+
+      // Noise burst (the crack)
+      const bufferSize = Math.floor(ctx.sampleRate * 0.5);
+      const buffer = ctx.createBuffer(2, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-3 * i / bufferSize);
+
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.value = 20000;
+      noiseFilter.Q.value = 1.2;
+      const noiseGain = ctx.createGain();
+      noiseGain.gain.setValueAtTime(1, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(ctx.destination);
+      noise.start(now);
+      noise.stop(now + 0.2);
+
+      // Low thump (body)
+      const thump = ctx.createOscillator();
+      const thumpGain = ctx.createGain();
+      thump.type = 'sine';
+      thump.frequency.setValueAtTime(120, now);
+      thumpGain.gain.setValueAtTime(0.0001, now);
+      thumpGain.gain.exponentialRampToValueAtTime(0.8, now + 0.005);
+      thumpGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.6);
+      thump.connect(thumpGain); thumpGain.connect(ctx.destination);
+      thump.start(now);
+      thump.stop(now + 0.65);
+
+      // Gentle reverb-like feedback (short)
+      // close the context a bit later to release resources
+      setTimeout(() => {
+        try { ctx.close(); } catch (e) {}
+      }, 1000);
+    } catch (e) {
+      console.error('gunshot sound failed', e);
+    }
+  }
+
+  // Play gunshot sound 3 times in quick succession
+  function playGunshotSequence(repeats = 3, spacingMs = 300) {
+    try {
+      for (let i = 0; i < repeats; i++) {
+        setTimeout(() => {
+          try { playGunshotSound(); } catch (e) { console.error(e); }
+        }, i * spacingMs);
+      }
+    } catch (e) {
+      console.error('gunshot sequence failed', e);
+    }
+  }
   function formatCurrency(v?: number | null) {
     if (v == null) return "₹0.00";
     try {
@@ -228,14 +326,12 @@ export default function AllCustomers() {
       return `₹${Number(v).toFixed(2)}`;
     }
   }
-
   function formatDate(d?: string | null) {
     if (!d) return "-";
     const dt = new Date(d);
     if (isNaN(dt.getTime())) return d;
     return dt.toLocaleDateString();
   }
-
   function mapGender(g?: number | string | null) {
     if (g == null) return null;
     // numeric codes
@@ -245,7 +341,6 @@ export default function AllCustomers() {
       if (g === 3) return "Other";
       return "-";
     }
- 
     const s = String(g).toLowerCase();
     if (s === "1") return "Male";
     if (s === "2") return "Female";
@@ -255,7 +350,6 @@ export default function AllCustomers() {
     if (s === "other" || s === "o") return "Other";
     return g as string;
   }
-
   function mapStatus(s?: number | string | null) {
     if (s == null) return "Unknown";
     if (typeof s === "number") return s === 1 ? "Active" : "Inactive";
@@ -264,7 +358,6 @@ export default function AllCustomers() {
     if (st === "0" || st === "inactive") return "Inactive";
     return s as string;
   }
-
   function genderToCode(g?: number | string | null): number | undefined {
     if (g == null) return undefined;
     if (typeof g === 'number') return g;
@@ -275,7 +368,6 @@ export default function AllCustomers() {
     const n = Number(s);
     return Number.isNaN(n) ? undefined : n;
   }
-
   function statusToCode(s?: number | string | null): number | undefined {
     if (s == null) return undefined;
     if (typeof s === 'number') return s;
@@ -285,7 +377,6 @@ export default function AllCustomers() {
     const n = Number(st);
     return Number.isNaN(n) ? undefined : n;
   }
-
   useEffect(() => {
     let mounted = true;
     setLoading(true);
@@ -316,7 +407,7 @@ export default function AllCustomers() {
       .catch((err: any) => {
         console.error(err);
         if (!mounted) return;
-        setError(err?.detail ?? "Failed to load users");
+        setError(err?.detail || err?.message || "Failed to load users");
       })
       .finally(() => {
         if (!mounted) return;
@@ -327,14 +418,11 @@ export default function AllCustomers() {
       mounted = false;
     };
   }, []);
-
   return (
     <>
       <PageMeta title="All Customers - Admin" description="All customers listing" />
       <PageBreadcrumb pageTitle="All Customers" />
-
       <div className="w-full max-w-full overflow-x-hidden">
-  
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 md:p-5 mb-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center gap-3">
             <input
@@ -345,37 +433,22 @@ export default function AllCustomers() {
               onChange={(e) => setQuery(e.target.value)}
               className="w-full md:w-auto md:flex-1 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-violet-500 dark:focus:border-violet-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
-
-            <select value={filterEmail} onChange={(e) => setFilterEmail(e.target.value)} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full md:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-              <option value="all">Filter By Email St</option>
-              <option value="verified">Email Verified</option>
-              <option value="unverified">Email Unverified</option>
-            </select>
-
             <select value={filterKyc} onChange={(e) => setFilterKyc(e.target.value)} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full md:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
               <option value="all">Filter By KYC</option>
               <option value="Verified">Verified</option>
               <option value="Unverified">Unverified</option>
               <option value="Pending">Pending</option>
             </select>
-
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full md:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
               <option value="all">Filter By Status</option>
               <option value="Active">Active</option>
               <option value="Inactive">Inactive</option>
             </select>
-
             <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full md:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
               <option value="id">Sort By ID</option>
               <option value="name">Sort By Name</option>
               <option value="balance">Sort By Balance</option>
             </select>
-
-            <select value={sortDir} onChange={(e) => setSortDir(e.target.value as "asc" | "desc")} className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full md:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-              <option value="asc">Asc</option>
-              <option value="desc">Desc</option>
-            </select>
-
             <button onClick={() => applyFilters()} className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-6 py-2 rounded text-sm font-medium inline-flex items-center justify-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -385,21 +458,16 @@ export default function AllCustomers() {
             </button>
           </div>
         </div>
-
-        
           {loading && (
             <div className="mb-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-700 dark:text-gray-200">
               Loading users...
             </div>
           )}
-
           {error && (
             <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg text-sm text-red-700 dark:text-red-200">
               Error: {error}
             </div>
           )}
-
-      
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1200px] hidden md:table">
@@ -506,16 +574,6 @@ export default function AllCustomers() {
                           <path d="m15 5 4 4"></path>
                         </svg>
                       </button>
-                      <button 
-                        className="w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-colors"
-                        title="Delete Customer"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18"></path>
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                        </svg>
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -523,8 +581,6 @@ export default function AllCustomers() {
             </tbody>
           </table>
           </div>
-
-
           <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
             {remoteCustomers.map((c) => (
               <div key={c.id} className="p-4">
@@ -579,15 +635,6 @@ export default function AllCustomers() {
                           <path d="m15 5 4 4"></path>
                         </svg>
                       </button>
-                      <button 
-                        className="w-9 h-9 rounded-full bg-red-500 hover:bg-red-600 text-white flex items-center justify-center transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M3 6h18"></path>
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-                        </svg>
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -595,29 +642,27 @@ export default function AllCustomers() {
             ))}
           </div>
         </div>
-
         {/* Pagination (simple) */}
         <div className="mt-4 flex justify-end">
           <nav>
             <ul className="inline-flex items-center -space-x-px">
-              <li><button className="px-3 py-1 border rounded-l">Prev</button></li>
-              <li><button className="px-3 py-1 border">1</button></li>
-              <li><button className="px-3 py-1 border">2</button></li>
-              <li><button className="px-3 py-1 border">3</button></li>
-              <li><button className="px-3 py-1 border rounded-r">Next</button></li>
+              <li><button className="px-3 py-1 border rounded-l dark:text-white">Prev</button></li>
+              <li><button className="px-3 py-1 border dark:text-white">1</button></li>
+              <li><button className="px-3 py-1 border dark:text-white">2</button></li>
+              <li><button className="px-3 py-1 border dark:text-white">3</button></li>
+              <li><button className="px-3 py-1 border rounded-r dark:text-white">Next</button></li>
             </ul>
           </nav>
         </div>
         {/* Mail modal */}
         {showMailModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/50" onClick={closeMailModal} />
+            <div className="absolute inset-0 bg-blue/50" onClick={closeMailModal} />
             <div className="relative bg-white dark:bg-gray-800 rounded-lg w-full max-w-lg mx-4 p-6 shadow-lg">
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Send Mail to {selectedCustomer?.name}</h3>
                 <button onClick={closeMailModal} className="text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200 text-2xl leading-none">×</button>
               </div>
-
               <form onSubmit={handleSendMail}>
                 <label className="block text-sm text-slate-600 dark:text-gray-300 mb-2">Subject:</label>
                 <input
@@ -626,7 +671,6 @@ export default function AllCustomers() {
                   type="text"
                   className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 mb-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
-
                 <label className="block text-sm text-slate-600 dark:text-gray-300 mb-2">Email Details</label>
                 <textarea
                   value={message}
@@ -634,7 +678,6 @@ export default function AllCustomers() {
                   rows={6}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 mb-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
-
                 <div className="flex items-center gap-3">
                   <button type="submit" className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2">
                     <span className="text-lg">✈</span>
@@ -649,13 +692,12 @@ export default function AllCustomers() {
         {/* Edit User modal */}
         {showEditModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/50" onClick={closeEditModal} />
+            <div className="absolute inset-0 bg-blue/50" onClick={closeEditModal} />
             <div className="relative bg-white dark:bg-gray-800 rounded-lg w-full max-w-2xl mx-4 p-6 shadow-lg">
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Edit User {editingCustomer?.user_id ?? ''}</h3>
                 <button onClick={closeEditModal} className="text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200 text-2xl leading-none">×</button>
               </div>
-
               {!editingCustomer ? (
                 <div className="py-8 text-center">{editError ? <div className="text-red-600">{editError}</div> : <div>Loading user...</div>}</div>
               ) : (
@@ -671,7 +713,6 @@ export default function AllCustomers() {
                         type="text"
                       />
                     </div>
-
                     <div>
                       <label className="block text-sm text-slate-600 dark:text-gray-300 mb-1">Email</label>
                       <input
@@ -681,7 +722,6 @@ export default function AllCustomers() {
                         type="email"
                       />
                     </div>
-
                     <div>
                       <label className="block text-sm text-slate-600 dark:text-gray-300 mb-1">Phone</label>
                       <input
@@ -691,7 +731,6 @@ export default function AllCustomers() {
                         type="text"
                       />
                     </div>
-
                     <div>
                       <label className="block text-sm text-slate-600 dark:text-gray-300 mb-1">DOB</label>
                       <input
@@ -701,7 +740,6 @@ export default function AllCustomers() {
                         type="date"
                       />
                     </div>
-
                     <div>
                       <label className="block text-sm text-slate-600 dark:text-gray-300 mb-1">Gender</label>
                       <select
@@ -715,7 +753,6 @@ export default function AllCustomers() {
                         <option value={3}>Other</option>
                       </select>
                     </div>
-
                     <div>
                       <label className="block text-sm text-slate-600 dark:text-gray-300 mb-1">Status</label>
                       <select
@@ -738,7 +775,6 @@ export default function AllCustomers() {
                         step="0.01"
                       />
                     </div>
-
                     <div>
                       <label className="block text-sm text-slate-600 dark:text-gray-300 mb-1">MPIN</label>
                       <input
@@ -748,11 +784,8 @@ export default function AllCustomers() {
                         className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                         placeholder="Set new MPIN (leave blank to keep)"
                       />
-                    </div>
-
-                  
+                    </div>                  
                   </div>
-
                   <div className="mt-4 flex items-center gap-3">
                     <button onClick={handleSaveEdit} disabled={editSaving} className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2">
                       {editSaving ? 'Saving...' : 'Save Changes'}

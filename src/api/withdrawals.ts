@@ -38,8 +38,17 @@ export async function fetchWithdrawals(options?: { baseUrl?: string; apiKey?: st
 
   const res = await fetch(url, { method: "GET", headers });
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Failed to fetch withdrawals: ${res.status} ${res.statusText} - ${text}`);
+    const text = await res.text().catch(() => "");
+    let errorData: any = null;
+    try {
+      errorData = text ? JSON.parse(text) : null;
+    } catch (e) {
+      // Not JSON
+    }
+    const message = errorData?.detail || text || `Failed to fetch withdrawals: ${res.status}`;
+    const err = new Error(message);
+    (err as any).detail = errorData?.detail || text;
+    throw err;
   }
   const data = (await res.json()) as WithdrawalsResponse;
   return data;

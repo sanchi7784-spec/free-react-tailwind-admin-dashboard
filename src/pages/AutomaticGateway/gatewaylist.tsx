@@ -150,7 +150,7 @@ const AutomaticGateway: React.FC = () => {
                       className={`px-3 py-1 rounded-full text-sm text-white ${
                         item.withdraw === "Yes"
                           ? "bg-teal-500"
-                          : "bg-yellow-400 text-black"
+                          : "bg-yellow-400 text-blue"
                       }`}
                     >
                       {item.withdraw}
@@ -183,7 +183,7 @@ const AutomaticGateway: React.FC = () => {
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="absolute inset-0 bg-black bg-opacity-50"
+            className="absolute inset-0 bg-blue bg-opacity-50"
             onClick={closeModal}
           />
 

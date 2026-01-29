@@ -23,9 +23,63 @@ export type UsersResponse = {
 
 const BASE = (import.meta as any).env?.VITE_API_BASE || "https://api.mastropaytech.com";
 
+export type UpdateStatusResponse = {
+  detail: string;
+};
+
+export async function updateUserStatus(userId: number, status: number): Promise<UpdateStatusResponse> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("ecommerce_token") : null;
+  
+  if (!token) {
+    throw new Error("Authentication token not found. Please login first.");
+  }
+  
+  const url = `https://api.mastrokart.com/dashboard/users/status/${userId}`;
+  
+  const res = await fetch(url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({ status }),
+  });
+  
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    let errorData: any = null;
+    try {
+      errorData = text ? JSON.parse(text) : null;
+    } catch (e) {
+      // Not JSON
+    }
+    const message = errorData?.detail || text || `Failed to update user status: ${res.status}`;
+    throw new Error(message);
+  }
+  
+  return await res.json();
+}
+
 export async function fetchUsers(): Promise<UsersResponse> {
-  const userId = typeof window !== "undefined" ? localStorage.getItem("mp_user_id") : null;
+  // Use correct user ID based on domain
+  const domain = typeof window !== "undefined" ? localStorage.getItem("ecommerce_domain") : null;
+  let userId: string | null = null;
+  
+  if (domain === "2") {
+    // Ecommerce user - use ecommerce_user_id only
+    userId = typeof window !== "undefined" ? localStorage.getItem("ecommerce_user_id") : null;
+  } else {
+    // MPay/Super Admin - try mp_user_id first, then ecommerce_user_id
+    userId = typeof window !== "undefined" 
+      ? (localStorage.getItem("mp_user_id") || localStorage.getItem("ecommerce_user_id"))
+      : null;
+  }
+  
+  // Try mp_api_key first (for backward compatibility with domain 0 & 1)
+  // Then fallback to ecommerce_token (unified auth system)
   const apiKey = typeof window !== "undefined" ? localStorage.getItem("mp_api_key") : null;
+  const ecommerceToken = typeof window !== "undefined" ? localStorage.getItem("ecommerce_token") : null;
+  const token = apiKey || ecommerceToken;
 
   const listUrl = userId ? `${BASE.replace(/\/$/, "")}/dashboard/users/${userId}` : `${BASE.replace(/\/$/, "")}/dashboard/users`;
   const singleUrl = userId ? `${BASE.replace(/\/$/, "")}/dashboard/users/${userId}` : null;
@@ -36,7 +90,7 @@ export async function fetchUsers(): Promise<UsersResponse> {
     headers: {
       Accept: "application/json",
       "Content-Type": "application/json",
-      ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
 
@@ -59,7 +113,16 @@ export async function fetchUsers(): Promise<UsersResponse> {
 
       if (!res.ok) {
         const text = await res.text().catch(() => "");
-        throw new Error(`Failed to fetch users: ${res.status} ${text}`);
+        let errorData: any = null;
+        try {
+          errorData = text ? JSON.parse(text) : null;
+        } catch (e) {
+          // Not JSON
+        }
+        const message = errorData?.detail || text || `Failed to fetch users: ${res.status}`;
+        const err = new Error(message);
+        (err as any).detail = errorData?.detail || text;
+        throw err;
       }
 
       const json = await res.json();
@@ -83,7 +146,16 @@ export async function fetchUsers(): Promise<UsersResponse> {
 
 
   const text = await res.text().catch(() => "");
-  throw new Error(`Failed to fetch users: ${res.status} ${text}`);
+  let errorData: any = null;
+  try {
+    errorData = text ? JSON.parse(text) : null;
+  } catch (e) {
+    // Not JSON
+  }
+  const message = errorData?.detail || text || `Failed to fetch users: ${res.status}`;
+  const err = new Error(message);
+  (err as any).detail = errorData?.detail || text;
+  throw err;
 }
 
 export async function fetchUser(id: number): Promise<ApiUser> {
@@ -108,12 +180,114 @@ export async function fetchUser(id: number): Promise<ApiUser> {
   }
 
   if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    throw new Error(`Failed to fetch user ${id}: ${res.status} ${text}`);
+    try {
+      const errorData = await res.json();
+      throw new Error(errorData?.detail || `Failed to fetch user ${id}: ${res.status}`);
+    } catch (e) {
+      const text = await res.text().catch(() => "");
+      throw new Error(text || `Failed to fetch user ${id}: ${res.status}`);
+    }
   }
 
   const data = await res.json();
   return data as ApiUser;
+}
+
+export type UserDetailResponse = {
+  detail: string;
+  user_id: number;
+  name: string | null;
+  email: string | null;
+  phone: string | null;
+  role_id: number;
+  dob: string | null;
+  gender: string | null;
+};
+
+export async function fetchUserDetails(userId: string): Promise<UserDetailResponse> {
+  // Try mp_api_key first (for backward compatibility with domain 0 & 1)
+  // Then fallback to ecommerce_token (unified auth system)
+  const apiKey = typeof window !== "undefined" ? localStorage.getItem("mp_api_key") : null;
+  const ecommerceToken = typeof window !== "undefined" ? localStorage.getItem("ecommerce_token") : null;
+  const token = apiKey || ecommerceToken;
+
+  if (!token) {
+    throw new Error("Authentication token not found. Please login first.");
+  }
+
+  const res = await fetch(`${BASE}/dashboard/admin/user/${userId}`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!res.ok) {
+    try {
+      const errorData = await res.json();
+      throw new Error(errorData?.detail || `Failed to fetch user details: ${res.status}`);
+    } catch (e) {
+      const text = await res.text().catch(() => "");
+      throw new Error(text || `Failed to fetch user details: ${res.status}`);
+    }
+  }
+
+  const data = await res.json();
+  return data as UserDetailResponse;
+}
+
+export type UpdateUserDetailsPayload = {
+  name?: string;
+  email?: string;
+  phone?: string;
+  mpin?: string;
+  dob?: string;
+  gender?: number | string;
+};
+
+export type UpdateUserDetailsResponse = {
+  detail: string;
+  user_id: number;
+};
+
+export async function updateUserDetails(
+  userId: string,
+  payload: UpdateUserDetailsPayload
+): Promise<UpdateUserDetailsResponse> {
+  // Try mp_api_key first (for backward compatibility with domain 0 & 1)
+  // Then fallback to ecommerce_token (unified auth system)
+  const apiKey = typeof window !== "undefined" ? localStorage.getItem("mp_api_key") : null;
+  const ecommerceToken = typeof window !== "undefined" ? localStorage.getItem("ecommerce_token") : null;
+  const token = apiKey || ecommerceToken;
+
+  if (!token) {
+    throw new Error("Authentication token not found. Please login first.");
+  }
+
+  const res = await fetch(`${BASE}/dashboard/admin/user/${userId}`, {
+    method: "PATCH",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    try {
+      const errorData = await res.json();
+      throw new Error(errorData?.detail || `Failed to update user details: ${res.status}`);
+    } catch (e) {
+      const text = await res.text().catch(() => "");
+      throw new Error(text || `Failed to update user details: ${res.status}`);
+    }
+  }
+
+  const data = await res.json();
+  return data as UpdateUserDetailsResponse;
 }
 
 export async function probeUserMethods(id: number): Promise<{ status: number; headers: Record<string,string>; text: string }> {
@@ -150,8 +324,25 @@ export type UpdateUserPayload = Partial<{
 }>;
 
 export async function updateUser(id: number, payload: UpdateUserPayload): Promise<any> {
-  const adminId = typeof window !== "undefined" ? localStorage.getItem("mp_user_id") : null;
+  // Use correct user ID based on domain
+  const domain = typeof window !== "undefined" ? localStorage.getItem("ecommerce_domain") : null;
+  let adminId: string | null = null;
+  
+  if (domain === "2") {
+    // Ecommerce user - use ecommerce_user_id only
+    adminId = typeof window !== "undefined" ? localStorage.getItem("ecommerce_user_id") : null;
+  } else {
+    // MPay/Super Admin - try mp_user_id first, then ecommerce_user_id
+    adminId = typeof window !== "undefined" 
+      ? (localStorage.getItem("mp_user_id") || localStorage.getItem("ecommerce_user_id"))
+      : null;
+  }
+  
+  // Try mp_api_key first (for backward compatibility with domain 0 & 1)
+  // Then fallback to ecommerce_token (unified auth system)
   const apiKey = typeof window !== "undefined" ? localStorage.getItem("mp_api_key") : null;
+  const ecommerceToken = typeof window !== "undefined" ? localStorage.getItem("ecommerce_token") : null;
+  const token = apiKey || ecommerceToken;
 
  
   const url = adminId 
@@ -164,7 +355,7 @@ export async function updateUser(id: number, payload: UpdateUserPayload): Promis
       "Content-Type": "application/json",
       ...(extraHeaders || {}),
     };
-    if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
+    if (token) headers["Authorization"] = `Bearer ${token}`;
 
     const res = await fetch(url, {
       method,
@@ -195,7 +386,13 @@ export async function updateUser(id: number, payload: UpdateUserPayload): Promis
   }
 
   if (!attempt.res.ok) {
-    throw new Error(`Failed to update user ${id}: ${attempt.res.status} ${attempt.text}`);
+    let errorMessage = `Failed to update user ${id}: ${attempt.res.status}`;
+    if (attempt.data?.detail) {
+      errorMessage = attempt.data.detail;
+    } else if (attempt.text) {
+      errorMessage = attempt.text;
+    }
+    throw new Error(errorMessage);
   }
 
   return attempt.data;

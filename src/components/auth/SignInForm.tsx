@@ -6,75 +6,102 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-import { loginRequest } from "../../api/auth";
+import { loginRequest, LoginResponse } from "../../api/auth";
 import { setAuth } from "../../utils/auth";
+import { storeEcommerceAuth } from "../../utils/ecommerceAuth";
+
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [email, setEmail] = useState("");
-  const [mpin, setMpin] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    // Client-side validation to avoid confusing object errors
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter both email and password.");
+      setLoading(false);
+      return;
+    }
+    
     try {
-      let res: any = await loginRequest(email, mpin);
-      // if API helper returned a raw JSON string, try to parse it
-      if (typeof res === "string") {
-        try {
-          res = JSON.parse(res);
-        } catch (e) {
-          // leave as string
-        }
-      }
-
-      const successDetail = res?.detail ?? (typeof res === "string" ? res : null);
-      if (successDetail && /success/i.test(String(successDetail))) {
+      const res = await loginRequest(email, password);
+      
+      // Check if login was successful
+      if (res.detail && /success/i.test(res.detail)) {
+        // Store old auth format for compatibility
         setAuth({ email });
-        // store user id for role-based dashboard behavior
-        if (res && (res.user_id || res.userId || res.user)) {
-          const uid = res.user_id ?? res.userId ?? res.user;
-          try {
-            localStorage.setItem('mp_user_id', String(uid));
-          } catch (e) {
-            // ignore storage errors
-          }
+        
+        // Store new auth with domain
+        storeEcommerceAuth(res.user_id, res.data.access_token, res.domain);
+        
+        // Handle old system compatibility based on domain
+        if (res.domain === 0 || res.domain === 1) {
+          // For Gold/BBPS users, also store in old format
+          localStorage.setItem('mp_user_id', String(res.user_id));
+          localStorage.setItem('mp_api_key', res.data.access_token);
+        } else if (res.domain === 2) {
+          // For Ecommerce users, clear old format to prevent conflicts
+          localStorage.removeItem('mp_user_id');
+          localStorage.removeItem('mp_api_key');
         }
-        // redirect to dashboard root
-        window.location.replace("/");
+        
+        // Set dashboard type based on domain
+        // Domain 0 (Super Admin) -> Gold dashboard (can access all)
+        // Domain 1 (MPay User) -> Gold dashboard
+        // Domain 2 (Ecom User) -> Ecommerce dashboard
+        if (res.domain === 2) {
+          localStorage.setItem('dashboardType', 'ecommerce');
+          window.location.replace("/ecom");
+        } else {
+          localStorage.setItem('dashboardType', 'gold');
+          window.location.replace("/");
+        }
         return;
       }
+      
+      const formatDetail = (d: any) => {
+        if (!d) return null;
+        if (typeof d === "string") return d;
+        if (typeof d === "object") {
+          if ((d as any).message) return (d as any).message;
+          try {
+            return JSON.stringify(d);
+          } catch {
+            return String(d);
+          }
+        }
+        return String(d);
+      };
 
-      setError(typeof successDetail === "string" ? successDetail : "Login failed");
+      setError(formatDetail(res.detail) || "Login failed");
     } catch (err: any) {
-      // Normalize various error shapes to pull out `.detail` when present
-      let message: string | null = null;
-      if (!err) message = "Login failed";
-      else if (typeof err === "string") message = err;
-      else if (err.detail) message = String(err.detail);
-      else if (err.detail) message = String(err.detail);
-      else {
-        try {
-          const maybe = JSON.stringify(err);
-          message = maybe;
-        } catch (e) {
-          message = "Login failed";
+      const formatDetail = (d: any) => {
+        if (!d) return null;
+        if (typeof d === "string") return d;
+        if (typeof d === "object") {
+          if ((d as any).message) return (d as any).message;
+          try {
+            return JSON.stringify(d);
+          } catch {
+            return String(d);
+          }
         }
-      }
+        return String(d);
+      };
 
-      // if message looks like JSON with a detail field, extract it
-      try {
-        if (message && message.trim().startsWith("{")) {
-          const parsed = JSON.parse(message);
-          if (parsed?.detail) message = String(parsed.detail);
-        }
-      } catch (e) {
-        // ignore parse errors
+      let message = "Login failed";
+      if (err?.message) {
+        message = err.message;
+      } else if (err?.detail) {
+        message = formatDetail(err.detail) || message;
       }
-
-      setError(message || "Login failed");
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -82,13 +109,13 @@ export default function SignInForm() {
   return (
     <div className="flex flex-col flex-1">
       <div className="w-full max-w-md pt-10 mx-auto">
-        <Link
+        {/* <Link
           to="/"
           className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
           Back to dashboard
-        </Link>
+        </Link> */}
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
@@ -119,7 +146,7 @@ export default function SignInForm() {
                   Password <span className="text-error-500">*</span>
                 </Label>
                 <div className="relative">
-                  <Input type={showPassword ? "text" : "password"} placeholder="Enter your Password" value={mpin} onChange={(e: any) => setMpin(e.target.value)} />
+                  <Input type={showPassword ? "text" : "password"} placeholder="Enter your Password" value={password} onChange={(e: any) => setPassword(e.target.value)} />
                   <span onClick={() => setShowPassword(!showPassword)} className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2">
                     {showPassword ? <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" /> : <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5" />}
                   </span>
@@ -131,21 +158,21 @@ export default function SignInForm() {
                   <Checkbox checked={isChecked} onChange={setIsChecked} />
                   <span className="block font-normal text-gray-700 text-theme-sm dark:text-gray-400">Keep me logged in</span>
                 </div>
-                <Link to="/reset-password" className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400">Forgot password?</Link>
+                {/* <Link to="/reset-password" className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400">Forgot password?</Link> */}
               </div>
               <div>
-                <Button className="w-full" size="sm" type="submit" disabled={loading}>
+                <Button className="w-full bg-stone-950" size="sm" type="submit" disabled={loading}>
                   {loading ? "Signing in..." : "Sign in"}
                 </Button>
               </div>
             </div>
           </form>
-          <div className="mt-5">
+          {/* <div className="mt-5">
             <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
               Don&apos;t have an account? {" "}
               <Link to="/signup" className="text-brand-500 hover:text-brand-600 dark:text-brand-400">Sign Up</Link>
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

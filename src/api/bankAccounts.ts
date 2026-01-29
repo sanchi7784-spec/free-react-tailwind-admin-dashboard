@@ -35,16 +35,16 @@ export async function fetchBankAccounts(options?: { baseUrl?: string; apiKey?: s
 
   const res = await fetch(url, { method: "GET", headers });
   if (!res.ok) {
-    try {
-      const errorData = await res.json();
-      const errorMessage = errorData && errorData.detail
-        ? (typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail))
-        : `${res.status} ${res.statusText}`;
-      throw new Error(errorMessage);
-    } catch (e) {
-      const text = await res.text();
-      throw new Error(`Failed to fetch bank accounts: ${res.status} - ${text}`);
-    }
+    // Try to parse JSON error body and attach it to the thrown error as `.detail`
+    const text = await res.text().catch(() => "");
+    let parsed: any = null;
+    try { parsed = text ? JSON.parse(text) : null; } catch (e) { parsed = null; }
+    const message = parsed?.detail
+      ? (typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail))
+      : parsed?.errors ? JSON.stringify(parsed.errors) : (text || `${res.status} ${res.statusText}`);
+    const err = new Error(message);
+    (err as any).detail = parsed ?? text;
+    throw err;
   }
   const data = (await res.json()) as BankAccountsResponse;
   return data;
@@ -85,14 +85,15 @@ export async function patchBankAccountVerification(bankId: string | number, body
   }
 
   if (!res.ok) {
-    try {
-      const err = await res.json();
-      const msg = err && err.detail ? (typeof err.detail === 'string' ? err.detail : JSON.stringify(err.detail)) : `${res.status} ${res.statusText}`;
-      throw new Error(msg);
-    } catch (e) {
-      const text = await res.text();
-      throw new Error(`Failed to update bank account: ${res.status} - ${text}`);
-    }
+    const text = await res.text().catch(() => "");
+    let parsed: any = null;
+    try { parsed = text ? JSON.parse(text) : null; } catch (e) { parsed = null; }
+    const message = parsed?.detail
+      ? (typeof parsed.detail === 'string' ? parsed.detail : JSON.stringify(parsed.detail))
+      : parsed?.errors ? JSON.stringify(parsed.errors) : (text || `${res.status} ${res.statusText}`);
+    const err = new Error(message);
+    (err as any).detail = parsed ?? text;
+    throw err;
   }
   const data = (await res.json()) as PatchBankAccountResponse;
   return data;

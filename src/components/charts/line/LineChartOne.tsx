@@ -8,7 +8,7 @@ export default function LineChartOne() {
       position: "top",
       horizontalAlign: "left",
     },
-    colors: ["#465FFF", "#9CB9FF"], // Define line colors
+    colors: ["#FF6B9A", "#7C4DFF"], // Define line colors (pink/orange & purple)
     chart: {
       fontFamily: "Outfit, sans-serif",
       height: 310,
@@ -25,8 +25,11 @@ export default function LineChartOne() {
     fill: {
       type: "gradient",
       gradient: {
-        opacityFrom: 0.55,
+        shade: "light",
+        type: "vertical",
+        opacityFrom: 0.8,
         opacityTo: 0,
+        gradientToColors: ["#FFB86B", "#A389FF"],
       },
     },
     markers: {

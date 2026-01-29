@@ -147,7 +147,7 @@ const BillServicesList: React.FC = () => {
         {/* Edit modal */}
         {editingService && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/40" onClick={closeModal} />
+            <div className="absolute inset-0 bg-blue/40" onClick={closeModal} />
             <div className="relative w-full max-w-lg mx-4">
               <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg overflow-hidden">
                 <div className="p-4 border-b dark:border-gray-800">

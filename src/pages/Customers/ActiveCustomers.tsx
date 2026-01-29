@@ -288,7 +288,7 @@ export default function ActiveCustomers() {
         {/* Mail modal */}
         {showMailModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/50" onClick={closeMailModal} />
+            <div className="absolute inset-0 bg-blue/50" onClick={closeMailModal} />
             <div className="relative bg-white dark:bg-gray-800 rounded-lg w-full max-w-lg mx-4 p-6 shadow-lg">
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Send Mail to {selectedCustomer?.name}</h3>

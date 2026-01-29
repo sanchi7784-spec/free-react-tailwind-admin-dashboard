@@ -33,7 +33,16 @@ export async function fetchChargeRules(): Promise<ChargeRulesResponse> {
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`Failed to fetch charge rules: ${res.status} ${text}`);
+    let errorData: any = null;
+    try {
+      errorData = text ? JSON.parse(text) : null;
+    } catch (e) {
+      // Not JSON
+    }
+    const message = errorData?.detail || text || `Failed to fetch charge rules: ${res.status}`;
+    const err = new Error(message);
+    (err as any).detail = errorData?.detail || text;
+    throw err;
   }
 
   const data = (await res.json()) as ChargeRulesResponse;
@@ -71,7 +80,16 @@ export async function createChargeRule(payload: CreateChargeRulePayload): Promis
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`Failed to create charge rule: ${res.status} ${text}`);
+    let errorData: any = null;
+    try {
+      errorData = text ? JSON.parse(text) : null;
+    } catch (e) {
+      // Not JSON
+    }
+    const message = errorData?.detail || text || `Failed to create charge rule: ${res.status}`;
+    const err = new Error(message);
+    (err as any).detail = errorData?.detail || text;
+    throw err;
   }
 
   const data = (await res.json()) as CreateChargeRuleResponse;
@@ -109,7 +127,16 @@ export async function updateChargeRule(ruleId: number, payload: UpdateChargeRule
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`Failed to update charge rule: ${res.status} ${text}`);
+    let errorData: any = null;
+    try {
+      errorData = text ? JSON.parse(text) : null;
+    } catch (e) {
+      // Not JSON
+    }
+    const message = errorData?.detail || text || `Failed to update charge rule: ${res.status}`;
+    const err = new Error(message);
+    (err as any).detail = errorData?.detail || text;
+    throw err;
   }
 
   const data = (await res.json()) as UpdateChargeRuleResponse;

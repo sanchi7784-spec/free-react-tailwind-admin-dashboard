@@ -22,6 +22,8 @@ const GoldChargeLimit = () => {
   const [isPlatformModalOpen, setIsPlatformModalOpen] = useState(false);
   const [platformPriceInput, setPlatformPriceInput] = useState("");
   const [sellPriceInput, setSellPriceInput] = useState("");
+  const [percentageInput, setPercentageInput] = useState("");
+  const [priceMode, setPriceMode] = useState<"direct" | "percentage">("percentage");
   const [isAddRuleOpen, setIsAddRuleOpen] = useState(false);
   const [creatingRule, setCreatingRule] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
@@ -62,7 +64,7 @@ const GoldChargeLimit = () => {
       const res = await fetchChargeRules();
       setChargeRules(res.charge_rules || []);
     } catch (err: any) {
-      setRulesError(err?.detail ?? "Failed to load charge rules");
+      setRulesError(err?.detail || err?.message || "Failed to load charge rules");
     } finally {
       setRulesLoading(false);
     }
@@ -78,8 +80,17 @@ const GoldChargeLimit = () => {
     fetch(url, { headers: apiKey ? { Authorization: `Bearer ${apiKey}` } : undefined })
       .then(async (res) => {
         if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(`Failed to fetch live price: ${res.status} ${txt}`);
+          const text = await res.text().catch(() => "");
+          let errorData: any = null;
+          try {
+            errorData = text ? JSON.parse(text) : null;
+          } catch {
+            // Not JSON
+          }
+          const message = errorData?.detail || text || `Failed to fetch live price: ${res.status}`;
+          const err = new Error(message);
+          (err as any).detail = errorData?.detail || text;
+          throw err;
         }
 
         const ct = res.headers.get("content-type") || "";
@@ -94,17 +105,23 @@ const GoldChargeLimit = () => {
         setLivePrice(data);
         setPlatformPriceInput(data.platform_price.toString());
         setSellPriceInput(data.sell_price?.toString() ?? "");
+        setPercentageInput("");
         setLoading(false);
       })
       .catch((err: any) => {
-        setError(err.detail || err.detail || "Error fetching data");
+        setError(err?.detail || err?.message || "Error fetching data");
         setLoading(false);
       });
   };
 
-  // PATCH API (Update Platform Price)
-  const updatePlatformPrice = (e: React.FormEvent) => {
+  // PATCH API (Update Sell Price)
+  const updateSellPrice = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!sellPriceInput) {
+      alert("Please enter a sell price");
+      return;
+    }
 
     const userId = typeof window !== "undefined" ? localStorage.getItem("mp_user_id") : null;
     const apiKey = typeof window !== "undefined" ? localStorage.getItem("mp_api_key") : null;
@@ -117,14 +134,92 @@ const GoldChargeLimit = () => {
         ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
       },
       body: JSON.stringify({
-        platform_price: parseFloat(platformPriceInput),
+        platform_price: livePrice?.platform_price ?? 0,
+        sell_price: parseFloat(sellPriceInput),
+      }),
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          let errorData: any = null;
+          try {
+            errorData = text ? JSON.parse(text) : null;
+          } catch {
+            // Not JSON
+          }
+          const message = errorData?.detail || text || `Failed to update sell price: ${res.status}`;
+          const err = new Error(message);
+          (err as any).detail = errorData?.detail || text;
+          throw err;
+        }
+
+        const ct = res.headers.get("content-type") || "";
+        if (!ct.includes("application/json")) {
+          const txt = await res.text();
+          throw new Error(`Expected JSON but received: ${txt.slice(0, 200)}`);
+        }
+
+        return res.json();
+      })
+      .then((data) => {
+        // Update UI with new response
+        setLivePrice({
+          live_price: data.live_price,
+          platform_price: data.platform_price,
+          sell_price: data.sell_price ?? livePrice?.sell_price,
+          change_in_price: (data.change_in_price ?? livePrice?.change_in_price) || 0,
+          change_in_percentage: (data.change_in_percentage ?? livePrice?.change_in_percentage) || 0,
+          change: data.change ?? livePrice?.change ?? "",
+        });
+
+        alert("Sell price updated successfully!");
+      })
+      .catch((err: any) => {
+        alert(err?.detail || err?.message || "Update failed");
+      });
+  };
+
+  // PATCH API (Update Platform Price)
+  const updatePlatformPrice = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Calculate the final platform price based on mode
+    let finalPlatformPrice = parseFloat(platformPriceInput);
+    
+    if (priceMode === "percentage" && percentageInput && livePrice) {
+      const percentage = parseFloat(percentageInput);
+      // Formula: new_price = current_price * (1 + percentage/100)
+      finalPlatformPrice = livePrice.platform_price * (1 + percentage / 100);
+    }
+
+    const userId = typeof window !== "undefined" ? localStorage.getItem("mp_user_id") : null;
+    const apiKey = typeof window !== "undefined" ? localStorage.getItem("mp_api_key") : null;
+    const url = userId ? `${API_BASE.replace(/\/$/, "")}/dashboard/platform-price/${userId}` : `${API_BASE.replace(/\/$/, "")}/dashboard/platform-price`;
+
+    fetch(url, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
+      },
+      body: JSON.stringify({
+        platform_price: finalPlatformPrice,
         sell_price: sellPriceInput ? parseFloat(sellPriceInput) : undefined,
       }),
     })
       .then(async (res) => {
         if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(`Failed to update platform price: ${res.status} ${txt}`);
+          const text = await res.text().catch(() => "");
+          let errorData: any = null;
+          try {
+            errorData = text ? JSON.parse(text) : null;
+          } catch {
+            // Not JSON
+          }
+          const message = errorData?.detail || text || `Failed to update platform price: ${res.status}`;
+          const err = new Error(message);
+          (err as any).detail = errorData?.detail || text;
+          throw err;
         }
 
         const ct = res.headers.get("content-type") || "";
@@ -147,9 +242,12 @@ const GoldChargeLimit = () => {
         });
 
         setIsPlatformModalOpen(false);
+        setPercentageInput("");
+        setPriceMode("direct");
+        alert("Platform price updated successfully!");
       })
       .catch((err: any) => {
-        alert(err.detail || err.detail || "Update failed");
+        alert(err?.detail || err?.message || "Update failed");
       });
   };
 
@@ -271,15 +369,16 @@ const GoldChargeLimit = () => {
           </h1>
         </div>
 
-        {/* Live Price Section (UNCHANGED) */}
+        {/* Live Price Section */}
         <div className="mb-8">
-          <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
             {loading ? (
               <div className="text-gray-500 dark:text-gray-400">Loading live price...</div>
             ) : error ? (
               <div className="text-red-500 font-medium">{error}</div>
             ) : livePrice ? (
-              <div className="w-full flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div className="w-full">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
                 {/* EXISTING UI — NOT MODIFIED */}
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-gray-500 dark:text-gray-400">Live Price</span>
@@ -351,14 +450,157 @@ const GoldChargeLimit = () => {
                     {livePrice.change}
                   </span>
                 </div>
+              </div>
 
-                {/* NEW BUTTON (ONLY CHANGE ADDED) */}
-                <button
-                  onClick={() => setIsPlatformModalOpen(true)}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-                >
-                  Edit Platform Price
-                </button>
+              {/* Sell Price Input */}
+              <div className="border-t border-gray-200 dark:border-slate-700 pt-4 mt-4">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Update Sell Price</h3>
+                <form onSubmit={updateSellPrice} className="space-y-4">
+                  <div className="max-w-md">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Sell Price (INR)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={sellPriceInput}
+                      onChange={(e) => setSellPriceInput(e.target.value)}
+                      placeholder="Enter sell price"
+                      className="w-full px-4 py-3 mt-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                      required
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg"
+                  >
+                    Update Sell Price
+                  </button>
+                </form>
+              </div>
+
+              {/* Inline Platform Price Update Form */}
+              <div className="border-t border-gray-200 dark:border-slate-700 pt-6 mt-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Update Platform Price</h3>
+                
+                <form onSubmit={updatePlatformPrice} className="space-y-4">
+                  {/* Toggle Mode */}
+                  <div className="flex gap-2 p-1 bg-gray-100 dark:bg-slate-700 rounded-lg max-w-md">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPriceMode("percentage");
+                        setPlatformPriceInput(livePrice?.platform_price.toString() ?? "");
+                      }}
+                      className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                        priceMode === "percentage"
+                          ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow"
+                          : "text-gray-600 dark:text-gray-400"
+                      }`}
+                    >
+                      Change By Percentage
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setPriceMode("direct");
+                        setPercentageInput("");
+                      }}
+                      className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                        priceMode === "direct"
+                          ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow"
+                          : "text-gray-600 dark:text-gray-400"
+                      }`}
+                    >
+                      Change By Price
+                    </button>
+                  </div>
+
+                  {/* Current Price Display */}
+                  {priceMode === "percentage" && livePrice && (
+                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg max-w-md">
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Current Platform Price:</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-white">
+                        ₹{livePrice.platform_price.toLocaleString(undefined, { maximumFractionDigits: 2 })} INR
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Direct Price Input */}
+                    {priceMode === "direct" && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Platform Price (INR)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={platformPriceInput}
+                          onChange={(e) => setPlatformPriceInput(e.target.value)}
+                          className="w-full px-4 py-3 mt-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                          required
+                        />
+                      </div>
+                    )}
+
+                    {/* Percentage Input */}
+                    {priceMode === "percentage" && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Percentage Change (%)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={percentageInput}
+                          onChange={(e) => {
+                            const percentage = e.target.value;
+                            setPercentageInput(percentage);
+                            
+                            // Calculate and update platform price based on percentage
+                            if (percentage && livePrice) {
+                              const newPrice = livePrice.platform_price * (1 + parseFloat(percentage) / 100);
+                              setPlatformPriceInput(newPrice.toFixed(2));
+                            } else {
+                              setPlatformPriceInput(livePrice?.platform_price.toString() ?? "");
+                            }
+                          }}
+                          placeholder="Enter the value"
+                          className="w-full px-4 py-3 mt-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
+                          required
+                        />
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Enter positive value for increase, negative for decrease
+                        </p>
+                        
+                        {/* Preview Calculation */}
+                        {percentageInput && livePrice && (
+                          <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">New Platform Price:</p>
+                            <p className="text-lg font-bold text-green-700 dark:text-green-400">
+                              ₹{(livePrice.platform_price * (1 + parseFloat(percentageInput) / 100)).toLocaleString(undefined, { 
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2 
+                              })} INR
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              Changing platform price will change the live price accordingly.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg"
+                  >
+                    Update Price
+                  </button>
+                </form>
+              </div>
               </div>
             ) : (
               <div className="text-gray-500 dark:text-gray-400">No live price data.</div>
@@ -460,7 +702,7 @@ const GoldChargeLimit = () => {
 
         {/* ADD RULE MODAL */}
         {isAddRuleOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-blue bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl max-w-lg w-full shadow-xl">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Create Charge Rule</h2>
 
@@ -586,7 +828,7 @@ const GoldChargeLimit = () => {
 
         {/* EDIT RULE MODAL */}
         {isEditOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 bg-blue bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-slate-800 p-6 rounded-xl max-w-lg w-full shadow-xl">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Edit Charge Rule</h2>
 
@@ -722,60 +964,7 @@ const GoldChargeLimit = () => {
           </div>
         )}
 
-        {/* PATCH MODAL */}
-        {isPlatformModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-xl max-w-md w-full shadow-xl">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                Update Platform Price
-              </h2>
 
-              <form onSubmit={updatePlatformPrice} className="space-y-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Platform Price (INR)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={platformPriceInput}
-                    onChange={(e) => setPlatformPriceInput(e.target.value)}
-                    className="w-full px-4 py-3 mt-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Sell Price (INR)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={sellPriceInput}
-                    onChange={(e) => setSellPriceInput(e.target.value)}
-                    className="w-full px-4 py-3 mt-2 rounded-lg border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg"
-                >
-                  Save Changes
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setIsPlatformModalOpen(false)}
-                  className="w-full py-3 bg-gray-300 dark:bg-slate-700 text-gray-900 dark:text-white rounded-lg"
-                >
-                  Cancel
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );

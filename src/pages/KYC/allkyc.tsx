@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import { fetchAllKycRecords, updateKycVerification } from "../../api/kyc";
@@ -28,7 +28,7 @@ export default function AllKYCLogs() {
         if (!mounted) return;
         setKycRecords(data.kyc_records || []);
       } catch (err: any) {
-        setError(err?.detail || "Failed to fetch KYC records");
+        setError(err?.detail || err?.message || "Failed to fetch KYC records");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -66,16 +66,60 @@ export default function AllKYCLogs() {
     return "Pending" as const;
   };
 
-  const filteredRecords = kycRecords.filter((record) => {
+  const filteredRecords = useMemo(() => {
     const q = searchTerm.trim().toLowerCase();
-    const matchesSearch =
-      record.name?.toLowerCase().includes(q) ||
-      record.email?.toLowerCase().includes(q) ||
-      String(record.user_id).includes(q);
-    const mapped = mapStatus(record);
-    const matchesStatus = statusFilter === "All" || mapped === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+    return kycRecords.filter((record) => {
+      const mapped = mapStatus(record);
+      const matchesStatus = statusFilter === "All" || mapped === statusFilter;
+      if (!matchesStatus) return false;
+      if (!q) return true;
+
+      const haystack = `${record.kyc_id} ${record.user_id} ${record.name} ${record.email} ${record.aadhaar_number ?? ''} ${record.pan_number ?? ''} ${record.reason ?? ''} ${record.created_at ?? ''}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [kycRecords, searchTerm, statusFilter]);
+
+  const exportCSV = (rows: typeof kycRecords) => {
+    if (!rows || rows.length === 0) {
+      alert('No KYC records to export');
+      return;
+    }
+
+    const headers = ['KYC ID','User ID','Name','Email','Aadhaar','PAN','Status','Reason','Verified At','Created At'];
+    const escapeCell = (v: any) => {
+      if (v === null || v === undefined) return '';
+      const s = String(v).replace(/"/g,'""');
+      return `"${s}"`;
+    };
+
+    const rowsOut = [headers.join(',')];
+    for (const r of rows) {
+      const row = [
+        r.kyc_id,
+        r.user_id,
+        r.name,
+        r.email,
+        r.aadhaar_number ?? '',
+        r.pan_number ?? '',
+        mapStatus(r),
+        r.reason ?? '',
+        r.verified_at ?? '',
+        r.created_at ?? ''
+      ].map(escapeCell).join(',');
+      rowsOut.push(row);
+    }
+
+    const csvString = rowsOut.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kyc-records${searchTerm ? `-${searchTerm}` : ''}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -198,11 +242,10 @@ export default function AllKYCLogs() {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                {/* Search */}
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search by username..."
+                    placeholder="Search KYC by any detail..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full sm:w-64 pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500 text-sm"
@@ -220,6 +263,22 @@ export default function AllKYCLogs() {
                     <circle cx="11" cy="11" r="8" />
                     <path d="m21 21-4.35-4.35" />
                   </svg>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => exportCSV(filteredRecords)}
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100"
+                  >
+                    Export CSV
+                  </button>
+                  <button
+                    onClick={refreshKycList}
+                    className="inline-flex items-center gap-2 px-3 py-2 bg-violet-600 text-white rounded-lg text-sm"
+                  >
+                    Refresh
+                  </button>
                 </div>
               </div>
             </div>
@@ -381,7 +440,7 @@ export default function AllKYCLogs() {
         {/* Responsive Beautiful Modal */}
         {isModalOpen && selectedKYC && (
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
+            className="fixed inset-0 bg-blue/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-2 sm:p-4 overflow-y-auto"
             onClick={() => setIsModalOpen(false)}
           >
             <div
@@ -419,7 +478,7 @@ export default function AllKYCLogs() {
                           await updateKycVerification(selectedKYC.kyc_id, 1, null);
                           await refreshKycList();
                         } catch (err: any) {
-                          setActionError(err?.detail || "Approve failed");
+                          setActionError(err?.detail || err?.message || "Approve failed");
                         } finally {
                           setActionLoading(false);
                         }
@@ -668,7 +727,7 @@ export default function AllKYCLogs() {
                             setShowRejectReason(false);
                             setRejectReason("");
                           } catch (err: any) {
-                            setActionError(err?.detail || "Reject failed");
+                            setActionError(err?.detail || err?.message || "Reject failed");
                           } finally {
                             setActionLoading(false);
                           }
@@ -758,7 +817,7 @@ export default function AllKYCLogs() {
                               className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
                             />
                             {/* Hover Overlay */}
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-blue/0 group-hover:bg-blue/40 transition-all duration-300 flex items-center justify-center">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="36"
@@ -797,7 +856,7 @@ export default function AllKYCLogs() {
                               alt="Aadhaar Back"
                               className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
                             />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-blue/0 group-hover:bg-blue/40 transition-all duration-300 flex items-center justify-center">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="36"
@@ -881,7 +940,7 @@ export default function AllKYCLogs() {
                               alt="PAN Front"
                               className="w-full h-40 sm:h-56 object-cover transition-transform duration-300 group-hover:scale-105"
                             />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-blue/0 group-hover:bg-blue/40 transition-all duration-300 flex items-center justify-center">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 width="36"

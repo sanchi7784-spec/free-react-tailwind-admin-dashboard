@@ -15,8 +15,17 @@ export async function fetchWalletTransactions(): Promise<WalletTransactionsRespo
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(`Failed to fetch wallet transactions: ${res.status} ${text}`);
+    const text = await res.text().catch(() => "");
+    let errorData: any = null;
+    try {
+      errorData = text ? JSON.parse(text) : null;
+    } catch (e) {
+      // Not JSON
+    }
+    const message = errorData?.detail || text || `Failed to fetch wallet transactions: ${res.status}`;
+    const err = new Error(message);
+    (err as any).detail = errorData?.detail || text;
+    throw err;
   }
 
   const data = (await res.json()) as WalletTransactionsResponse;

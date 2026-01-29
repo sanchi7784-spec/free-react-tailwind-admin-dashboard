@@ -1,174 +1,175 @@
-import { Link } from "react-router";
-import { useState } from "react";
+import { Link, useNavigate } from "react-router";
+import { useState, useEffect } from "react";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadCrumb from "../../components/common/PageBreadCrumb";
 import DatePicker from "../../components/form/date-picker";
 import Chart from "react-apexcharts";
+import { canAccessGold, isEcommerceAuthenticated } from "../../utils/ecommerceAuth";
 
 // SVG Icon Components
 const Users = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-    <circle cx="9" cy="7" r="4"></circle>
-    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
   </svg>
 );
 
 const UserCheck = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-    <circle cx="9" cy="7" r="4"></circle>
-    <polyline points="16 11 18 13 22 9"></polyline>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <polyline points="16 11 18 13 22 9" />
   </svg>
 );
 
 const UserX = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M2 21a8 8 0 0 1 11.873-7"></path>
-    <circle cx="10" cy="8" r="5"></circle>
-    <path d="m17 17 5 5"></path>
-    <path d="m22 17-5 5"></path>
+    <path d="M2 21a8 8 0 0 1 11.873-7" />
+    <circle cx="10" cy="8" r="5" />
+    <path d="m17 17 5 5" />
+    <path d="m22 17-5 5" />
   </svg>
 );
 
 const Settings = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="18" cy="15" r="3"></circle>
-    <circle cx="9" cy="7" r="4"></circle>
-    <path d="M10 15H6a4 4 0 0 0-4 4v2"></path>
-    <path d="m21.7 16.4-.9-.3"></path>
-    <path d="m15.2 13.9-.9-.3"></path>
-    <path d="m16.6 18.7.3-.9"></path>
-    <path d="m19.1 12.2.3-.9"></path>
-    <path d="m19.6 18.7-.4-1"></path>
-    <path d="m16.8 12.3-.4-1"></path>
-    <path d="m14.3 16.6 1-.4"></path>
-    <path d="m20.7 13.8 1-.4"></path>
+    <circle cx="18" cy="15" r="3" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M10 15H6a4 4 0 0 0-4 4v2" />
+    <path d="m21.7 16.4-.9-.3" />
+    <path d="m15.2 13.9-.9-.3" />
+    <path d="m16.6 18.7.3-.9" />
+    <path d="m19.1 12.2.3-.9" />
+    <path d="m19.6 18.7-.4-1" />
+    <path d="m16.8 12.3-.4-1" />
+    <path d="m14.3 16.6 1-.4" />
+    <path d="m20.7 13.8 1-.4" />
   </svg>
 );
 
 const Wallet = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path>
-    <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path>
+    <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
+    <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
   </svg>
 );
 
 const Landmark = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="3" x2="21" y1="22" y2="22"></line>
-    <line x1="6" x2="6" y1="18" y2="11"></line>
-    <line x1="10" x2="10" y1="18" y2="11"></line>
-    <line x1="14" x2="14" y1="18" y2="11"></line>
-    <line x1="18" x2="18" y1="18" y2="11"></line>
-    <polygon points="12 2 20 7 4 7"></polygon>
+    <line x1="3" x2="21" y1="22" y2="22" />
+    <line x1="6" x2="6" y1="18" y2="11" />
+    <line x1="10" x2="10" y1="18" y2="11" />
+    <line x1="14" x2="14" y1="18" y2="11" />
+    <line x1="18" x2="18" y1="18" y2="11" />
+    <polygon points="12 2 20 7 4 7" />
   </svg>
 );
 
 const LinkIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
   </svg>
 );
 
 const Send = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m22 2-7 20-4-9-9-4Z"></path>
-    <path d="M22 2 11 13"></path>
+    <path d="m22 2-7 20-4-9-9-4Z" />
+    <path d="M22 2 11 13" />
   </svg>
 );
 
 const Archive = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="20" height="5" x="2" y="3" rx="1"></rect>
-    <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path>
-    <path d="M10 12h4"></path>
+    <rect width="20" height="5" x="2" y="3" rx="1" />
+    <path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8" />
+    <path d="M10 12h4" />
   </svg>
 );
 
 const Book = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path>
+    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
   </svg>
 );
 
 const AlertTriangle = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"></path>
-    <path d="M12 9v4"></path>
-    <path d="M12 17h.01"></path>
+    <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" />
+    <path d="M12 9v4" />
+    <path d="M12 17h.01" />
   </svg>
 );
 
 const CreditCard = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect width="20" height="14" x="2" y="5" rx="2"></rect>
-    <line x1="2" x2="22" y1="10" y2="10"></line>
+    <rect width="20" height="14" x="2" y="5" rx="2" />
+    <line x1="2" x2="22" y1="10" y2="10" />
   </svg>
 );
 
 const Gift = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="8" width="18" height="4" rx="1"></rect>
-    <path d="M12 8v13"></path>
-    <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"></path>
-    <path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"></path>
+    <rect x="3" y="8" width="18" height="4" rx="1" />
+    <path d="M12 8v13" />
+    <path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7" />
+    <path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5" />
   </svg>
 );
 
 const PackagePlus = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 16h6"></path>
-    <path d="M19 13v6"></path>
-    <path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14"></path>
-    <path d="m7.5 4.27 9 5.15"></path>
-    <polyline points="3.29 7 12 12 20.71 7"></polyline>
-    <line x1="12" x2="12" y1="22" y2="12"></line>
+    <path d="M16 16h6" />
+    <path d="M19 13v6" />
+    <path d="M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14" />
+    <path d="m7.5 4.27 9 5.15" />
+    <polyline points="3.29 7 12 12 20.71 7" />
+    <line x1="12" x2="12" y1="22" y2="12" />
   </svg>
 );
 
 const Webhook = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2"></path>
-    <path d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06"></path>
-    <path d="m12 6 3.13 5.73C15.66 12.7 16.9 13 18 13a4 4 0 0 1 0 8"></path>
+    <path d="M18 16.98h-5.99c-1.1 0-1.95.94-2.48 1.9A4 4 0 0 1 2 17c.01-.7.2-1.4.57-2" />
+    <path d="m6 17 3.13-5.78c.53-.97.1-2.18-.5-3.1a4 4 0 1 1 6.89-4.06" />
+    <path d="m12 6 3.13 5.73C15.66 12.7 16.9 13 18 13a4 4 0 0 1 0 8" />
   </svg>
 );
 
 const HelpCircle = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"></circle>
-    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-    <path d="M12 17h.01"></path>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+    <path d="M12 17h.01" />
   </svg>
 );
 
 const Loader = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" x2="12" y1="2" y2="6"></line>
-    <line x1="12" x2="12" y1="18" y2="22"></line>
-    <line x1="4.93" x2="7.76" y1="4.93" y2="7.76"></line>
-    <line x1="16.24" x2="19.07" y1="16.24" y2="19.07"></line>
-    <line x1="2" x2="6" y1="12" y2="12"></line>
-    <line x1="18" x2="22" y1="12" y2="12"></line>
-    <line x1="4.93" x2="7.76" y1="19.07" y2="16.24"></line>
-    <line x1="16.24" x2="19.07" y1="7.76" y2="4.93"></line>
+    <line x1="12" x2="12" y1="2" y2="6" />
+    <line x1="12" x2="12" y1="18" y2="22" />
+    <line x1="4.93" x2="7.76" y1="4.93" y2="7.76" />
+    <line x1="16.24" x2="19.07" y1="16.24" y2="19.07" />
+    <line x1="2" x2="6" y1="12" y2="12" />
+    <line x1="18" x2="22" y1="12" y2="12" />
+    <line x1="4.93" x2="7.76" y1="19.07" y2="16.24" />
+    <line x1="16.24" x2="19.07" y1="7.76" y2="4.93" />
   </svg>
 );
 
 const Zap = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"></path>
+    <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" />
   </svg>
 );
 
 const ExternalLink = ({ size = 20 }: { size?: number }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 3h6v6"></path>
-    <path d="M10 14 21 3"></path>
-    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+    <path d="M15 3h6v6" />
+    <path d="M10 14 21 3" />
+    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
   </svg>
 );
 
@@ -234,7 +235,16 @@ const AnnouncementButton: React.FC<AnnouncementButtonProps> = ({
 };
 
 export default function BBPSDashboard() {
+  const navigate = useNavigate();
   const [siteStatsDateRange, setSiteStatsDateRange] = useState('10/31/2025 - 11/07/2025');
+
+  // Check domain access before loading
+  useEffect(() => {
+    if (isEcommerceAuthenticated() && !canAccessGold()) {
+      // Redirect Ecommerce-only users to their dashboard
+      navigate('/ecom', { replace: true });
+    }
+  }, [navigate]);
 
   // Log date range changes for debugging
   console.log('Site Stats Date Range:', siteStatsDateRange);
@@ -325,18 +335,18 @@ export default function BBPSDashboard() {
             count="1"
             label="Total Staff"
             link="/staff/all"
-            gradient="bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-800 dark:to-black"
+            gradient="bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-800 dark:to-blue"
           />
           <DataCard
             icon={<Wallet />}
-            count="$0"
+            count="₹0"
             label="Total Deposits"
             link="/deposits/deposit-history"
             gradient="bg-gradient-to-br from-green-700 to-green-900 dark:from-green-800 dark:to-green-950"
           />
           <DataCard
             icon={<Landmark />}
-            count="$600"
+            count="₹600"
             label="Total Withdraw"
             link="/withdraw/withdraw-history"
             gradient="bg-gradient-to-br from-orange-500 to-orange-700 dark:from-orange-600 dark:to-orange-800"
@@ -349,31 +359,31 @@ export default function BBPSDashboard() {
           />
           <DataCard
             icon={<Send />}
-            count="$8866"
+            count="₹8866"
             label="Total Fund Transfer"
-            gradient="bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-800 dark:to-black"
+            gradient="bg-gradient-to-br from-slate-700 to-slate-900 dark:from-slate-800 dark:to-blue"
           />
           <DataCard
             icon={<Archive />}
-            count="$11328000"
+            count="₹11328000"
             label="Total DPS"
             gradient="bg-gradient-to-br from-teal-600 to-teal-800 dark:from-teal-700 dark:to-teal-900"
           />
           <DataCard 
             icon={<Book />} 
-            count="$5471.89" 
+            count="₹5471.89" 
             label="Total FDR"
             gradient="bg-gradient-to-br from-purple-600 to-purple-800 dark:from-purple-700 dark:to-purple-900"
           />
           <DataCard
             icon={<AlertTriangle />}
-            count="$5405.00"
+            count="₹5405.00"
             label="Total Loan"
             gradient="bg-gradient-to-br from-blue-700 to-blue-900 dark:from-blue-800 dark:to-blue-950"
           />
           <DataCard
             icon={<CreditCard />}
-            count="$0"
+            count="₹0"
             label="Total Pay Bill"
             gradient="bg-gradient-to-br from-pink-500 to-pink-700 dark:from-pink-600 dark:to-pink-800"
           />
@@ -385,7 +395,7 @@ export default function BBPSDashboard() {
           />
           <DataCard
             icon={<PackagePlus />}
-            count="$0"
+            count="₹0"
             label="Deposit Bonus"
             gradient="bg-gradient-to-br from-teal-500 to-teal-700 dark:from-teal-600 dark:to-teal-800"
           />
@@ -471,17 +481,17 @@ export default function BBPSDashboard() {
                   },
                   tooltip: {
                     y: {
-                      formatter: (value) => `$${value}`,
+                      formatter: (value) => `₹${value}`,
                     },
                   },
                 }}
                 series={[
-                  { name: "Total Deposit $0", data: [0, 0, 0, 0, 0, 0, 0, 0] },
-                  { name: "Total DPS $96400", data: [10000, 20000, 40000, 60000, 75000, 85000, 92000, 96400] },
-                  { name: "Total FDR $0", data: [0, 0, 0, 0, 0, 0, 0, 0] },
-                  { name: "Total Loan $0", data: [0, 0, 0, 0, 0, 0, 0, 0] },
-                  { name: "Total Bill $0", data: [0, 0, 0, 0, 0, 0, 0, 0] },
-                  { name: "Total Withdraw $0", data: [0, 0, 0, 0, 0, 0, 0, 0] },
+                  { name: "Total Deposit ₹0", data: [0, 0, 0, 0, 0, 0, 0, 0] },
+                  { name: "Total DPS ₹96400", data: [10000, 20000, 40000, 60000, 75000, 85000, 92000, 96400] },
+                  { name: "Total FDR ₹0", data: [0, 0, 0, 0, 0, 0, 0, 0] },
+                  { name: "Total Loan ₹0", data: [0, 0, 0, 0, 0, 0, 0, 0] },
+                  { name: "Total Bill ₹0", data: [0, 0, 0, 0, 0, 0, 0, 0] },
+                  { name: "Total Withdraw ₹0", data: [0, 0, 0, 0, 0, 0, 0, 0] },
                 ]}
                 type="area"
                 height={300}
@@ -678,7 +688,7 @@ export default function BBPSDashboard() {
                     id: 1662,
                     name: "KALIDOUsavadogo...",
                     email: "ajecbgroup@gmail.com",
-                    balance: "$8",
+                    balance: "₹8",
                     avatar: "KS",
                     bgColor: "bg-pink-500",
                   },
@@ -686,7 +696,7 @@ export default function BBPSDashboard() {
                     id: 1661,
                     name: "AsadbekNorturae...",
                     email: "khorunaweel@gmail.co...",
-                    balance: "$8",
+                    balance: "₹8",
                     avatar: "AN",
                     bgColor: "bg-teal-600",
                   },
@@ -694,7 +704,7 @@ export default function BBPSDashboard() {
                     id: 1660,
                     name: "MaherAl-Yamany5...",
                     email: "handalex79@gmail.com",
-                    balance: "$8",
+                    balance: "₹8",
                     avatar: "MA",
                     bgColor: "bg-slate-700",
                   },
@@ -702,7 +712,7 @@ export default function BBPSDashboard() {
                     id: 1659,
                     name: "KerryAbia2329",
                     email: "kattywhite918@gmail....",
-                    balance: "$8",
+                    balance: "₹8",
                     avatar: "KA",
                     bgColor: "bg-green-700",
                   },
@@ -710,7 +720,7 @@ export default function BBPSDashboard() {
                     id: 1658,
                     name: "MohannadMahmoud...",
                     email: "loaniigroup@gmail.co...",
-                    balance: "$8",
+                    balance: "₹8",
                     avatar: "MM",
                     bgColor: "bg-orange-500",
                   },

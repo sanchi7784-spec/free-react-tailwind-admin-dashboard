@@ -1,16 +1,140 @@
+import { useEffect, useState } from "react";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
+import { getProfile, updateProfile, ProfileData } from "../../api/profile";
+
+// Helper function to map gender values to display names
+const getGenderDisplay = (gender: string | number | null | undefined): string => {
+  if (gender === 1 || gender === "1") return "Male";
+  if (gender === 2 || gender === "2") return "Female";
+  if (gender === 3 || gender === "3") return "Other";
+  return "N/A";
+};
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
-  const handleSave = () => {
-    // Handle save logic here
-    console.log("Saving changes...");
-    closeModal();
+  const [userData, setUserData] = useState<ProfileData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Form fields
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    dob: "",
+    gender: "",
+    mpin: "",
+  });
+
+  useEffect(() => {
+    loadUserData();
+  }, []);
+
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Fetch current user's profile (no user ID needed)
+      // Uses token from localStorage automatically
+      const response = await getProfile();
+      const data = response.data;
+      setUserData(data);
+
+      // Split name and populate form
+      const nameParts = data?.name?.split(" ") || [];
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+
+      setFormData({
+        firstName,
+        lastName,
+        email: data?.email || "",
+        phone: data?.phone || "",
+        dob: data?.dob || "",
+        gender: data?.gender !== undefined && data?.gender !== null ? String(data.gender) : "",
+        mpin: "",
+      });
+    } catch (err: any) {
+      console.error("Error fetching user details:", err);
+      setError(err?.detail || "Failed to fetch user details");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    setSuccessMessage(null);
+  };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      setError(null);
+      setSuccessMessage(null);
+
+      // Prepare payload for profile update
+      const payload: any = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.phone,
+      };
+
+      if (formData.dob) {
+        payload.dob = formData.dob;
+      }
+
+      if (formData.gender) {
+        payload.gender = parseInt(formData.gender) || formData.gender;
+      }
+
+      const result = await updateProfile(payload);
+      setSuccessMessage(result.detail || "User details updated successfully");
+      
+      // Reload user data
+      await loadUserData();
+      
+      // Close modal after 1.5 seconds
+      setTimeout(() => {
+        closeModal();
+        setSuccessMessage(null);
+      }, 1500);
+    } catch (err: any) {
+      console.error("Error updating user details:", err);
+      setError(err?.detail || "Failed to update user details");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Split name into first and last name for display
+  const displayFirstName = userData?.name?.split(" ")[0] || "";
+  const displayLastName = userData?.name?.split(" ").slice(1).join(" ") || "";
+
+  if (loading) {
+    return (
+      <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+        <p className="text-sm text-gray-500 dark:text-gray-400">Loading user details...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
+        <p className="text-sm text-red-500">Error: {error}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -25,7 +149,7 @@ export default function UserInfoCard() {
                 First Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Musharof
+                {displayFirstName || "N/A"}
               </p>
             </div>
 
@@ -34,7 +158,7 @@ export default function UserInfoCard() {
                 Last Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Chowdhury
+                {displayLastName || "N/A"}
               </p>
             </div>
 
@@ -43,7 +167,7 @@ export default function UserInfoCard() {
                 Email address
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                randomuser@pimjo.com
+                {userData?.email || "N/A"}
               </p>
             </div>
 
@@ -52,16 +176,25 @@ export default function UserInfoCard() {
                 Phone
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                +09 363 398 46
+                {userData?.phone || "N/A"}
               </p>
             </div>
 
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Bio
+                Date of Birth
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Team Manager
+                {userData?.dob || "N/A"}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Gender
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {getGenderDisplay(userData?.gender)}
               </p>
             </div>
           </div>
@@ -99,43 +232,20 @@ export default function UserInfoCard() {
             <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
               Update your details to keep your profile up-to-date.
             </p>
+            {successMessage && (
+              <div className="mb-4 rounded-lg bg-green-50 p-3 text-sm text-green-600 dark:bg-green-900/20 dark:text-green-400">
+                {successMessage}
+              </div>
+            )}
+            {error && (
+              <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-400">
+                {error}
+              </div>
+            )}
           </div>
-          <form className="flex flex-col">
+          <form className="flex flex-col" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
               <div>
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Social Links
-                </h5>
-
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div>
-                    <Label>Facebook</Label>
-                    <Input
-                      type="text"
-                      value="https://www.facebook.com/PimjoHQ"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>X.com</Label>
-                    <Input type="text" value="https://x.com/PimjoHQ" />
-                  </div>
-
-                  <div>
-                    <Label>Linkedin</Label>
-                    <Input
-                      type="text"
-                      value="https://www.linkedin.com/company/pimjo"
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Instagram</Label>
-                    <Input type="text" value="https://instagram.com/PimjoHQ" />
-                  </div>
-                </div>
-              </div>
-              <div className="mt-7">
                 <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
                   Personal Information
                 </h5>
@@ -143,37 +253,81 @@ export default function UserInfoCard() {
                 <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                   <div className="col-span-2 lg:col-span-1">
                     <Label>First Name</Label>
-                    <Input type="text" value="Musharof" />
+                    <Input 
+                      type="text" 
+                      value={formData.firstName}
+                      onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
                     <Label>Last Name</Label>
-                    <Input type="text" value="Chowdhury" />
+                    <Input 
+                      type="text" 
+                      value={formData.lastName}
+                      onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
                     <Label>Email Address</Label>
-                    <Input type="text" value="randomuser@pimjo.com" />
+                    <Input 
+                      type="email" 
+                      value={formData.email}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                    />
                   </div>
 
                   <div className="col-span-2 lg:col-span-1">
                     <Label>Phone</Label>
-                    <Input type="text" value="+09 363 398 46" />
+                    <Input 
+                      type="text" 
+                      value={formData.phone}
+                      onChange={(e) => handleInputChange("phone", e.target.value)}
+                    />
                   </div>
 
-                  <div className="col-span-2">
-                    <Label>Bio</Label>
-                    <Input type="text" value="Team Manager" />
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>Date of Birth</Label>
+                    <Input 
+                      type="date" 
+                      value={formData.dob}
+                      onChange={(e) => handleInputChange("dob", e.target.value)}
+                    />
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>Gender</Label>
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => handleInputChange("gender", e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none transition focus:border-blue-500 dark:border-gray-700 dark:bg-gray-800 dark:text-white"
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="1">Male</option>
+                      <option value="2">Female</option>
+                      <option value="3">Other</option>
+                    </select>
+                  </div>
+
+                  <div className="col-span-2 lg:col-span-1">
+                    <Label>MPIN (Leave blank to keep current)</Label>
+                    <Input 
+                      type="password" 
+                      value={formData.mpin}
+                      onChange={(e) => handleInputChange("mpin", e.target.value)}
+                      placeholder="Enter new MPIN"
+                    />
                   </div>
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
+              <Button size="sm" variant="outline" onClick={closeModal} type="button" disabled={saving}>
                 Close
               </Button>
-              <Button size="sm" onClick={handleSave}>
-                Save Changes
+              <Button size="sm" type="submit" disabled={saving}>
+                {saving ? "Saving..." : "Save Changes"}
               </Button>
             </div>
           </form>

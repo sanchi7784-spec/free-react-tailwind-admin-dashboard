@@ -244,7 +244,7 @@ const OwnBankTransfer: React.FC = () => {
 
       {/* Modal */}
       {showModal && selectedTransfer && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black bg-opacity-50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-blue bg-opacity-50 p-4">
           <div className="relative w-full max-w-4xl rounded-lg bg-white shadow-xl dark:bg-gray-800">
             <div className="flex items-center justify-between border-b border-gray-200 p-6 dark:border-gray-700">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">Transfer Details</h3>

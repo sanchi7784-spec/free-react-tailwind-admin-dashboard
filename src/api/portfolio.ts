@@ -42,22 +42,23 @@ export async function fetchPortfolio(options: { livePrice: number; baseUrl?: str
   });
   
   if (!res.ok) {
-    // Try to parse structured JSON error first, otherwise fallback to text
+    const text = await res.text().catch(() => "");
+    let errorData: any = null;
     try {
-      const errorData = await res.json();
-      const errorMessage = errorData && errorData.detail
-        ? (typeof errorData.detail === 'string'
-            ? errorData.detail
-            : Array.isArray(errorData.detail)
-              ? errorData.detail.map((e: any) => e.msg || e).join(', ')
-              : JSON.stringify(errorData.detail))
-        : `${res.status} ${res.statusText}`;
-      throw new Error(errorMessage);
-    } catch (parseErr) {
-      // JSON parse failed or unexpected shape — fall back to plain text
-      const text = await res.text();
-      throw new Error(`Failed to fetch portfolio: ${res.status} - ${text}`);
+      errorData = text ? JSON.parse(text) : null;
+    } catch (e) {
+      // Not JSON
     }
+    const errorMessage = errorData && errorData.detail
+      ? (typeof errorData.detail === 'string'
+          ? errorData.detail
+          : Array.isArray(errorData.detail)
+            ? errorData.detail.map((e: any) => e.msg || e).join(', ')
+            : JSON.stringify(errorData.detail))
+      : text || `Failed to fetch portfolio: ${res.status}`;
+    const err = new Error(errorMessage);
+    (err as any).detail = errorData?.detail || text;
+    throw err;
   }
   const data = (await res.json()) as PortfolioResponse;
   return data;

@@ -42,7 +42,7 @@ const TopUpModal = ({ isOpen, onClose, onSubmit }: TopUpModalProps) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-blue/50 dark:bg-blue/70 backdrop-blur-sm"
         onClick={onClose}
       ></div>
 

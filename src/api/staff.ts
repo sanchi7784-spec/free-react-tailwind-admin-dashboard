@@ -150,3 +150,47 @@ export async function createStaff(payload: CreateStaffPayload): Promise<CreateSt
     throw new Error("Failed to parse create staff response");
   }
 }
+
+export type StaffRequestResponse = {
+  detail: string;
+};
+
+export async function submitStaffRequest(request_text: string): Promise<StaffRequestResponse> {
+  const staffUserId = typeof window !== "undefined" ? localStorage.getItem("mp_user_id") : null;
+  const apiKey = typeof window !== "undefined" ? localStorage.getItem("mp_api_key") : null;
+
+  if (!staffUserId) {
+    throw new Error("No staff user id found in localStorage (mp_user_id)");
+  }
+
+  const url = `${BASE.replace(/\/$/, "")}/dashboard/staff-requests/${staffUserId}`;
+  const headers: Record<string,string> = { "Content-Type": "application/json", Accept: "application/json" };
+  if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ request_text }),
+  });
+
+  const text = await res.text().catch(() => "");
+  if (!res.ok) {
+    try {
+      const json = text ? JSON.parse(text) : null;
+      const err = new Error(json?.detail || text || `${res.status} ${res.statusText}`);
+      (err as any).detail = json?.detail || text;
+      throw err;
+    } catch (e) {
+      const err = new Error(text || `${res.status} ${res.statusText}`);
+      (err as any).detail = text;
+      throw err;
+    }
+  }
+
+  try {
+    const data = text ? JSON.parse(text) : {};
+    return data as StaffRequestResponse;
+  } catch (e) {
+    throw new Error("Failed to parse staff request response");
+  }
+}

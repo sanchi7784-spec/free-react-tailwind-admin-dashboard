@@ -97,7 +97,7 @@ export default function LoanPlans() {
       {/* Edit Modal */}
       {isEditOpen && editingPlan && (
         <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto py-10">
-          <div className="fixed inset-0 bg-black/50" onClick={closeEditModal}></div>
+          <div className="fixed inset-0 bg-blue/50" onClick={closeEditModal}></div>
           <div className="relative w-full max-w-6xl rounded bg-white p-6 shadow-lg dark:bg-gray-800 z-10">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-semibold dark:text-white">Edit Loan Plan</h2>

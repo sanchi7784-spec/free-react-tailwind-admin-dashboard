@@ -17,7 +17,7 @@ const GoldRedeemUnits = () => {
         if (!mounted) return;
         setTransactions(res.transactions || []);
       } catch (err: any) {
-        setError(err?.detail || "Failed to fetch transactions");
+        setError(err?.detail || err?.message || "Failed to fetch transactions");
       } finally {
         if (mounted) setLoading(false);
       }
@@ -71,7 +71,7 @@ const GoldRedeemUnits = () => {
                   <div className="max-h-[60vh] overflow-y-auto no-scrollbar">
                     <table className="min-w-max w-full table-auto">
                 <thead>
-                  <tr className="bg-indigo-600 text-white">
+                  <tr className="bg-stone-900 text-white">
                     <th className="px-4 py-3 text-left text-sm font-bold">Txn ID</th>
                     <th className="px-4 py-3 text-left text-sm font-bold">Wallet</th>
                     <th className="px-4 py-3 text-left text-sm font-bold">User</th>

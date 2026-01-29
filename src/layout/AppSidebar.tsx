@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import logo from '../icons/ChatGPT Image Nov 5, 2025, 12_41_38 PM.png'
 // Assume these icons are imported from an icon library
 import {
@@ -26,6 +26,13 @@ import {
   TimeIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import { useDashboard, DashboardType } from "../context/DashboardContext";
+import { 
+  isEcommerceAuthenticated, 
+  canAccessEcommerce, 
+  canAccessGold,
+  isSuperAdmin 
+} from "../utils/ecommerceAuth";
 
 type NavItem = {
   name: string;
@@ -33,234 +40,299 @@ type NavItem = {
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
-const sidebarSections: { title: string; items: NavItem[] }[] = [
+
+// Ecommerce Sidebar Sections
+const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
   {
-    title: "Dashboard",
+    title: "DASHBOARD",
     items: [
       {
         name: "Dashboard Overview",
         icon: <GridIcon />,
-        subItems: [{ name: "Ecommerce", path: "/" }
-          ,
-          { name: "BBPS", path: "/dashboard-overview/bbps" },
-          { name: "Gold", path: "/dashboard-overview/Gold" }
+        subItems: [
+          { name: "Ecommerce", path: "/ecom" },
+          { name: "BBPS", path: "/bbps" },
+          { name: "Gold", path: "/" }
         ],
       },
     ],
   },
   {
-    title: "Customer Management",
+    title: "ECOMMERCE",
+    items: [
+      { 
+        name: "Users", 
+        icon: <GroupIcon />, 
+        subItems: [
+          { name: "All Users", path: "/ecommerce/users/all" },
+          // { name: "Active Users", path: "/ecommerce/users/active" },
+          // { name: "Banned Users", path: "/ecommerce/users/banned" },
+        ],
+      },
+      { 
+        name: "Products", 
+        icon: <BoxIcon />, 
+        subItems: [
+          { name: "All Products", path: "/ecommerce/products/all" },
+          { name: "Add Product", path: "/ecommerce/products/add" },
+          { name: "Categories", path: "/ecommerce/products/categories" },
+        ],
+      },
+      { 
+        name: "Staff & Vendors", 
+        icon: <GroupIcon />, 
+        subItems: [
+          { name: "All Vendors & Staff", path: "/ecommerce/vendors/all" },
+          // { name: "Add Vendor", path: "/ecommerce/vendors/add" },
+          { name: "Staff & Vendor Kyc", path: "/ecommerce/vendors/requests" },
+          // { name: "Vendor Product List", path: "/ecommerce/vendors/products" },
+        ],
+      },
+
+       { 
+        name: "All KYC", 
+        icon: <GroupIcon />, 
+        subItems: [
+          { name: "All KYC", path: "/ecommerce/kyc/all" },
+          // { name: "Add Vendor", path: "/ecommerce/vendors/add" },
+          // { name: "Vendor Kyc", path: "/ecommerce/vendors/requests" },
+        ],
+      },
+      { 
+        name: "Orders", 
+        icon: <FileIcon />, 
+        subItems: [
+          { name: "All Orders", path: "/ecommerce/orders/all" },
+          // { name: "Pending Orders", path: "/ecommerce/orders/pending" },
+          // { name: "Completed Orders", path: "/ecommerce/orders/completed" },
+          // { name: "Cancelled Orders", path: "/ecommerce/orders/cancelled" },
+        ],
+      },
+      {
+        name: "Refund Requests",
+        icon: <AlertIcon />,
+        path: "/ecommerce/refunds",
+      },
+      { 
+        name: "Ads Banner", 
+        icon: <ListIcon />, 
+        subItems: [
+          { name: "Add Banners", path: "/ecommerce/banners/all" },
+          // { name: "Add Category", path: "/ecommerce/category/add" },
+        ],
+      },
+      { 
+        name: "Business Settings",
+        icon: <BoxCubeIcon />,
+        path: "/ecommerce/basicinfo/business-settings"
+      },
+      { 
+        name: "Delivery Charges",
+        icon: <DollarLineIcon />,
+        path: "/ecommerce/delivery-charges"
+      },
+      { 
+        name: "VAT & Tax",
+        icon: <DollarLineIcon />,
+        path: "/ecommerce/vat-tax"
+      },
+    ],
+  },
+  // {
+  //   title: "Profile Settings",
+  //   items: [
+  //     { name: "Profile", icon: <DocsIcon />, path: "/profile" },
+  //     // { name: "Revenue Report", icon: <DollarLineIcon />, path: "/ecommerce/reports/revenue" },
+  //   ],
+  // },
+];
+
+// BBPS Sidebar Sections
+const bbpsSidebarSections: { title: string; items: NavItem[] }[] = [
+  {
+    title: "DASHBOARD",
+    items: [
+      {
+        name: "Dashboard Overview",
+        icon: <GridIcon />,
+        subItems: [
+          { name: "Ecommerce", path: "/ecom" },
+          { name: "BBPS", path: "/bbps" },
+          { name: "Gold", path: "/" }
+        ],
+      },
+    ],
+  },
+  {
+    title: "CUSTOMER MANAGEMENT",
     items: [
       { name: "Customers", icon: <GroupIcon />, 
-        
-           subItems: [
+        subItems: [
           { name: "All Customers", path: "/customers/allcustomers" },
-          { name: "Active Customers", path: "/customers/activecustomers" },
-           { name: "Closed Customers", path: "/customers/closedcustomers" },
-            { name: "Disabled Customers", path: "/customers/disabledcustomers" },
-                   { name: "Add New Customers", path: "/customers/addnew" },
-                          { name: "Notifications", path: "/customers/notifications" },
-                                 { name: "Send Email to All", path: "/customers/sendemail" },
         ],
       },
       {
         name: "KYC Management",
         icon: <ListIcon />,
         subItems: [
-          { name: "Pending KYC", path: "/kyc/pending" },
-          { name: "Approved KYC", path: "/kyc/approved" },
-           { name: "Rejected KYC", path: "/kyc/rejected" },
-            { name: "All KYC Logs", path: "/kyc/all" },
+          { name: "All KYC Logs", path: "/kyc/all" },
         ],
       },
     ],
   },
   {
-    title: "Access Management",
+    title: "ACCESS MANAGEMENT",
     items: [
-      { name: "System Access", icon: <LockIcon />, subItems: [{ name: "Manage Roles", path: "/access/roles" }, { name: "Manage Staff", path: "/access/permissions" }] },
+      { name: "System Access", icon: <LockIcon />, 
+        subItems: [
+          { name: "Upload Staff KYC", path: "/access/roles" }, 
+          { name: "Manage Staff", path: "/access/permissions" }
+        ] 
+      },
     ],
   },
   {
-    title: "Manage Bank Branches",
-    items: [{ name: "Manage Branches", icon: <BoxIconLine />, path: "/branches" ,
-   subItems: [
-          { name: "All Branch", path: "/branch/all" },
-          { name: "Branch Staff", path: "/staff/all" },
-        ],
-
-    }],
-  },
-  {
-    title: "Transactions",
+    title: "TRANSACTIONS",
     items: [
       { name: "Bank Accounts", icon: <FileIcon />, path: "/Transactions" },
-      { name: "Wallets", icon: <DollarLineIcon />, path: "/wallet/all" },
-      { name: "Virtual Cards", icon: <BoxIcon />, path: "/wallet/virtual-cards" },
+    ],
+  },
+];
+
+// Gold Sidebar Sections (Original)
+const goldSidebarSections: { title: string; items: NavItem[] }[] = [
+  {
+    title: "DASHBOARD",
+    items: [
       {
-        name: "Profits",
-        icon: <DollarLineIcon />,
+        name: "Dashboard Overview",
+        icon: <GridIcon />,
         subItems: [
-          { name: "User Paybacks", path: "/profits/paybacks" },
-          { name: "Bank Profits", path: "/profits/bankprofit" },
+          { name: "Ecommerce", path: "/ecom" },
+          { name: "BBPS", path: "/bbps" },
+          { name: "Gold", path: "/" }
+        ],
+      },
+    ],
+  },
+  {
+    title: "CUSTOMER MANAGEMENT",
+    items: [
+      { name: "Customers", icon: <GroupIcon />, 
+        subItems: [
+          { name: "All Customers", path: "/customers/allcustomers" },
         ],
       },
       {
-        name: "Fund Transfer",
-        icon: <PaperPlaneIcon />,
+        name: "KYC Management",
+        icon: <ListIcon />,
         subItems: [
-          { name: "Pending Transfer", path: "/fund-transfer/Pending" },
-          { name: "Rejected Transfer", path: "/fund-transfer/Rejected" },
-           { name: "All Transfer", path: "/fund-transfer/all-transfer" },
-            { name: "Own Bank Transfer", path: "/fund-transfer/ownbanktransfer" },
-              { name: "Other Bank Transfer", path: "/fund-transfer/otherbanktransfer" },
-                { name: "Wire Transfer", path: "/fund-transfer/wire-transfer" },
-                  { name: "Others Bank", path: "/fund-transfer/othersbank" },
+          { name: "All KYC Logs", path: "/kyc/all" },
         ],
       },
-      // --- GOLD HISTORY DROPDOWN ---
+    ],
+  },
+  {
+    title: "ACCESS MANAGEMENT",
+    items: [
+      { name: "System Access", icon: <LockIcon />, 
+        subItems: [
+          { name: "Upload Staff KYC", path: "/access/roles" }, 
+          { name: "Manage Staff", path: "/access/permissions" }
+        ] 
+      },
+    ],
+  },
+  {
+    title: "TRANSACTIONS",
+    items: [
+      { name: "Bank Accounts", icon: <FileIcon />, path: "/Transactions" },
       {
         name: "Gold History",
         icon: <TimeIcon />,
         subItems: [
-          { name: "Buy", path: "/gold/buy" },
-          { name: "Sell", path: "/gold/sell" },
-          { name: "Gold Transactions", path: "/gold/redeem", new: true }, // badge example
-          { name: "Gift", path: "/gold/gift" },
-          { name: "Category", path: "/gold/category" },
+          { name: "Gold Transactions", path: "/gold/redeem", new: true },
           { name: "Charge Limit", path: "/gold/chargelimit" },
+          { name: "Charge Change History", path: "/gold/charge-history" },
           { name: "Wallet Transactions", path: "/gold/redeemunits" },
         ],
       },
-  
-      // --- END GOLD HISTORY ---
-      // { name: "DPS", icon: <BoxCubeIcon />, subItems: [{ name: "DPS List", path: "/dps" }] },
-      // { name: "FDR", icon: <BoxCubeIcon />, subItems: [{ name: "FDR List", path: "/fdr" }] },
-      { name: "Loan", icon: <AlertIcon />, 
-        subItems: [
-          { name: "Request Loan", path: "/loan/requestloan" },
-{ name: "Approved Loan", path: "/loan/approved-loan" },
-{ name: "Payable Installments", path: "/loan/payable-loan"},
-{ name: "Completed Loan", path: "/loan/completed-loan" },
-{ name: "Rejected Loan", path: "/loan/rejected-loan" },
-{ name: "All Loan", path: "/loan/all-loans" },
-{ name: "Loan Plans", path: "/loan/loan-plans"}
-
-        ] },
-        
     ],
   },
   {
-    title: "Bill Management",
+    title: "ESSENTIALS",
     items: [
-      {
-        name: "Bill Management",
-        icon: <DocsIcon />,
-        subItems: [
-          // Path should match route: leading slash and hyphen
-          { name: "Recharge Services", path: "/bill/import-services" },
-          { name: "Convert Rate", path: "/bill/convertrate" },
-          { name: "Bill Services list", path: "/bill/billservices-list" },
-        ],
-      },
-      {
-        name: "Bill History",
-        icon: <DownloadIcon />,
-        subItems: [
-          { name: "Pending Bill", path: "/bill/history/pendingbills" },
-          { name: "Complete Bill", path: "/bill/history/completed-bills" },
-               { name: "Returned Bill", path: "/bill/history/returned-bills" },
-                    { name: "All Bill", path: "/bill/history/all-bills" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Essentials",
-    items: [
-      {
-        name: "Automatic Gateways",
-        icon: <PlugInIcon />,
-        subItems: [
-          { name: "Gateway List", path: "/gateway/gatewaylist" },
-          // { name: "Add Gateway", path: "/gateways/add" },
-        ],
-      },
-      {
-        name: "Deposits",
-        icon: <DownloadIcon />,
-        subItems: [
-          { name: "Automatic Methods", path: "/deposits/automatic-methods" },
-          { name: "Manual Methods", path: "/deposits/manual-methods" },
-             { name: "Pending Manual Deposits", path: "/deposits/pendin-manual-deposits" },
-                { name: "Deposit History", path: "/deposits/deposit-history" },
-        ],
-      },
       {
         name: "Withdraw",
         icon: <ArrowDownIcon />,
         subItems: [
-          { name: "Automatic Methods", path: "/withdraw/automatic" },
-          { name: "Manual Methods", path: "/withdraw/manualmethods" },
-           { name: "Pending Withdraws", path: "/withdraw/pending" },
-           { name: "Withdraw Schedule", path: "/withdraw/withdraw-Schedule" },
            { name: "Withdraw History", path: "/withdraw/withdraw-history" },
         ],
       },
-      { name: "Referral", icon: <MailIcon />, subItems: [{ name: "Referral Settings", path: "/referral/settings" },{ name: "Referral Reports", path: "/referral/reports" }] },
-      { name: "Portfolios", icon: <PageIcon />, subItems: [{ name: "All Portfolios", path: "/portfolio/all" }, { name: "Create Portfolio", path: "/portfolio/allprofileupdates" },
-        { name: "Staff Profile", path: "/portfolio/uiforstaffdetails" }
-      ] },
-      {
-        name: "Manage Reward Point",
-        icon: <ShootingStarIcon />,
+      { name: "Portfolios", icon: <PageIcon />, 
         subItems: [
-          { name: "Reward Earnings", path: "/rewards/rewardsearnings" },
-          { name: "Reward Redeems", path: "/rewards/rewardredeems" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Site Settings",
-    items: [
-      {
-        name: "Settings",
-        icon: <BoxIcon />,
-        subItems: [
-          { name: "Site Settings", path: "/settings/sitesetting" },
-          { name: "Email Settings", path: "/settings/email-setting" },
-          { name: "SEO Meta Settings", path: "/settings/seo-meta-settings" },
-           { name: "Language Settings", path: "/settings/language-settings" },
-           { name: "Page Settings", path: "/settings/page-settings" },
-           { name: "Plugin Settings", path: "/settings/plugin-settings" },
-           { name: "Billing Service Settings", path: "/settings/billing-service-settings" },
-           { name: "Card Provider", path: "/settings/Card Provider" },
-           { name: "SMS Settings", path: "/settings/sms-settings" },
-           { name: "Push Notification", path: "/settings/push-notification" },
-           { name: "Notification Tune", path: "/settings/notification-tune" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "App Settings",
-    items: [
-      {
-        name: "App Settings",
-        icon: <BoxIconLine />,
-        subItems: [
-          { name: "Onboarding Screen", path: "/app-settings/mobile-onboarding" },
-          // { name: "Integrations", path: "/app-settings/integrations" },
-        ],
+          { name: "All Portfolios", path: "/portfolio/all" }, 
+          { name: "Create Portfolio", path: "/portfolio/allprofileupdates" },
+          { name: "Staff Profile", path: "/portfolio/uiforstaffdetails" }
+        ] 
       },
     ],
   },
 ];
 
 const AppSidebar: React.FC = () => {
-  const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { isExpanded, isMobileOpen, isHovered, setIsHovered, toggleMobileSidebar } = useSidebar();
+  const { dashboardType, setDashboardType } = useDashboard();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Select sidebar sections based on user domain
+  // Super Admin (0): Can see all sections
+  // MPay User (1): Can only see Gold/BBPS sections
+  // Ecom User (2): Can only see Ecommerce sections
+  let sidebarSections: { title: string; items: NavItem[] }[] = [];
+  
+  if (isSuperAdmin()) {
+    // Super admin sees sections based on current dashboard type
+    sidebarSections = 
+      dashboardType === 'ecommerce' ? ecommerceSidebarSections :
+      dashboardType === 'bbps' ? bbpsSidebarSections :
+      goldSidebarSections;
+  } else if (canAccessEcommerce() && !canAccessGold()) {
+    // Ecom user (domain 2) - only ecommerce sections
+    sidebarSections = ecommerceSidebarSections;
+  } else if (canAccessGold() && !canAccessEcommerce()) {
+    // MPay user (domain 1) - only gold/BBPS sections based on dashboard type
+    sidebarSections = 
+      dashboardType === 'bbps' ? bbpsSidebarSections :
+      goldSidebarSections;
+  }
+
+  // Filter dashboard overview based on user domain
+  sidebarSections = sidebarSections.map(section => {
+    if (section.title === "DASHBOARD") {
+      return {
+        ...section,
+        items: section.items.map(item => {
+          if (item.name === "Dashboard Overview" && item.subItems) {
+            // Filter dashboard options based on domain access
+            const filteredSubItems = item.subItems.filter(subItem => {
+              if (subItem.path === '/ecom') {
+                return canAccessEcommerce();
+              }
+              if (subItem.path === '/bbps' || subItem.path === '/') {
+                return canAccessGold();
+              }
+              return true;
+            });
+            return { ...item, subItems: filteredSubItems };
+          }
+          return item;
+        })
+      };
+    }
+    return section;
+  });
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: string;
@@ -322,6 +394,29 @@ const AppSidebar: React.FC = () => {
     });
   };
 
+  const handleDashboardClick = (path: string) => {
+    // Determine which dashboard type based on path
+    let type: DashboardType = 'gold';
+    if (path === '/ecom') type = 'ecommerce';
+    else if (path === '/bbps') type = 'bbps';
+    else if (path === '/') type = 'gold';
+    
+    // Validate access based on domain
+    if (type === 'ecommerce' && !canAccessEcommerce()) {
+      console.warn('User does not have access to ecommerce dashboard');
+      return;
+    }
+    
+    if ((type === 'gold' || type === 'bbps') && !canAccessGold()) {
+      console.warn('User does not have access to gold/BBPS dashboard');
+      return;
+    }
+    
+    setDashboardType(type);
+    navigate('/dashboard');
+    if (isMobileOpen) toggleMobileSidebar();
+  };
+
   const renderMenuItems = (items: NavItem[], sectionKey: string) => (
     <ul className="flex flex-col gap-4">
       {items.map((nav, index) => (
@@ -362,10 +457,13 @@ const AppSidebar: React.FC = () => {
                 />
               )}
             </button>
-          ) : (
+            ) : (
             nav.path && (
               <Link
                 to={nav.path}
+                onClick={() => {
+                  if (isMobileOpen) toggleMobileSidebar();
+                }}
                 className={`menu-item group ${
                   isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
                 }`}
@@ -399,44 +497,98 @@ const AppSidebar: React.FC = () => {
               }}
             >
               <ul className="mt-2 space-y-1 ml-9">
-                {nav.subItems.map((subItem) => (
-                  <li key={subItem.name}>
-                    <Link
-                      to={subItem.path}
-                      className={`menu-dropdown-item ${
-                        isActive(subItem.path)
-                          ? "menu-dropdown-item-active"
-                          : "menu-dropdown-item-inactive"
-                      }`}
-                    >
-                      {subItem.name}
-                      <span className="flex items-center gap-1 ml-auto">
-                        {subItem.new && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            new
+                {nav.subItems.map((subItem) => {
+                  // Check if this is a dashboard overview item
+                  const isDashboardItem = sectionKey === '0' && index === 0;
+                  
+                  return (
+                    <li key={subItem.name}>
+                        {isDashboardItem ? (
+                        <button
+                          onClick={() => handleDashboardClick(subItem.path)}
+                          className={`menu-dropdown-item w-full text-left ${
+                            location.pathname === '/dashboard' && 
+                            ((subItem.path === '/ecom' && dashboardType === 'ecommerce') ||
+                             (subItem.path === '/bbps' && dashboardType === 'bbps') ||
+                             (subItem.path === '/' && dashboardType === 'gold'))
+                              ? "menu-dropdown-item-active"
+                              : "menu-dropdown-item-inactive"
+                          }`}
+                        >
+                          {subItem.name}
+                          <span className="flex items-center gap-1 ml-auto">
+                            {subItem.new && (
+                              <span
+                                className={`ml-auto ${
+                                  location.pathname === '/dashboard' && 
+                                  ((subItem.path === '/ecom' && dashboardType === 'ecommerce') ||
+                                   (subItem.path === '/bbps' && dashboardType === 'bbps') ||
+                                   (subItem.path === '/' && dashboardType === 'gold'))
+                                    ? "menu-dropdown-badge-active"
+                                    : "menu-dropdown-badge-inactive"
+                                } menu-dropdown-badge`}
+                              >
+                                new
+                              </span>
+                            )}
+                            {subItem.pro && (
+                              <span
+                                className={`ml-auto ${
+                                  location.pathname === '/dashboard' && 
+                                  ((subItem.path === '/ecom' && dashboardType === 'ecommerce') ||
+                                   (subItem.path === '/bbps' && dashboardType === 'bbps') ||
+                                   (subItem.path === '/' && dashboardType === 'gold'))
+                                    ? "menu-dropdown-badge-active"
+                                    : "menu-dropdown-badge-inactive"
+                                } menu-dropdown-badge`}
+                              >
+                                pro
+                              </span>
+                            )}
                           </span>
-                        )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge`}
-                          >
-                            pro
+                        </button>
+                        ) : (
+                        <Link
+                          to={subItem.path}
+                          onClick={() => {
+                            if (isMobileOpen) toggleMobileSidebar();
+                          }}
+                          className={`menu-dropdown-item ${
+                            isActive(subItem.path)
+                              ? "menu-dropdown-item-active"
+                              : "menu-dropdown-item-inactive"
+                          }`}
+                        >
+                          {subItem.name}
+                          <span className="flex items-center gap-1 ml-auto">
+                            {subItem.new && (
+                              <span
+                                className={`ml-auto ${
+                                  isActive(subItem.path)
+                                    ? "menu-dropdown-badge-active"
+                                    : "menu-dropdown-badge-inactive"
+                                } menu-dropdown-badge`}
+                              >
+                                new
+                              </span>
+                            )}
+                            {subItem.pro && (
+                              <span
+                                className={`ml-auto ${
+                                  isActive(subItem.path)
+                                    ? "menu-dropdown-badge-active"
+                                    : "menu-dropdown-badge-inactive"
+                                } menu-dropdown-badge`}
+                              >
+                                pro
+                              </span>
+                            )}
                           </span>
-                        )}
-                      </span>
-                    </Link>
-                  </li>
-                ))}
+                        </Link>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
@@ -446,8 +598,9 @@ const AppSidebar: React.FC = () => {
   );
 
   return (
+    <>
     <aside
-      className={`blood-sidebar fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 text-white h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200
+      className={`blood-sidebar fixed top-16 lg:top-0 bottom-0 left-0 px-5 text-white transition-all duration-300 ease-in-out z-50 border-r border-gray-200 flex flex-col
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -462,6 +615,13 @@ const AppSidebar: React.FC = () => {
       aria-label="sidebar"
       data-theme="blood"
     >
+      <button
+        onClick={toggleMobileSidebar}
+        className="lg:hidden absolute top-4 right-4 text-white bg-transparent p-2"
+        aria-label="Close sidebar"
+      >
+        ✕
+      </button>
       <div
         className={`py-8 flex ${
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
@@ -477,7 +637,10 @@ const AppSidebar: React.FC = () => {
           )}
         </Link>
       </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+      <div
+        className="flex flex-col flex-1 min-h-0 overflow-y-auto duration-300 ease-linear no-scrollbar"
+        style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain", overscrollBehaviorY: "contain" }}
+      >
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             {sidebarSections.map((section, sIndex) => (
@@ -503,6 +666,14 @@ const AppSidebar: React.FC = () => {
   {/* Sidebar widget removed per user request */}
       </div>
     </aside>
+      {isMobileOpen && (
+        <div
+          onClick={toggleMobileSidebar}
+          className="fixed inset-0 bg-blue bg-opacity-40 lg:hidden z-40"
+          aria-hidden
+        />
+      )}
+    </>
   );
 };
 

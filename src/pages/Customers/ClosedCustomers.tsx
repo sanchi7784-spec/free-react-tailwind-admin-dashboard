@@ -2,42 +2,34 @@ import { useState } from "react";
 import { useNavigate } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-
 import { Customer, customers } from "../../data/customers";
-
 export default function ClosedCustomers() {
   const [showMailModal, setShowMailModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
-
   // Filter only closed customers - you may need to add more customers with 'Closed' status to your data
   const closedCustomers = customers.filter(c => c.status.toLowerCase() === 'closed');
-
   function openMailModal(c: Customer) {
     setSelectedCustomer(c);
     setSubject("");
     setMessage("");
     setShowMailModal(true);
   }
-
   function closeMailModal() {
     setShowMailModal(false);
     setSelectedCustomer(null);
   }
-
   function handleSendMail(e: React.FormEvent) {
     e.preventDefault();
     console.log("Send mail to:", selectedCustomer, { subject, message });
     closeMailModal();
   }
-
   return (
     <>
       <PageMeta title="Closed Customers - Admin" description="Closed customers listing" />
       <PageBreadcrumb pageTitle="Closed Customers" />
-
       <div className="w-full max-w-full overflow-x-hidden">
         {/* Filters card */}
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 md:p-5 mb-6 shadow-sm">
@@ -48,25 +40,21 @@ export default function ClosedCustomers() {
               placeholder="SEARCH"
               className="w-full md:w-auto md:flex-1 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:border-violet-500 dark:focus:border-violet-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
             />
-
             <select className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full md:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
               <option>Filter By Email St</option>
               <option>Email Verified</option>
               <option>Email Unverified</option>
             </select>
-
             <select className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full md:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
               <option>Filter By KYC</option>
               <option>Verified</option>
               <option>Unverified</option>
             </select>
-
             <select className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-full md:w-auto bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
               <option>Filter By Status</option>
               <option>Active</option>
               <option>Disabled</option>
             </select>
-
             <button className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white px-6 py-2 rounded text-sm font-medium inline-flex items-center justify-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="11" cy="11" r="8"></circle>
@@ -76,7 +64,6 @@ export default function ClosedCustomers() {
             </button>
           </div>
         </div>
-
         {/* Table (desktop) with horizontal scroll */}
         <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
@@ -197,7 +184,6 @@ export default function ClosedCustomers() {
               </tbody>
             </table>
           </div>
-
           {/* Mobile cards */}
           <div className="md:hidden divide-y divide-gray-200 dark:divide-gray-700">
             {closedCustomers.map((c) => (
@@ -271,7 +257,6 @@ export default function ClosedCustomers() {
             ))}
           </div>
         </div>
-
         {/* Pagination (simple) */}
         <div className="mt-4 flex justify-end">
           <nav>
@@ -284,17 +269,15 @@ export default function ClosedCustomers() {
             </ul>
           </nav>
         </div>
-
         {/* Mail modal */}
         {showMailModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="absolute inset-0 bg-black/50" onClick={closeMailModal} />
+            <div className="absolute inset-0 bg-blue/50" onClick={closeMailModal} />
             <div className="relative bg-white dark:bg-gray-800 rounded-lg w-full max-w-lg mx-4 p-6 shadow-lg">
               <div className="flex items-start justify-between mb-4">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Send Mail to {selectedCustomer?.name}</h3>
                 <button onClick={closeMailModal} className="text-slate-500 dark:text-gray-400 hover:text-slate-700 dark:hover:text-gray-200 text-2xl leading-none">×</button>
               </div>
-
               <form onSubmit={handleSendMail}>
                 <label className="block text-sm text-slate-600 dark:text-gray-300 mb-2">Subject:</label>
                 <input
@@ -303,7 +286,6 @@ export default function ClosedCustomers() {
                   type="text"
                   className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 mb-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
-
                 <label className="block text-sm text-slate-600 dark:text-gray-300 mb-2">Email Details</label>
                 <textarea
                   value={message}
@@ -311,7 +293,6 @@ export default function ClosedCustomers() {
                   rows={6}
                   className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 mb-4 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 />
-
                 <div className="flex items-center gap-3">
                   <button type="submit" className="bg-blue-600 dark:bg-blue-500 text-white px-4 py-2 rounded flex items-center gap-2">
                     <span className="text-lg">✈</span>

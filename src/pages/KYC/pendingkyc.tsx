@@ -369,7 +369,7 @@ export default function PendingKYC() {
         {/* KYC Details Modal */}
         {isModalOpen && selectedKYC && (
           <div 
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto"
+            className="fixed inset-0 bg-blue/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 overflow-y-auto"
             onClick={() => setIsModalOpen(false)}
           >
             <div 
@@ -495,7 +495,7 @@ export default function PendingKYC() {
                                   alt="Aadhaar Front"
                                   className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                <div className="absolute inset-0 bg-blue/0 group-hover:bg-blue/10 transition-colors flex items-center justify-center">
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width="32"
@@ -532,7 +532,7 @@ export default function PendingKYC() {
                                   alt="Aadhaar Back"
                                   className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                <div className="absolute inset-0 bg-blue/0 group-hover:bg-blue/10 transition-colors flex items-center justify-center">
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width="32"
@@ -677,7 +677,7 @@ export default function PendingKYC() {
                                   alt="PAN Front"
                                   className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                <div className="absolute inset-0 bg-blue/0 group-hover:bg-blue/10 transition-colors flex items-center justify-center">
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width="32"
@@ -714,7 +714,7 @@ export default function PendingKYC() {
                                   alt="PAN Back"
                                   className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-300"
                                 />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                <div className="absolute inset-0 bg-blue/0 group-hover:bg-blue/10 transition-colors flex items-center justify-center">
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
                                     width="32"
@@ -848,7 +848,7 @@ export default function PendingKYC() {
                             className="w-full h-56 object-cover transition-transform duration-300 group-hover:scale-105"
                           />
                           {/* Hover Overlay */}
-                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-300 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-blue/0 group-hover:bg-blue/40 transition-all duration-300 flex items-center justify-center">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
                               width="48"

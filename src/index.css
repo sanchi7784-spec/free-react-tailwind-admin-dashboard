@@ -39,20 +39,20 @@ layer(base);
   --color-current: currentColor;
   --color-transparent: transparent;
   --color-white: #ffffff;
-  --color-black: #101828;
+  --color-blue: #101828;
 
-  --color-brand-25: #f2f7ff;
-  --color-brand-50: #ecf3ff;
-  --color-brand-100: #dde9ff;
-  --color-brand-200: #c2d6ff;
-  --color-brand-300: #9cb9ff;
-  --color-brand-400: #7592ff;
-  --color-brand-500: #465fff;
-  --color-brand-600: #3641f5;
-  --color-brand-700: #2a31d8;
-  --color-brand-800: #252dae;
-  --color-brand-900: #262e89;
-  --color-brand-950: #161950;
+  --color-brand-25: #fff7f9;
+  --color-brand-50: #fff2f6;
+  --color-brand-100: #ffd9e8;
+  --color-brand-200: #ffbcd0;
+  --color-brand-300: #ff8bb3;
+  --color-brand-400: #ff5b95;
+  --color-brand-500: #FF6B9A;
+  --color-brand-600: #e34d87;
+  --color-brand-700: #c3366f;
+  --color-brand-800: #9b2756;
+  --color-brand-900: #6f1f3f;
+  --color-brand-950: #3f1226;
 
   --color-blue-light-25: #f5fbff;
   --color-blue-light-50: #f0f9ff;
@@ -133,9 +133,9 @@ layer(base);
   --color-warning-900: #7a2e0e;
   --color-warning-950: #4e1d09;
 
-  --color-theme-pink-500: #ee46bc;
+  --color-theme-pink-500: #FF6B9A;
 
-  --color-theme-purple-500: #7a5af8;
+  --color-theme-purple-500: #7C4DFF;
 
   --shadow-theme-md: 0px 4px 8px -2px rgba(16, 24, 40, 0.1),
     0px 2px 4px -2px rgba(16, 24, 40, 0.06);
@@ -186,7 +186,9 @@ layer(base);
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-outfit z-1 bg-gray-50;
+    @apply relative font-normal font-outfit z-1;
+    --page-background: linear-gradient(180deg, var(--color-brand-25), var(--color-white));
+    background: var(--page-background);
   }
 }
 
@@ -517,13 +519,13 @@ span.flatpickr-weekday,
 .flatpickr-day.selected.nextMonthDay,
 .flatpickr-day.startRange.nextMonthDay,
 .flatpickr-day.endRange.nextMonthDay {
-  background: #465fff;
+  background: var(--color-brand-500);
   @apply !border-brand-500 !bg-brand-500 hover:!border-brand-500 hover:!bg-brand-500;
 }
 .flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n + 1)) {
-  box-shadow: -10px 0 0 #465fff;
+  box-shadow: -10px 0 0 var(--color-brand-500);
 }
 
 .flatpickr-months .flatpickr-prev-month svg,
@@ -631,6 +633,19 @@ span.flatpickr-weekday,
 }
 .event-fc-color {
   @apply rounded-lg py-2.5 pl-4 pr-3;
+}
+/* Utility to hide native scrollbars for overflow containers */
+.hide-scrollbar {
+  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  height: 0 !important;
+  width: 0 !important;
+  display: none !important; /* Chrome, Safari and Opera */
+}
+.hide-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent !important;
 }
 .event-fc-color .fc-event-title {
   @apply p-0 text-sm font-normal text-gray-700;
@@ -759,7 +774,7 @@ span.flatpickr-weekday,
 .custom-calendar .fc-h-event {
   background-color: transparent;
   border: none;
-  color: black;
+  color: blue;
 }
 .fc.fc-media-screen {
   @apply min-h-screen;
@@ -780,7 +795,7 @@ span.flatpickr-weekday,
   /* --sidebar-blood-900:  rgba(30, 74, 139);
   --sidebar-blood-700:  rgba(30, 74, 139);
   --sidebar-blood-500:  rgba(30, 74, 139); */
-  background-color:rgba(30, 74, 139) !important;
+  background-color:rgba(11, 10, 11, 0.968) !important;
   color: #ffffff;
 }
 
@@ -923,4 +938,16 @@ span.flatpickr-weekday,
 
 .simplebar-scrollbar.simplebar-visible:before {
   @apply opacity-100;
+}
+
+/* Toast Animation */
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }

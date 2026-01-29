@@ -3,18 +3,15 @@ import { useParams, useNavigate } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import { Customer, customers } from "../../data/customers";
-
 export default function EditCustomer() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [customer, setCustomer] = useState<Customer | null>(null);
-
   // form state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
-  
   const [country, setCountry] = useState("Afghanistan");
   // tabs for right column
   const tabs = ['Information','Paybacks','DPS','FDR','Loan','Virtual Card','Transactions','Referral','Ticket'];
@@ -27,7 +24,6 @@ export default function EditCustomer() {
   const [showDelete, setShowDelete] = useState(false);
   // verification states (placeholders)
   // currently these are reflected in the form controls; wire to API as needed
-
   useEffect(() => {
     if (!id) return;
     const cid = Number(id);
@@ -43,7 +39,6 @@ export default function EditCustomer() {
         // initialize any verification-related UI from found data if needed
     }
   }, [id]);
-
   // sample paybacks data (will be replaced by real data/API)
   const paybacks = [
     {
@@ -55,16 +50,12 @@ export default function EditCustomer() {
       description: 'Signup Bonus',
     },
   ];
-
-  
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     // TODO: wire to API to save user details
   console.log("Save user:", { firstName, lastName, email, mobile, country });
     navigate(-1);
   }
-
   // Mail modal handlers
   function handleSendMail(e: React.FormEvent) {
     e.preventDefault();
@@ -73,19 +64,16 @@ export default function EditCustomer() {
     setMailBody("");
     setShowMailModal(false);
   }
-
   function handleConfirmDelete() {
     // TODO: perform deletion (API or in-memory)
     console.log("Delete user:", customer?.id);
     setShowDelete(false);
     navigate(-1);
   }
-
   return (
     <>
       <PageMeta title={`Edit Customer - ${customer?.name || "User"}`} description="Edit customer details" />
       <PageBreadcrumb pageTitle={`User Detail - ${customer?.name || "User"}`} />
-
       <div className="p-4 md:p-6">
         <div className="container mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -100,7 +88,6 @@ export default function EditCustomer() {
                       {customer?.initials ?? 'U'}
                     </div>
                   </div>
-
                   {/* User Info - Centered */}
                   <div className="mt-4 w-full">
                     <h2 className="font-bold text-lg sm:text-xl text-slate-900 break-words">{customer?.name || 'User Name'}</h2>
@@ -110,7 +97,6 @@ export default function EditCustomer() {
                     <p className="text-sm text-slate-500 break-all mt-1">{customer?.email}</p>
                     <p className="text-xs text-slate-400 mt-2">Last Login: 20-06-2024 00:46:02</p>
                   </div>
-
                   {/* Action Buttons Row - Centered */}
                   <div className="mt-6 flex items-center justify-center gap-3 flex-wrap">
                     <button type="button" title="Send mail" aria-label="Send mail" onClick={() => setShowMailModal(true)} className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg text-white bg-slate-800 hover:bg-slate-900 transition-colors">
@@ -118,20 +104,17 @@ export default function EditCustomer() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     </button>
-
                     <button type="button" title="Login as user" aria-label="Login as user" className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg text-white bg-emerald-500 hover:bg-emerald-600 transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </button>
-
                     <button type="button" title="Wallet" aria-label="Wallet" className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                         <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                         <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"></path>
                       </svg>
                     </button>
-
                     <button type="button" title="Delete" aria-label="Delete" onClick={() => setShowDelete(true)} className="w-12 h-12 rounded-full flex items-center justify-center shadow-lg text-white bg-rose-500 hover:bg-rose-600 transition-colors">
                       <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -140,7 +123,6 @@ export default function EditCustomer() {
                   </div>
                 </div>
               </div>
-
               <div className="bg-gradient-to-br from-teal-500 to-cyan-600 rounded-lg p-6 text-white shadow-lg">
                 <div className="flex items-center justify-between">
                   <div>
@@ -157,7 +139,6 @@ export default function EditCustomer() {
                   </div>
                 </div>
               </div>
-
               <div className="bg-white border rounded-lg p-6 text-center">
                 <div className="mb-4 text-sm sm:text-base font-semibold text-slate-900">Subscribe DPS, FDR & Loan</div>
                 <div className="flex gap-3 justify-center flex-wrap">
@@ -166,7 +147,6 @@ export default function EditCustomer() {
                   <button className="px-5 sm:px-6 py-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg text-sm font-medium transition-colors shadow-md">Loan</button>
                 </div>
               </div>
-
               <div className="bg-white border rounded-lg p-4">
                 <h5 className="text-sm font-semibold mb-3">Account Informations</h5>
                 <form className="space-y-4">
@@ -179,7 +159,6 @@ export default function EditCustomer() {
                       <label className={`px-2 sm:px-3 py-2 border rounded text-xs sm:text-sm`}><input type="radio" name="status" /> Closed</label>
                     </div>
                   </div>
-
                   {/* Verification groups: Email, KYC, 2FA, OTP etc. (radio-like) */}
                   <div>
                     <div className="text-xs font-medium mb-2">Email Verification</div>
@@ -188,7 +167,6 @@ export default function EditCustomer() {
                       <label className="px-2 sm:px-3 py-2 border rounded bg-gray-100 text-xs sm:text-sm"><input type="radio" name="email_verified" defaultChecked /> Unverified</label>
                     </div>
                   </div>
-
                   <div>
                     <div className="text-xs font-medium mb-2">KYC Verification</div>
                     <div className="flex gap-2 flex-wrap">
@@ -196,7 +174,6 @@ export default function EditCustomer() {
                       <label className="px-2 sm:px-3 py-2 border rounded bg-gray-100 text-xs sm:text-sm"><input type="radio" name="kyc" defaultChecked /> Unverified</label>
                     </div>
                   </div>
-
                   <div>
                     <div className="text-xs font-medium mb-2">2FA Verification</div>
                     <div className="flex gap-2 flex-wrap">
@@ -204,7 +181,6 @@ export default function EditCustomer() {
                       <label className="px-2 sm:px-3 py-2 border rounded bg-gray-100 text-xs sm:text-sm"><input type="radio" name="two_fa" defaultChecked /> Disabled</label>
                     </div>
                   </div>
-
                   <div>
                     <div className="text-xs font-medium mb-2">OTP Verification</div>
                     <div className="flex gap-2 flex-wrap">
@@ -212,7 +188,6 @@ export default function EditCustomer() {
                       <label className="px-2 sm:px-3 py-2 border rounded text-xs sm:text-sm"><input type="radio" name="otp_status" /> Disabled</label>
                     </div>
                   </div>
-
                   {/* Additional status groups (Deposit, Withdraw etc.) */}
                   {['Deposit Status','Withdraw Status','Fund Transfer Status','DPS Status','FDR Status','Loan Status','Pay Bill Status','Portfolio Status','Reward Status','Referral Status'].map((label) => (
                     <div key={label}>
@@ -223,14 +198,12 @@ export default function EditCustomer() {
                       </div>
                     </div>
                   ))}
-
                   <div>
                     <button type="button" className="w-full bg-indigo-600 text-white py-2 rounded">Save Changes</button>
                   </div>
                 </form>
               </div>
             </div>
-
             {/* Right column: metrics tiles, tabs, and forms */}
             <div className="lg:col-span-9 space-y-6">
               {/* Metrics tiles grid */}
@@ -260,7 +233,6 @@ export default function EditCustomer() {
                   </div>
                 ))}
               </div>
-
               {/* Tabs (simple) */}
               <div className="bg-white border rounded-lg p-4">
                 <ul className="flex gap-2 flex-wrap mb-4 overflow-x-auto">
@@ -272,7 +244,6 @@ export default function EditCustomer() {
                       </li>
                     ))}
                   </ul>
-
                   {/* Tab content */}
                   <div className="bg-white overflow-hidden">
                     {activeTab === 'Information' && (
@@ -305,7 +276,6 @@ export default function EditCustomer() {
                                   </select>
                                 </div>
                               </div>
-
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                   <label className="block text-sm mb-1">Branch:</label>
@@ -320,7 +290,6 @@ export default function EditCustomer() {
                                   <input type="text" className="w-full border rounded p-2" defaultValue={customer?.name?.toLowerCase().replace(/\s+/g,'') || ''} />
                                 </div>
                               </div>
-
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                   <label className="block text-sm mb-1">Email:</label>
@@ -335,7 +304,6 @@ export default function EditCustomer() {
                                   <input type="date" className="w-full border rounded p-2" />
                                 </div>
                               </div>
-
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                   <label className="block text-sm mb-1">City:</label>
@@ -350,7 +318,6 @@ export default function EditCustomer() {
                                   <input type="text" name="address" className="w-full border rounded p-2" />
                                 </div>
                               </div>
-
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                   <label className="block text-sm mb-1">Joining Date:</label>
@@ -365,7 +332,6 @@ export default function EditCustomer() {
                                   <input type="text" className="w-full border rounded p-2 bg-gray-50" defaultValue="Level 1 - Digi Member" disabled />
                                 </div>
                               </div>
-
                               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                   <label className="block text-sm mb-1">NID No.</label>
@@ -373,14 +339,12 @@ export default function EditCustomer() {
                                 </div>
                                 <div className="md:col-span-2" />
                               </div>
-
                               <div>
                                 <button type="submit" className="w-full bg-indigo-600 text-white py-3 rounded">Save Changes</button>
                               </div>
                             </form>
                           </div>
                         </div>
-
                         {/* Change Password card (also part of Information tab in provided HTML) */}
                         <div className="site-card">
                           <div className="site-card-header">
@@ -406,7 +370,6 @@ export default function EditCustomer() {
                         </div>
                       </div>
                     )}
-
                     {activeTab === 'Paybacks' && (
                       <div className="tab-pane p-0">
                         <div className="site-card">
@@ -417,7 +380,6 @@ export default function EditCustomer() {
                               return `${total} USD`;
                             })()}</div>
                           </div>
-
                           <div className="site-card-body">
                             <div className="mb-4 bg-white border rounded p-4">
                               <form className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4" onSubmit={(e) => e.preventDefault()}>
@@ -455,7 +417,6 @@ export default function EditCustomer() {
                         </div>
                       </div>
                     )}
-
                     {activeTab === 'DPS' && (
                       <div className="p-4 text-sm text-slate-600">
                         <div className="site-card">
@@ -480,7 +441,6 @@ export default function EditCustomer() {
                                   </button>
                                 </form>
                               </div>
-
                               <div className="overflow-x-auto">
                                 <table className="w-full border-collapse min-w-[900px]">
                                   <thead>
@@ -508,7 +468,6 @@ export default function EditCustomer() {
                         </div>
                       </div>
                     )}
-
                     {activeTab === 'FDR' && (
                       <div className="p-4 text-sm text-slate-600">
                         <div className="site-card">
@@ -533,7 +492,6 @@ export default function EditCustomer() {
                                   </button>
                                 </form>
                               </div>
-
                               <div className="overflow-x-auto">
                                 <table className="w-full border-collapse min-w-[900px]">
                                   <thead>
@@ -561,7 +519,6 @@ export default function EditCustomer() {
                         </div>
                       </div>
                     )}
-
                     {activeTab === 'Loan' && (
                       <div className="p-4 text-sm text-slate-600">
                         <div className="site-card">
@@ -777,7 +734,7 @@ export default function EditCustomer() {
       {/* Mail Modal */}
       {showMailModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black opacity-40" onClick={() => setShowMailModal(false)} />
+          <div className="absolute inset-0 bg-blue opacity-40" onClick={() => setShowMailModal(false)} />
           <div className="bg-white rounded-lg shadow-lg w-full max-w-lg z-10 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="text-base sm:text-lg font-semibold mb-2 break-words">Send Email to {customer?.name}</h3>
             <form onSubmit={handleSendMail} className="space-y-3">
@@ -801,7 +758,7 @@ export default function EditCustomer() {
       {/* Delete confirmation modal */}
       {showDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black opacity-40" onClick={() => setShowDelete(false)} />
+          <div className="absolute inset-0 bg-blue opacity-40" onClick={() => setShowDelete(false)} />
           <div className="bg-white rounded-lg shadow-lg w-full max-w-md z-10 p-4 sm:p-6">
             <h3 className="text-base sm:text-lg font-semibold mb-2">Are you sure?</h3>
             <p className="text-xs sm:text-sm text-slate-600 mb-4">You want to delete this user?</p>

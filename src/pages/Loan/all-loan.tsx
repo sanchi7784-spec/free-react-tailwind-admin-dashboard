@@ -246,7 +246,7 @@ export default function AllLoans() {
       {/* Loan Details Modal */}
       {isModalOpen && selectedLoan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="fixed inset-0 bg-black/50" onClick={closeLoanModal}></div>
+          <div className="fixed inset-0 bg-blue/50" onClick={closeLoanModal}></div>
           <div className="relative w-full max-w-4xl rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800">
             <div className="flex items-start justify-between">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Loan Details</h3>
