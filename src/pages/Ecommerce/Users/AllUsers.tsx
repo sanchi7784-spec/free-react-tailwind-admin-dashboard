@@ -181,6 +181,17 @@ export default function AllUsers() {
     loadUsers();
   }, []);
 
+  // Default to grid view on small screens for better mobile UX
+  useEffect(() => {
+    try {
+      if (window && window.innerWidth < 640) {
+        setViewMode("grid");
+      }
+    } catch (e) {
+      // ignore (SSR-safe)
+    }
+  }, []);
+
   const getStatusBadge = (status: number | string | null) => {
     if (status === 1 || status === "active") {
       return (
@@ -509,12 +520,12 @@ export default function AllUsers() {
                 Manage and view all registered users ({filteredUsers.length} of {users.length})
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {/* View Toggle */}
               <div className="flex items-center gap-1 rounded-md border border-stroke p-1 dark:border-strokedark">
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`rounded px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-medium transition-colors ${
                     viewMode === "table"
                       ? "bg-blue-500 dark:text-white"
                       : "text-body hover:bg-gray-2 dark:hover:bg-meta-4 dark:text-white"
@@ -536,7 +547,7 @@ export default function AllUsers() {
                 </button>
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`rounded px-2 py-1 text-xs sm:px-3 sm:py-1.5 sm:text-sm font-medium transition-colors ${
                     viewMode === "grid"
                       ? "bg-blue-700 dark:text-white"
                       : "text-body hover:bg-gray-2 dark:hover:bg-meta-4 dark:text-white"
@@ -559,7 +570,7 @@ export default function AllUsers() {
               </div>
               <button
                 onClick={handleOpenCreateModal}
-                className="inline-flex items-center gap-2 rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+                className="inline-flex items-center gap-2 rounded-md bg-green-600 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium text-white hover:bg-opacity-90"
               >
                 <svg
                   className="h-4 w-4"
@@ -579,7 +590,7 @@ export default function AllUsers() {
               <button
                 onClick={loadUsers}
                 disabled={loading}
-                className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50"
               >
                 <svg
                   className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
@@ -647,7 +658,7 @@ export default function AllUsers() {
                   a.remove();
                   URL.revokeObjectURL(url);
                 }}
-                className="inline-flex items-center gap-2 rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90"
+                className="inline-flex items-center gap-2 rounded-md bg-gray-600 px-3 py-1.5 text-xs sm:px-4 sm:py-2 sm:text-sm font-medium text-white hover:bg-opacity-90"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v14m7-7H5" />
@@ -763,16 +774,16 @@ export default function AllUsers() {
               <table className="w-full table-auto">
                 <thead>
                   <tr className="border-b border-stroke text-left dark:border-strokedark">
-                    <th className="px-4 py-4 font-semibold text-blue dark:text-white">
+                      <th className="px-3 py-3 sm:px-4 sm:py-4 font-semibold text-blue dark:text-white">
                       User
                     </th>
-                    <th className="px-4 py-4 font-semibold text-blue dark:text-white">
+                      <th className="px-3 py-3 sm:px-4 sm:py-4 font-semibold text-blue dark:text-white">
                       Contact
                     </th>
-                    <th className="px-4 py-4 font-semibold text-blue dark:text-white">
+                      <th className="px-3 py-3 sm:px-4 sm:py-4 font-semibold text-blue dark:text-white">
                       Status
                     </th>
-                    <th className="px-4 py-4 font-semibold text-blue dark:text-white">
+                      <th className="px-3 py-3 sm:px-4 sm:py-4 font-semibold text-blue dark:text-white">
                       Actions
                     </th>
                   </tr>
@@ -783,10 +794,10 @@ export default function AllUsers() {
                       key={user.user_id}
                       className="border-b border-stroke hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
                     >
-                      <td className="px-4 py-5">
+                      <td className="px-3 py-3 sm:px-4 sm:py-5">
                         <div className="flex items-center gap-3 ">
                           <div
-                            className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white"
+                            className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full text-sm font-semibold text-white"
                             style={{ backgroundColor: getAvatarColor(user.user_id) }}
                           >
                             {getInitials(user.name)}
@@ -799,14 +810,14 @@ export default function AllUsers() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-5">
+                      <td className="px-3 py-3 sm:px-4 sm:py-5">
                         <div className="text-sm">
                           <p className="text-blue dark:text-white">{user.email || "N/A"}</p>
                           <p className="text-body dark:text-white">{user.phone || "N/A"}</p>
                         </div>
                       </td>
-                      <td className="px-4 py-5">{getStatusBadge(user.status)}</td>
-                      <td className="px-4 py-5">
+                      <td className="px-3 py-3 sm:px-4 sm:py-5">{getStatusBadge(user.status)}</td>
+                      <td className="px-3 py-3 sm:px-4 sm:py-5">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleViewUser(user)}
@@ -864,12 +875,12 @@ export default function AllUsers() {
               {paginatedUsers.map((user) => (
                 <div
                   key={user.user_id}
-                  className="rounded-lg border border-stroke bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-strokedark dark:bg-boxdark"
+                  className="rounded-lg border border-stroke bg-white p-4 sm:p-6 shadow-sm transition-shadow hover:shadow-md dark:border-strokedark dark:bg-boxdark"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className="flex h-12 w-12 items-center justify-center rounded-full text-base font-semibold text-white"
+                        className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full text-base font-semibold text-white"
                         style={{ backgroundColor: getAvatarColor(user.user_id) }}
                       >
                         {getInitials(user.name)}
@@ -940,13 +951,13 @@ export default function AllUsers() {
                   <div className="mt-4 flex gap-2">
                     <button
                       onClick={() => handleViewUser(user)}
-                      className="flex-1 rounded-md border border-stroke py-2 text-sm font-medium text-body hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
+                      className="flex-1 rounded-md border border-stroke py-2 text-xs sm:text-sm font-medium text-body hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
                     >
                       View Details
                     </button>
                     <button
                       onClick={() => handleEditUser(user)}
-                      className="rounded-md border border-stroke px-4 py-2 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
+                      className="rounded-md border border-stroke px-3 py-1.5 sm:px-4 sm:py-2 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
                     >
                       <svg
                         className="h-4 w-4 text-body"

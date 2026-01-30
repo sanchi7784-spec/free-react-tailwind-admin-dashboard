@@ -25,6 +25,7 @@ import {
   MailIcon,
   TimeIcon,
 } from "../icons";
+import { FlagTriangleRight,Users } from 'lucide-react'
 import { useSidebar } from "../context/SidebarContext";
 import { useDashboard, DashboardType } from "../context/DashboardContext";
 import { 
@@ -91,7 +92,7 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
 
        { 
         name: "All KYC", 
-        icon: <GroupIcon />, 
+        icon: <DocsIcon />, 
         subItems: [
           { name: "All KYC", path: "/ecommerce/kyc/all" },
           // { name: "Add Vendor", path: "/ecommerce/vendors/add" },
@@ -100,7 +101,7 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
       },
       { 
         name: "Orders", 
-        icon: <FileIcon />, 
+        icon: <ShootingStarIcon />, 
         subItems: [
           { name: "All Orders", path: "/ecommerce/orders/all" },
           // { name: "Pending Orders", path: "/ecommerce/orders/pending" },
@@ -135,6 +136,17 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
         name: "VAT & Tax",
         icon: <DollarLineIcon />,
         path: "/ecommerce/vat-tax"
+      },
+       { 
+        name: "Reports", 
+        icon: <FlagTriangleRight />, 
+        subItems: [
+          { name: "Products Reports", path: "/ecommerce/reports/products" },
+          { name: "Order Reports", path: "/ecommerce/reports/orders" },
+          { name: "Admin Tax Reports", path: "/ecommerce/reports/admin-tax" },
+          { name: "Vendor Vat Reports", path: "/ecommerce/reports/vendor-vat" },
+          // { name: "Add Category", path: "/ecommerce/category/add" },
+        ],
       },
     ],
   },
@@ -627,15 +639,11 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link to="/">
-          {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <img src={logo} alt="Logo" width={150} height={40} className=" ml-10" />
-            </>
-          ) : (
-            <img src={logo} alt="Logo" width={32} height={32} />
-          )}
-        </Link>
+        {isExpanded || isHovered || isMobileOpen ? (
+          <img src={logo} alt="Logo" width={150} height={40} className=" ml-10" />
+        ) : (
+          <img src={logo} alt="Logo" width={32} height={32} />
+        )}
       </div>
       <div
         className="flex flex-col flex-1 min-h-0 overflow-y-auto duration-300 ease-linear no-scrollbar"

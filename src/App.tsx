@@ -113,6 +113,10 @@ import EcomAllCategories from "./pages/Ecommerce/Category/AllCategories";
 import EcomAddCategory from "./pages/Ecommerce/Category/AddCategory";
 import EcomSalesReport from "./pages/Ecommerce/Reports/SalesReport";
 import EcomRevenueReport from "./pages/Ecommerce/Reports/RevenueReport";
+import ProductsReport from "./pages/Ecommerce/Reports/ProductsReport";
+import OrdersReport from "./pages/Ecommerce/Reports/OrdersReport";
+import AdminTaxReport from "./pages/Ecommerce/Reports/AdminTaxReport";
+import VendorVatReport from "./pages/Ecommerce/Reports/VendorVatReport";
 import EcommerceLogin from "./pages/Ecommerce/EcommerceLogin";
 import EcomAllKYC from "./pages/Ecommerce/KYC/AllKYC";
 import BusinessSettings from "./pages/Ecommerce/BasicInfo/BusinessSettings";
@@ -220,6 +224,10 @@ export default function App() {
             <Route path="/ecommerce/kyc/all" element={<RequireEcommerceAuth><EcomAllKYC /></RequireEcommerceAuth>} />
             <Route path="/ecommerce/reports/sales" element={<RequireEcommerceAuth><EcomSalesReport /></RequireEcommerceAuth>} />
             <Route path="/ecommerce/reports/revenue" element={<RequireEcommerceAuth><EcomRevenueReport /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/reports/products" element={<RequireEcommerceAuth><ProductsReport /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/reports/orders" element={<RequireEcommerceAuth><OrdersReport /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/reports/admin-tax" element={<RequireEcommerceAuth><AdminTaxReport /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/reports/vendor-vat" element={<RequireEcommerceAuth><VendorVatReport /></RequireEcommerceAuth>} />
             <Route path="/ecommerce/basicinfo/business-settings" element={<RequireEcommerceAuth><BusinessSettings /></RequireEcommerceAuth>} />
             <Route path="/ecommerce/delivery-charges" element={<RequireEcommerceAuth><DeliveryCharges /></RequireEcommerceAuth>} />
             <Route path="/ecommerce/vat-tax" element={<RequireEcommerceAuth><VatTax /></RequireEcommerceAuth>} />
