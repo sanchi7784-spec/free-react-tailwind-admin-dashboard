@@ -150,13 +150,14 @@ export default function App() {
           <Routes>
             {/* Dashboard Layout (protected) */}
             <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
-              {/* Dynamic Dashboard Route */}
+              {/* Main Dashboard Route - Automatically shows correct dashboard based on user domain */}
+              <Route path="/" element={<DynamicDashboard />} />
               <Route path="/dashboard" element={<DynamicDashboard />} />
               
               {/* Legacy routes for backward compatibility */}
               <Route index path="/ecom" element={<Home />} />
               <Route path="/bbps" element={<BBPSDashboard />} />
-              <Route path="/" element={<GoldDashboard />} />
+              <Route path="/gold" element={<GoldDashboard />} />
 
             {/* Others Page */}
             {/* Profile - Only for Gold/MPay users (domain 0 & 1) */}

@@ -103,7 +103,7 @@ export default function AllUsers() {
       });
 
       if (response.status === 403) {
-        throw new Error('Access denied. Your session may have expired. Please login again.');
+        throw new Error('Access denied.');
       }
 
       if (response.status === 401) {
@@ -116,12 +116,12 @@ export default function AllUsers() {
 
       const result = await response.json();
       
-      console.log('API Response:', result); // Debug log
+      // console.log('API Response:', result); // Debug log
       
       if (result.data && Array.isArray(result.data)) {
         // Map API response to component structure
         const mappedUsers: User[] = result.data.map((user: any) => {
-          console.log('User data:', user); // Debug log for each user
+          // console.log('User data:', user); // Debug log for each user
           return {
             ...user,
             // Explicitly map role_id (fallback to 0 if not provided)
@@ -373,7 +373,7 @@ export default function AllUsers() {
 
       const result = await response.json();
       
-      console.log('Create user response:', result); // Debug log
+      // console.log('Create user response:', result); // Debug log
       
       // Close modal first
       handleCloseModals();
@@ -438,7 +438,7 @@ export default function AllUsers() {
           role_id: parseInt(editFormData.role_id),
         };
 
-        console.log('PATCH payload:', payload); // Debug log
+        // console.log('PATCH payload:', payload); // Debug log
 
         // Make PATCH request to update user
         const response = await fetch(`${API_BASE_URL}/dashboard/users/${selectedUser.user_id}`, {
@@ -450,7 +450,7 @@ export default function AllUsers() {
           body: JSON.stringify(payload),
         });
 
-        console.log('PATCH response status:', response.status); // Debug log
+        // console.log('PATCH response status:', response.status); // Debug log
 
         if (response.status === 403) {
           throw new Error('Access denied. You may not have permission to update this user.');
@@ -462,7 +462,7 @@ export default function AllUsers() {
 
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('Error response text:', errorText); // Debug log
+          // console.error('Error response text:', errorText); // Debug log
           
           let errorData = null;
           try {
@@ -476,7 +476,7 @@ export default function AllUsers() {
         }
 
         const result = await response.json();
-        console.log('PATCH response data:', result); // Debug log
+        // console.log('PATCH response data:', result); // Debug log
       }
       
       // Close modal first

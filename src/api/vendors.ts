@@ -159,7 +159,22 @@ export async function createVendor(data: CreateVendorData): Promise<CreateVendor
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    throw new Error(error.detail || 'Failed to create vendor');
+    
+    // Handle validation errors (422) which may have multiple field errors
+    if (response.status === 422 && error.detail) {
+      if (Array.isArray(error.detail)) {
+        const errorMessages = error.detail.map((err: any) => 
+          `${err.loc ? err.loc.join('.') + ': ' : ''}${err.msg || err.message || JSON.stringify(err)}`
+        ).join(', ');
+        throw new Error(errorMessages);
+      } else if (typeof error.detail === 'string') {
+        throw new Error(error.detail);
+      } else {
+        throw new Error(JSON.stringify(error.detail));
+      }
+    }
+    
+    throw new Error(error.detail || error.message || 'Failed to create vendor');
   }
 
   return response.json();

@@ -84,7 +84,6 @@ export async function fetchDeliveryCharges(): Promise<DeliveryChargesResponse> {
     }));
   }
   
-  console.log('Fetched delivery charges:', data);
   return data;
 }
 

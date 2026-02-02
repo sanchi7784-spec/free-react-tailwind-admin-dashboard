@@ -124,7 +124,7 @@ export default function RefundRequests() {
         const payload = await res.json();
         // useful for debugging in dev console
         // eslint-disable-next-line no-console
-        console.debug('Refunds API response', res.status, payload);
+        // console.debug('Refunds API response', res.status, payload);
         if (!res.ok) {
           setError(payload?.detail || 'Failed to fetch refunds');
           setLoading(false);

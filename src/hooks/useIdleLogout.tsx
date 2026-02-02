@@ -27,12 +27,9 @@ export default function UseIdleLogout({ timeoutMs = 60 * 60 * 1000, warnBeforeSe
 
     function doLogout() {
       try {
-        clearAuth();
+        clearAuth(); // This now clears mp_user_id, mp_api_key, and mp_auth
         clearEcommerceAuth();
         localStorage.removeItem('dashboardType');
-        localStorage.removeItem('mp_user_id');
-        localStorage.removeItem('mp_api_key');
-        localStorage.removeItem('mp_auth');
       } catch (e) {
         // ignore
       }
@@ -42,12 +39,9 @@ export default function UseIdleLogout({ timeoutMs = 60 * 60 * 1000, warnBeforeSe
     // Clear session data without attempting to navigate — suitable for unload handlers
     function clearSessionOnly() {
       try {
-        clearAuth();
+        clearAuth(); // This now clears mp_user_id, mp_api_key, and mp_auth
         clearEcommerceAuth();
         localStorage.removeItem('dashboardType');
-        localStorage.removeItem('mp_user_id');
-        localStorage.removeItem('mp_api_key');
-        localStorage.removeItem('mp_auth');
       } catch (e) {
         // ignore
       }

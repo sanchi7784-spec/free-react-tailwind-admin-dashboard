@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import PageMeta from '../../components/common/PageMeta';
 import { getDashboardOverview, DashboardOverviewData, getAppVersion, updateAppVersion } from '../../api/dashboard';
 import { canAccessGold, isEcommerceAuthenticated } from '../../utils/ecommerceAuth';
+import { getUserId, clearAuth } from '../../utils/auth';
 
 const GoldDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -17,6 +18,16 @@ const GoldDashboard: React.FC = () => {
   const [lastUpdated, setLastUpdated] = useState<string>('');
 
   useEffect(() => {
+    // Validate user_id is present before making API calls
+    const userId = getUserId();
+    if (!userId) {
+      console.error('User ID not found. Session may be invalid.');
+      // Clear auth and redirect to login
+      clearAuth();
+      navigate('/auth/signin', { replace: true });
+      return;
+    }
+
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
@@ -47,7 +58,7 @@ const GoldDashboard: React.FC = () => {
 
     fetchDashboardData();
     fetchAppVersion();
-  }, []);
+  }, [navigate]);
 
   const formatRs = (val: number | string) => {
     const n = Number(val) || 0;

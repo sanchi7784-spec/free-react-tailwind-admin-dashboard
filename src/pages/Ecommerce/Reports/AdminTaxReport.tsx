@@ -1,6 +1,5 @@
 import PageMeta from "../../../components/common/PageMeta";
 import PageBreadCrumb from "../../../components/common/PageBreadCrumb";
-
 export default function AdminTaxReport() {
   return (
     <>

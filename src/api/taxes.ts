@@ -80,7 +80,7 @@ export async function fetchTaxes(): Promise<TaxesResponse> {
     }));
   }
   
-  console.log('Fetched taxes:', data);
+  // console.log('Fetched taxes:', data);
   return data;
 }
 

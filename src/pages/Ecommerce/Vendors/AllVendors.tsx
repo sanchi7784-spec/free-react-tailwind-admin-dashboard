@@ -287,7 +287,8 @@ export default function AllVendors() {
       handleCloseModal();
     } catch (err: any) {
       console.error('Error submitting vendor:', err);
-      alert(err.message || 'Failed to save vendor');
+      const errorMessage = err.message || (typeof err === 'string' ? err : 'Failed to save vendor');
+      alert(`Failed to save vendor: ${errorMessage}`);
     } finally {
       setSubmitLoading(false);
     }
@@ -328,13 +329,13 @@ export default function AllVendors() {
     const normalized = normalizeStatus(status);
     switch (normalized) {
       case "active":
-        return "bg-success bg-opacity-10 text-success";
+        return "bg-blue-300 bg-opacity-10 text-success";
       case "inactive":
-        return "bg-warning bg-opacity-10 text-warning";
+        return "bg-yellow-500 bg-opacity-10 text-warning";
       case "deleted":
-        return "bg-danger bg-opacity-10 text-danger";
+        return "bg-red-500 bg-opacity-10 text-danger";
       default:
-        return "bg-body bg-opacity-10 text-body";
+        return "bg-green-400 bg-opacity-10 text-body";
     }
   };
 
@@ -717,7 +718,7 @@ export default function AllVendors() {
                       errors.companyName
                         ? "border-meta-1"
                         : "border-stroke dark:border-form-strokedark"
-                    } bg-transparent px-5 py-3 text-blue outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input dark:text-white`}
+                    } bg-transparent px-5 py-3 text-blue-600 outline-none transition focus:border-blue-600 active:border-blue-600 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                   />
                   {errors.companyName && (
                     <p className="mt-1 text-sm text-meta-1">
@@ -745,7 +746,7 @@ export default function AllVendors() {
                       errors.contactPerson
                         ? "border-meta-1"
                         : "border-stroke dark:border-form-strokedark"
-                    } bg-transparent px-5 py-3 text-blue outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input dark:text-white`}
+                    } bg-transparent px-5 py-3 text-blu-600 outline-none transition focus:border-primary active:border-blue-500 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                   />
                   {errors.contactPerson && (
                     <p className="mt-1 text-sm text-meta-1">
@@ -770,7 +771,7 @@ export default function AllVendors() {
                       errors.email
                         ? "border-meta-1"
                         : "border-stroke dark:border-form-strokedark"
-                    } bg-transparent px-5 py-3 text-blue outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input dark:text-white`}
+                    } bg-transparent px-5 py-3 text-blue-600 outline-none transition focus:border-blue-600 active:border-blue-600 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                   />
                   {errors.email && (
                     <p className="mt-1 text-sm text-meta-1">{errors.email}</p>
@@ -793,7 +794,7 @@ export default function AllVendors() {
                       errors.phone
                         ? "border-meta-1"
                         : "border-stroke dark:border-form-strokedark"
-                    } bg-transparent px-5 py-3 text-blue outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input dark:text-white`}
+                    } bg-transparent px-5 py-3 text-blue-600 outline-none transition focus:border-blue-600 active:border-blue-600 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                   />
                   {errors.phone && (
                     <p className="mt-1 text-sm text-meta-1">{errors.phone}</p>
@@ -817,7 +818,7 @@ export default function AllVendors() {
                         errors.password
                           ? "border-meta-1"
                           : "border-stroke dark:border-form-strokedark"
-                      } bg-transparent px-5 py-3 text-blue outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input dark:text-white`}
+                      } bg-transparent px-5 py-3 text-blue-600 outline-none transition focus:border-blue-600 active:border-blue-600 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                     />
                     {errors.password && (
                       <p className="mt-1 text-sm text-meta-1">{errors.password}</p>
@@ -835,7 +836,7 @@ export default function AllVendors() {
                     onChange={(e) =>
                       setFormData({ ...formData, gender: Number(e.target.value) })
                     }
-                    className="w-full rounded-lg border border-stroke bg-transparent px-5 py-3 text-blue outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+                    className="w-full rounded-lg border border-stroke bg-transparent px-5 py-3 text-blue-600 outline-none transition focus:border-blue-600 active:border-blue-600 dark:border-form-strokedark dark:bg-form-input dark:text-white"
                   >
                     <option value={1}>Male</option>
                     <option value={2}>Female</option>
@@ -858,7 +859,7 @@ export default function AllVendors() {
                       errors.dob
                         ? "border-meta-1"
                         : "border-stroke dark:border-form-strokedark"
-                    } bg-transparent px-5 py-3 text-blue outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input dark:text-white`}
+                    } bg-transparent px-5 py-3 text-blue-600 outline-none transition focus:border-blue-600 active:border-blue-600 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                   />
                   {errors.dob && (
                     <p className="mt-1 text-sm text-meta-1">{errors.dob}</p>

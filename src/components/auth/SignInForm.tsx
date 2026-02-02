@@ -34,8 +34,8 @@ export default function SignInForm() {
       
       // Check if login was successful
       if (res.detail && /success/i.test(res.detail)) {
-        // Store old auth format for compatibility
-        setAuth({ email });
+        // Store auth with user_id for consistency
+        setAuth({ email, user_id: String(res.user_id) });
         
         // Store new auth with domain
         storeEcommerceAuth(res.user_id, res.data.access_token, res.domain);

@@ -1,3 +1,5 @@
+import { getUserId } from '../utils/auth';
+
 const BASE = "https://api.mastropaytech.com";
 
 export interface DashboardOverviewData {
@@ -37,11 +39,11 @@ export interface UpdateAppVersionResponse {
 }
 
 export async function getAppVersion(): Promise<AppVersionData> {
-  // Get user ID from localStorage
-  const userId = localStorage.getItem("mp_user_id");
+  // Get user ID using auth helper
+  const userId = getUserId();
   
   if (!userId) {
-    throw new Error("User ID not found in localStorage");
+    throw new Error("User ID not found. Please login again.");
   }
 
   const res = await fetch(`${BASE}/dashboard/app-version/${userId}`, {
@@ -80,11 +82,11 @@ export async function getAppVersion(): Promise<AppVersionData> {
 }
 
 export async function updateAppVersion(version: string): Promise<UpdateAppVersionResponse> {
-  // Get user ID from localStorage
-  const userId = localStorage.getItem("mp_user_id");
+  // Get user ID using auth helper
+  const userId = getUserId();
   
   if (!userId) {
-    throw new Error("User ID not found in localStorage");
+    throw new Error("User ID not found. Please login again.");
   }
 
   const res = await fetch(`${BASE}/dashboard/app-version/${userId}`, {
@@ -124,11 +126,11 @@ export async function updateAppVersion(version: string): Promise<UpdateAppVersio
 }
 
 export async function getDashboardOverview(): Promise<DashboardOverviewResponse> {
-  // Get user ID from localStorage
-  const userId = localStorage.getItem("mp_user_id");
+  // Get user ID using auth helper
+  const userId = getUserId();
   
   if (!userId) {
-    throw new Error("User ID not found in localStorage");
+    throw new Error("User ID not found. Please login again.");
   }
 
   const res = await fetch(`${BASE}/dashboard/overview/${userId}`, {
@@ -224,6 +226,6 @@ export async function fetchEcommerceDashboardOverview(): Promise<EcommerceDashbo
   }
 
   const data = (await res.json()) as EcommerceDashboardOverviewResponse;
-  console.log('Fetched ecommerce dashboard overview:', data);
+  // console.log('Fetched ecommerce dashboard overview:', data);
   return data;
 }

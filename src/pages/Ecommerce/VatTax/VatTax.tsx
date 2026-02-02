@@ -59,7 +59,7 @@ export default function VatTax() {
   };
 
   const handleEdit = (tax: Tax) => {
-    console.log('Editing tax:', tax);
+    // console.log('Editing tax:', tax);
     setEditingTax(tax);
     setFormData({
       tax_name: tax.tax_name,

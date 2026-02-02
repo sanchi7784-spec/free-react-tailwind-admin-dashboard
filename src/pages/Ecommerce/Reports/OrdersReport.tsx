@@ -176,30 +176,30 @@ export default function OrdersReport() {
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              <div className="rounded-md border p-4">
-                <div className="text-xs text-gray-500">Total Orders</div>
+              <div className="rounded-md border p-4 bg-gradient-to-l from-black to-white">
+                <div className="text-xs text-gray-900">Total Orders</div>
                 <div className="text-xl font-semibold">
                   {data?.overall_counts?.total_orders ?? "-"}
                 </div>
-                <div className="text-sm text-gray-500">Placed: {data?.overall_counts?.placed ?? 0}</div>
+                <div className="text-sm text-gray-900">Placed: {data?.overall_counts?.placed ?? 0}</div>
               </div>
 
-              <div className="rounded-md border p-4">
-                <div className="text-xs text-gray-500">Payment Summary</div>
+              <div className="rounded-md border p-4 bg-gradient-to-l from-black to-white">
+                <div className="text-xs text-gray-900">Payment Summary</div>
                 <div className="text-xl font-semibold">{data?.payment_summary?.total_order_amount ?? "-"}</div>
-                <div className="text-sm text-gray-500">Pending: {data?.payment_summary?.pending ?? 0}</div>
+                <div className="text-sm text-gray-900">Pending: {data?.payment_summary?.pending ?? 0}</div>
               </div>
 
-              <div className="rounded-md border p-4">
-                <div className="text-xs text-gray-500">Paid</div>
+              <div className="rounded-md border p-4 bg-gradient-to-l from-black to-white">
+                <div className="text-xs text-gray-900">Paid</div>
                 <div className="text-xl font-semibold">{data?.payment_summary?.paid ?? 0}</div>
-                <div className="text-sm text-gray-500">Refunded: {data?.payment_summary?.refunded ?? 0}</div>
+                <div className="text-sm text-gray-900">Refunded: {data?.payment_summary?.refunded ?? 0}</div>
               </div>
 
-              <div className="rounded-md border p-4">
-                <div className="text-xs text-gray-500">Refund Initiated</div>
+              <div className="rounded-md border p-4 bg-gradient-to-l from-black to-white">
+                <div className="text-xs text-gray-900">Refund Initiated</div>
                 <div className="text-xl font-semibold">{data?.payment_summary?.refund_initiated ?? 0}</div>
-                <div className="text-sm text-gray-500">Cancelled: {data?.overall_counts?.cancelled ?? 0}</div>
+                <div className="text-sm text-gray-900">Cancelled: {data?.overall_counts?.cancelled ?? 0}</div>
               </div>
             </div>
 

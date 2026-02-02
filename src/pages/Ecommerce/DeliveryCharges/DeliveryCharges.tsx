@@ -61,7 +61,6 @@ export default function DeliveryCharges() {
   };
 
   const handleEdit = (charge: DeliveryCharge) => {
-    console.log('Editing charge:', charge);
     setEditingCharge(charge);
     setFormData({
       min_order_quantity: charge.min_order_quantity,

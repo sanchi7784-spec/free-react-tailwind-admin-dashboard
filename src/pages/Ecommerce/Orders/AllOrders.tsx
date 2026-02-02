@@ -367,8 +367,8 @@ export default function AllOrders() {
           )}
           {error && (
             <div className="mb-4 rounded-lg bg-red-50 p-4 text-red-800 dark:bg-red-900 dark:text-red-300">
-              <p className="font-medium">Error loading orders</p>
-              <p className="text-sm mt-1">{error}</p>
+              {/* <p className="font-medium">Error loading orders</p> */}
+              <p className="text-center text-red-600 dark:text-red-300 font-bold text-lg">Access Denied</p>
             </div>
           )}
           {!loading && !error && orders.length === 0 && (

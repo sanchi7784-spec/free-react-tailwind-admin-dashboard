@@ -38,7 +38,7 @@ export default function AllKYC() {
       setKycDocuments(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching KYC documents:", error);
-      setError("Failed to fetch KYC documents");
+      setError("Access Denied");
     } finally {
       setLoading(false);
     }
