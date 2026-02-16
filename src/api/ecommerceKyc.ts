@@ -12,6 +12,8 @@ export interface KYCDocument {
   pan_number: string | null;
   is_verified: number; // 0: pending, 1: approved, 2: rejected
   reason: string | null;
+  verified_by_name: string | null;
+  verified_by_email: string | null;
   created_at: string;
   updated_at: string;
 }

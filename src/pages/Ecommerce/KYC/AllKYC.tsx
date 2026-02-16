@@ -259,6 +259,9 @@ export default function AllKYC() {
                     <th className="min-w-[200px] px-4 py-4 font-medium text-blue dark:text-white">
                       Reason
                     </th>
+                    <th className="min-w-[150px] px-4 py-4 font-medium text-blue dark:text-white">
+                      Verified By
+                    </th>
                     <th className="min-w-[110px] px-4 py-4 font-medium text-blue dark:text-white">
                       Created At
                     </th>
@@ -270,7 +273,7 @@ export default function AllKYC() {
                 <tbody>
                   {filteredDocuments.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="px-4 py-8 text-center text-sm text-gray-500">
+                      <td colSpan={9} className="px-4 py-8 text-center text-sm text-gray-500">
                         No KYC documents found
                       </td>
                     </tr>
@@ -301,6 +304,20 @@ export default function AllKYC() {
                               <p className="whitespace-pre-line line-clamp-3" title={kyc.reason}>
                                 {kyc.reason}
                               </p>
+                            </div>
+                          ) : (
+                            <span className="text-sm text-gray-400 italic">-</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-5">
+                          {kyc.verified_by_name ? (
+                            <div className="text-sm">
+                              <div className="font-medium text-blue dark:text-white">
+                                {kyc.verified_by_name}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {kyc.verified_by_email || "-"}
+                              </div>
                             </div>
                           ) : (
                             <span className="text-sm text-gray-400 italic">-</span>
@@ -405,6 +422,18 @@ export default function AllKYC() {
                       {kyc.reason && (
                         <div>
                           <span className="font-medium">Reason:</span> {kyc.reason}
+                        </div>
+                      )}
+                      {kyc.verified_by_name && (
+                        <div className="mt-2">
+                          <div>
+                            <span className="font-medium">Verified By:</span> {kyc.verified_by_name}
+                          </div>
+                          {kyc.verified_by_email && (
+                            <div className="text-gray-500">
+                              {kyc.verified_by_email}
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>

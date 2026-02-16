@@ -111,8 +111,8 @@ export default function AllOrders() {
 
   const getPaymentMethodText = (method: number) => {
     const methodMap: Record<number, string> = {
-      0: "Cash on Delivery",
-      1: "Online Payment",
+      1: "COD",
+      2: "Online",
     };
     return methodMap[method] || "Unknown";
   };
