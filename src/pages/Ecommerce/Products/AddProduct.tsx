@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router";
 import PageMeta from "../../../components/common/PageMeta";
 import PageBreadCrumb from "../../../components/common/PageBreadCrumb";
@@ -16,11 +16,67 @@ export default function AddProduct() {
   });
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [image, setImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [images, setImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // Cascading category dropdown state
+  const [catDropdownOpen, setCatDropdownOpen] = useState(false);
+  const [expandedParent, setExpandedParent] = useState<number | null>(null);
+  const [selectedParent, setSelectedParent] = useState<Category | null>(null);
+  const [selectedChild, setSelectedChild] = useState<Category | null>(null);
+  const catDropdownRef = useRef<HTMLDivElement>(null);
+
+  const parentCategories = useMemo(
+    () => categories.filter(c => !c.parent_id),
+    [categories]
+  );
+  const childrenOf = useMemo(
+    () => (parentId: number) => categories.filter(c => c.parent_id === parentId),
+    [categories]
+  );
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (catDropdownRef.current && !catDropdownRef.current.contains(e.target as Node)) {
+        setCatDropdownOpen(false);
+        setExpandedParent(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // Options state
+  const [options, setOptions] = useState({
+    Quantity: [""],
+    Color: [""],
+    Size: [""],
+  });
+  // Handle option value change
+  const handleOptionChange = (optionKey: keyof typeof options, idx: number, value: string) => {
+    setOptions(prev => {
+      const updated = [...prev[optionKey]];
+      updated[idx] = value;
+      return { ...prev, [optionKey]: updated };
+    });
+  };
+
+  // Add new value field for an option
+  const addOptionValue = (optionKey: keyof typeof options) => {
+    setOptions(prev => ({ ...prev, [optionKey]: [...prev[optionKey], ""] }));
+  };
+
+  // Remove a value field for an option
+  const removeOptionValue = (optionKey: keyof typeof options, idx: number) => {
+    setOptions(prev => {
+      const updated = prev[optionKey].filter((_, i) => i !== idx);
+      return { ...prev, [optionKey]: updated.length ? updated : [""] };
+    });
+  };
 
   useEffect(() => {
     loadCategories();
@@ -87,20 +143,31 @@ export default function AddProduct() {
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImage(file);
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (!files.length) return;
+    // Append new files to existing
+    const newImages = [...images, ...files];
+    setImages(newImages);
+
+    // Generate previews for new files and append
+    let loaded = 0;
+    const newPreviews: string[] = [];
+    files.forEach((file, idx) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        newPreviews[idx] = reader.result as string;
+        loaded++;
+        if (loaded === files.length) {
+          setImagePreviews(prev => [...prev, ...newPreviews]);
+        }
       };
       reader.readAsDataURL(file);
-    }
+    });
   };
 
-  const removeImage = () => {
-    setImage(null);
-    setImagePreview("");
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,14 +175,18 @@ export default function AddProduct() {
     setError(null);
     setSuccess(false);
 
-    if (!image) {
-      setError("Please upload a product image");
+    if (!images.length) {
+      setError("Please upload at least one product image");
       return;
     }
 
     setLoading(true);
 
     try {
+      // Prepare options: remove empty strings
+      const filteredOptions = Object.fromEntries(
+        Object.entries(options).map(([k, arr]) => [k, arr.filter(v => v.trim() !== "")])
+      );
       await createProduct({
         product_name: formData.productName,
         description: formData.description,
@@ -123,11 +194,11 @@ export default function AddProduct() {
         price: formData.price,
         discount: formData.discount || "0",
         stock_quantity: formData.quantity,
-        product_image: image,
+        images: images,
+        options: filteredOptions,
       });
 
       setSuccess(true);
-      
       // Reset form
       setFormData({
         productName: "",
@@ -137,8 +208,12 @@ export default function AddProduct() {
         quantity: "",
         description: "",
       });
-      setImage(null);
-      setImagePreview("");
+      setImages([]);
+      setImagePreviews([]);
+      setOptions({ Quantity: [""], Color: [""], Size: [""] });
+      setSelectedParent(null);
+      setSelectedChild(null);
+      setExpandedParent(null);
 
       // Show success message for 2 seconds then redirect
       setTimeout(() => {
@@ -157,6 +232,34 @@ export default function AddProduct() {
       <PageBreadCrumb pageTitle="Add Product" />
       
       <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Product Options Section */}
+        <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div className="border-b border-stroke px-4 py-4 dark:border-strokedark sm:px-6.5">
+            <h3 className="font-semibold text-blue dark:text-white">
+              Product Options (Optional)
+            </h3>
+          </div>
+          <div className="p-4 sm:p-6.5 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {Object.keys(options).map((key) => (
+              <div key={key}>
+                <label className="mb-2 block text-sm font-medium text-blue dark:text-white">{key}</label>
+                {options[key as keyof typeof options].map((val, idx) => (
+                  <div className="flex items-center mb-2" key={idx}>
+                    <input
+                      type="text"
+                      value={val}
+                      onChange={e => handleOptionChange(key as keyof typeof options, idx, e.target.value)}
+                      placeholder={`Enter ${key} option`}
+                      className="w-full rounded border-[1.5px] border-stroke bg-transparent px-3 py-2 font-normal text-blue outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                    />
+                    <button type="button" onClick={() => removeOptionValue(key as keyof typeof options, idx)} className="ml-2 text-red-500">&times;</button>
+                  </div>
+                ))}
+                <button type="button" onClick={() => addOptionValue(key as keyof typeof options)} className="text-xs text-primary underline">+ Add {key}</button>
+              </div>
+            ))}
+          </div>
+        </div>
         {/* Success Message */}
         {success && (
           <div className="rounded-md border border-green-500 bg-green-50 p-4 dark:bg-green-900/20">
@@ -212,22 +315,121 @@ export default function AddProduct() {
               {/* Category */}
               <div>
                 <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                  Category <span className="text-meta-1">*</span>
+                  Category <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 font-normal text-blue outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
-                >
-                  <option value="">Select category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.category_id} value={cat.category_id}>
-                      {cat.category_name}
-                    </option>
-                  ))}
-                </select>
+                <div ref={catDropdownRef} className="relative">
+                  {/* Trigger button */}
+                  <button
+                    type="button"
+                    onClick={() => { setCatDropdownOpen(o => !o); setExpandedParent(null); }}
+                    className="flex w-full items-center justify-between rounded border-[1.5px] border-stroke bg-transparent px-5 py-3 font-normal text-blue outline-none transition focus:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white"
+                  >
+                    <span className={selectedChild || selectedParent ? "text-blue dark:text-white" : "text-gray-400"}>
+                      {selectedChild
+                        ? `${selectedParent?.category_name} › ${selectedChild.category_name}`
+                        : selectedParent
+                        ? selectedParent.category_name
+                        : "Select category"}
+                    </span>
+                    <svg className={`w-4 h-4 flex-shrink-0 transition-transform ${catDropdownOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  {/* Dropdown panel */}
+                  {catDropdownOpen && (
+                    <div className="absolute left-0 right-0 z-50 mt-1 rounded border border-stroke bg-white shadow-lg dark:border-strokedark dark:bg-boxdark sm:w-max sm:right-auto">
+                      <div className="flex flex-col sm:flex-row">
+                        {/* Parent list */}
+                        <ul className="w-full sm:w-52 max-h-60 overflow-y-auto py-1">
+                          {parentCategories.length === 0 && (
+                            <li className="px-4 py-2 text-sm text-gray-400">No categories</li>
+                          )}
+                          {parentCategories.map(parent => {
+                            const children = childrenOf(parent.category_id);
+                            const isExpanded = expandedParent === parent.category_id;
+                            return (
+                              <li key={parent.category_id}>
+                                <div
+                                  className={`flex items-center justify-between px-4 py-2.5 text-sm cursor-pointer select-none transition-colors ${
+                                    isExpanded
+                                      ? "bg-primary/10 text-primary"
+                                      : "text-blue dark:text-white hover:bg-gray-100 dark:hover:bg-meta-4 active:bg-gray-100"
+                                  }`}
+                                  onClick={() => {
+                                    if (children.length === 0) {
+                                      setSelectedParent(parent);
+                                      setSelectedChild(null);
+                                      setFormData(prev => ({ ...prev, category: String(parent.category_id) }));
+                                      setCatDropdownOpen(false);
+                                      setExpandedParent(null);
+                                    } else {
+                                      setExpandedParent(isExpanded ? null : parent.category_id);
+                                    }
+                                  }}
+                                >
+                                  <span>{parent.category_name}</span>
+                                  {children.length > 0 && (
+                                    <svg
+                                      className={`w-3.5 h-3.5 ml-2 flex-shrink-0 transition-transform sm:rotate-0 ${isExpanded ? "rotate-180 sm:rotate-90" : ""}`}
+                                      fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    >
+                                      {/* Down on mobile (accordion), right on desktop (flyout) */}
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" className="sm:hidden" />
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" className="hidden sm:block" />
+                                    </svg>
+                                  )}
+                                </div>
+                                {/* Mobile accordion — children inline */}
+                                {isExpanded && children.length > 0 && (
+                                  <ul className="sm:hidden bg-gray-50 dark:bg-meta-4 border-t border-stroke dark:border-strokedark">
+                                    {children.map(child => (
+                                      <li
+                                        key={child.category_id}
+                                        className="px-6 py-2.5 text-sm cursor-pointer text-blue dark:text-white hover:bg-primary/10 hover:text-primary active:bg-primary/10 transition-colors select-none"
+                                        onClick={() => {
+                                          setSelectedParent(parent);
+                                          setSelectedChild(child);
+                                          setFormData(prev => ({ ...prev, category: String(child.category_id) }));
+                                          setCatDropdownOpen(false);
+                                          setExpandedParent(null);
+                                        }}
+                                      >
+                                        {child.category_name}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </li>
+                            );
+                          })}
+                        </ul>
+
+                        {/* Desktop side panel — children shown when parent is expanded */}
+                        {expandedParent !== null && childrenOf(expandedParent).length > 0 && (
+                          <ul className="hidden sm:block w-52 max-h-60 overflow-y-auto border-l border-stroke py-1 dark:border-strokedark">
+                            {childrenOf(expandedParent).map(child => (
+                              <li
+                                key={child.category_id}
+                                className="px-4 py-2.5 text-sm cursor-pointer text-blue dark:text-white hover:bg-primary/10 hover:text-primary transition-colors select-none"
+                                onClick={() => {
+                                  const parent = parentCategories.find(p => p.category_id === expandedParent)!;
+                                  setSelectedParent(parent);
+                                  setSelectedChild(child);
+                                  setFormData(prev => ({ ...prev, category: String(child.category_id) }));
+                                  setCatDropdownOpen(false);
+                                  setExpandedParent(null);
+                                }}
+                              >
+                                {child.category_name}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Price */}
@@ -311,16 +513,16 @@ export default function AddProduct() {
         <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="border-b border-stroke px-4 py-4 dark:border-strokedark sm:px-6.5">
             <h3 className="font-semibold text-blue dark:text-white">
-              Product Image <span className="text-meta-1">*</span>
+              Product Images <span className="text-meta-1">*</span>
             </h3>
           </div>
-          
           <div className="p-4 sm:p-6.5">
             <div className="flex items-center justify-center border-2 border-dashed border-stroke rounded-lg p-8 dark:border-strokedark">
               <div className="text-center">
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageUpload}
                   className="hidden"
                   id="product-image"
@@ -349,43 +551,41 @@ export default function AddProduct() {
                   <p className="mb-2 text-sm font-medium text-blue dark:text-white">
                     <span className="text-primary">Click to upload</span> or drag and drop
                   </p>
-                  <p className="text-xs text-body">PNG, JPG, WEBP up to 10MB</p>
+                  <p className="text-xs text-body">PNG, JPG, WEBP up to 10MB. You can select multiple images.</p>
                 </label>
               </div>
             </div>
-
-            {/* Image Preview */}
-            {imagePreview && (
-              <div className="mt-6">
-                <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                  Preview
-                </label>
-                <div className="relative inline-block">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="h-48 w-48 rounded-lg border border-stroke object-cover dark:border-strokedark"
-                  />
-                  <button
-                    type="button"
-                    onClick={removeImage}
-                    className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-meta-1 text-white hover:bg-opacity-90"
-                  >
-                    <svg
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+            {/* Image Previews */}
+            {imagePreviews.length > 0 && (
+              <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                {imagePreviews.map((preview, idx) => (
+                  <div key={idx} className="relative inline-block">
+                    <img
+                      src={preview}
+                      alt={`Preview ${idx + 1}`}
+                      className="h-32 w-32 rounded-lg border border-stroke object-cover dark:border-strokedark"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(idx)}
+                      className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-meta-1 text-white hover:bg-opacity-90"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
           </div>

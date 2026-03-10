@@ -1,5 +1,34 @@
+/**
+ * Delete a product image by image_id
+ * @param image_id - The ID of the image to delete
+ * @returns Promise with API response
+ */
+export async function deleteProductImage(image_id: number): Promise<{ detail: string }> {
+  const token = localStorage.getItem('ecommerce_token');
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
+  const response = await fetch(`${ECOMMERCE_API_BASE_URL}/products/images/${image_id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || 'Failed to delete product image');
+  }
+  return response.json();
+}
 // Products API
 const ECOMMERCE_API_BASE_URL = 'https://api.mastrokart.com/dashboard';
+
+export interface ProductImage {
+  image_id: number;
+  image_url: string;
+  is_primary: number;
+}
 
 export interface Product {
   product_id: number;
@@ -13,7 +42,8 @@ export interface Product {
   status: number;
   added_by: string;
   role_id?: number;
-  image_url: string;
+  images: ProductImage[];
+  options?: Record<string, string[]>;
   created_at: string;
   updated_at: string;
 }
@@ -53,7 +83,8 @@ export interface CreateProductData {
   price: string;
   discount: string;
   stock_quantity: string;
-  product_image: File;
+  images: File[];
+  options?: Record<string, string[]>;
 }
 
 export interface CreateProductResponse {
@@ -75,7 +106,14 @@ export async function createProduct(data: CreateProductData): Promise<CreateProd
   formData.append('price', data.price);
   formData.append('discount', data.discount);
   formData.append('stock_quantity', data.stock_quantity);
-  formData.append('product_image', data.product_image);
+  // Append all images
+  data.images.forEach((file) => {
+    formData.append('images', file);
+  });
+  // Add options as JSON string if present
+  if (data.options) {
+    formData.append('options', JSON.stringify(data.options));
+  }
 
   const response = await fetch(`${ECOMMERCE_API_BASE_URL}/products/add`, {
     method: 'POST',
@@ -251,7 +289,8 @@ export interface UpdateProductData {
   discount?: string;
   stock_quantity?: string;
   status?: string;
-  product_image?: File;
+  images?: File[];
+  options?: Record<string, string[]>;
 }
 
 export interface UpdateProductResponse {
@@ -298,8 +337,14 @@ export async function updateProduct(productId: number, data: UpdateProductData):
     formData.append('status', data.status);
   }
   
-  if (data.product_image) {
-    formData.append('product_image', data.product_image);
+  if (data.images && data.images.length > 0) {
+    data.images.forEach((file) => {
+      formData.append('images', file);
+    });
+  }
+  // Removed product_image, handled by images array only
+  if (data.options) {
+    formData.append('options', JSON.stringify(data.options));
   }
 
   console.log('FormData entries:', Array.from(formData.entries()));

@@ -146,3 +146,39 @@ export async function updateCommission(payload: CommissionData): Promise<{ detai
     throw new Error("Invalid response format from server");
   }
 }
+
+export interface CreatePaymentMethodPayload {
+  method_name: string;
+}
+
+export async function createPaymentMethod(payload: CreatePaymentMethodPayload): Promise<{ detail: string }> {
+  const token = localStorage.getItem("ecommerce_token");
+  if (!token) {
+    throw new Error("No authentication token found. Please login first.");
+  }
+  const res = await fetch(`${BASE}/dashboard/settings/payment-method`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "accept": "application/json"
+    },
+    body: JSON.stringify(payload),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    try {
+      const json = JSON.parse(text);
+      const msg = json?.detail || json?.message || text || res.statusText;
+      throw new Error(msg);
+    } catch (parseError) {
+      throw new Error(text || `Server error: ${res.status} ${res.statusText}`);
+    }
+  }
+  try {
+    const json = JSON.parse(text);
+    return json;
+  } catch (parseError) {
+    throw new Error("Invalid response format from server");
+  }
+}

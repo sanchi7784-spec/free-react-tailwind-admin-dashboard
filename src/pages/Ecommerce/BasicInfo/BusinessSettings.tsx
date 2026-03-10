@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchSettings, updateSettings, fetchCommission, updateCommission } from '../../../api/settings';
+import { fetchSettings, updateSettings, fetchCommission, updateCommission, createPaymentMethod } from '../../../api/settings';
 
 // Withdraw settings API integration
 const fetchWithdrawSettings = async () => {
@@ -82,6 +82,12 @@ export default function BusinessSettings() {
   });
   const [withdrawSaving, setWithdrawSaving] = useState(false);
   const [withdrawSuccess, setWithdrawSuccess] = useState<string | null>(null);
+
+  // Payment method creation state
+  const [newPaymentMethod, setNewPaymentMethod] = useState('');
+  const [creatingPayment, setCreatingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -256,6 +262,28 @@ export default function BusinessSettings() {
     }
   };
 
+  const handleCreatePaymentMethod = async () => {
+    if (!newPaymentMethod.trim()) {
+      setPaymentError('Please enter a payment method name');
+      return;
+    }
+    setCreatingPayment(true);
+    setPaymentError(null);
+    setPaymentSuccess(null);
+    try {
+      const result = await createPaymentMethod({ method_name: newPaymentMethod });
+      setPaymentSuccess(result.detail || 'Payment method added successfully');
+      setNewPaymentMethod('');
+      // Refresh settings to show new payment method
+      const res = await fetchSettings();
+      setSettings(res.data);
+    } catch (err: any) {
+      setPaymentError(err.message || 'Failed to create payment method');
+    } finally {
+      setCreatingPayment(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-900 via-blue to-blue-800 p-4 sm:p-6 md:p-8">
       <div className="w-full max-w-3xl mx-auto rounded-2xl shadow-2xl bg-white/10 backdrop-blur-md border border-white/20">
@@ -357,28 +385,69 @@ export default function BusinessSettings() {
               {activeTab === 'payment' && (
                 <div className="space-y-6">
                   <h2 className="text-lg sm:text-xl font-bold text-blue-300">Payment Method Setup</h2>
-                  <div className="flex flex-col gap-4">
-                    {Array.isArray(settings?.payment_methods) && settings.payment_methods.length > 0 ? (
-                      settings.payment_methods.map((method: any) => (
-                        <div key={method.payment_method_id} className="flex items-center justify-between bg-gradient-to-br from-blue-800/60 to-blue/60 rounded-xl p-4 sm:p-6 shadow-lg">
-                          <div>
-                            <h3 className="text-base sm:text-lg font-semibold text-white mb-2">{method.method_name}</h3>
-                          </div>
-                          <label className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              className="accent-blue-400 scale-125"
-                              checked={method.status === 1}
-                              disabled={saving}
-                              onChange={(e) => handlePaymentStatusToggle(method, e.target.checked ? 1 : 0)}
-                            />
-                            <span className="text-white">{paymentStatusMap[method.status] || 'Unknown'}</span>
-                          </label>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-white/70">No payment methods configured.</div>
+                  
+                  {/* Create New Payment Method Section */}
+                  <div className="bg-gradient-to-br from-blue-800/40 to-blue/40 rounded-xl p-4 sm:p-6 shadow-lg border border-blue-400/30">
+                    <h3 className="text-base sm:text-lg font-semibold text-white mb-4">Add New Payment Method</h3>
+                    {paymentSuccess && (
+                      <div className="mb-4 p-3 bg-green-500/20 border border-green-500 rounded-lg text-green-300 text-center">
+                        {paymentSuccess}
+                      </div>
                     )}
+                    {paymentError && (
+                      <div className="mb-4 p-3 bg-red-500/20 border border-red-500 rounded-lg text-red-300 text-center">
+                        {paymentError}
+                      </div>
+                    )}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <input
+                        type="text"
+                        className="flex-1 rounded-lg px-4 py-2 bg-white/20 text-white placeholder:text-white/50 border border-blue-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-300 outline-none"
+                        placeholder="Enter payment method name (e.g., Card Payment, UPI, Cash on Delivery)"
+                        value={newPaymentMethod}
+                        onChange={(e) => setNewPaymentMethod(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleCreatePaymentMethod();
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={handleCreatePaymentMethod}
+                        disabled={creatingPayment || !newPaymentMethod.trim()}
+                        className="px-6 py-2 bg-gradient-to-r from-green-600 to-green-400 text-white rounded-lg font-semibold shadow-lg hover:from-green-700 hover:to-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all whitespace-nowrap"
+                      >
+                        {creatingPayment ? 'Adding...' : 'Add Method'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Existing Payment Methods List */}
+                  <div>
+                    <h3 className="text-base sm:text-lg font-semibold text-blue-300 mb-4">Existing Payment Methods</h3>
+                    <div className="flex flex-col gap-4">
+                      {Array.isArray(settings?.payment_methods) && settings.payment_methods.length > 0 ? (
+                        settings.payment_methods.map((method: any) => (
+                          <div key={method.payment_method_id} className="flex items-center justify-between bg-gradient-to-br from-blue-800/60 to-blue/60 rounded-xl p-4 sm:p-6 shadow-lg">
+                            <div>
+                              <h3 className="text-base sm:text-lg font-semibold text-white mb-2">{method.method_name}</h3>
+                            </div>
+                            <label className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                className="accent-blue-400 scale-125"
+                                checked={method.status === 1}
+                                disabled={saving}
+                                onChange={(e) => handlePaymentStatusToggle(method, e.target.checked ? 1 : 0)}
+                              />
+                              <span className="text-white">{paymentStatusMap[method.status] || 'Unknown'}</span>
+                            </label>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-white/70">No payment methods configured.</div>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

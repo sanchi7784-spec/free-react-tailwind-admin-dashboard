@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+﻿import { useState, useEffect, useMemo } from "react";
 import PageMeta from "../../../components/common/PageMeta";
 import PageBreadCrumb from "../../../components/common/PageBreadCrumb";
 import { fetchVendors, createVendor, updateVendor, Vendor } from "../../../api/vendors";
@@ -660,7 +660,7 @@ export default function AllVendors() {
                           </button>
                           <button
                             onClick={() => handleDelete(vendor.id)}
-                            className="dark:text-white hover:text-meta-1"
+                            className="dark:text-white hover:text-red-500"
                             title="Delete"
                           >
                             <svg
@@ -705,7 +705,7 @@ export default function AllVendors() {
                 {/* Shop Name */}
                 <div>
                   <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                    Shop Name <span className="text-meta-1">*</span>
+                    Shop Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -716,12 +716,12 @@ export default function AllVendors() {
                     }
                     className={`w-full rounded-lg border ${
                       errors.companyName
-                        ? "border-meta-1"
+                        ? "border-red-500"
                         : "border-stroke dark:border-form-strokedark"
                     } bg-transparent px-5 py-3 text-blue-600 outline-none transition focus:border-blue-600 active:border-blue-600 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                   />
                   {errors.companyName && (
-                    <p className="mt-1 text-sm text-meta-1">
+                    <p className="mt-1 text-sm text-red-500">
                       {errors.companyName}
                     </p>
                   )}
@@ -730,7 +730,7 @@ export default function AllVendors() {
                 {/* Vendor Name */}
                 <div>
                   <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                    Vendor Name <span className="text-meta-1">*</span>
+                    Vendor Name <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -744,12 +744,12 @@ export default function AllVendors() {
                     }
                     className={`w-full rounded-lg border ${
                       errors.contactPerson
-                        ? "border-meta-1"
+                        ? "border-red-500"
                         : "border-stroke dark:border-form-strokedark"
                     } bg-transparent px-5 py-3 text-blu-600 outline-none transition focus:border-primary active:border-blue-500 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                   />
                   {errors.contactPerson && (
-                    <p className="mt-1 text-sm text-meta-1">
+                    <p className="mt-1 text-sm text-red-500">
                       {errors.contactPerson}
                     </p>
                   )}
@@ -758,7 +758,7 @@ export default function AllVendors() {
                 {/* Email */}
                 <div>
                   <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                    Email <span className="text-meta-1">*</span>
+                    Email <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="email"
@@ -769,19 +769,19 @@ export default function AllVendors() {
                     }
                     className={`w-full rounded-lg border ${
                       errors.email
-                        ? "border-meta-1"
+                        ? "border-red-500"
                         : "border-stroke dark:border-form-strokedark"
                     } bg-transparent px-5 py-3 text-blue-600 outline-none transition focus:border-blue-600 active:border-blue-600 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                   />
                   {errors.email && (
-                    <p className="mt-1 text-sm text-meta-1">{errors.email}</p>
+                    <p className="mt-1 text-sm text-red-500">{errors.email}</p>
                   )}
                 </div>
 
                 {/* Phone */}
                 <div>
                   <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                    Phone <span className="text-meta-1">*</span>
+                    Phone <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="tel"
@@ -792,12 +792,12 @@ export default function AllVendors() {
                     }
                     className={`w-full rounded-lg border ${
                       errors.phone
-                        ? "border-meta-1"
+                        ? "border-red-500"
                         : "border-stroke dark:border-form-strokedark"
                     } bg-transparent px-5 py-3 text-blue-600 outline-none transition focus:border-blue-600 active:border-blue-600 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                   />
                   {errors.phone && (
-                    <p className="mt-1 text-sm text-meta-1">{errors.phone}</p>
+                    <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
                   )}
                 </div>
 
@@ -805,7 +805,7 @@ export default function AllVendors() {
                 {modalType === "add" && (
                   <div>
                     <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                      Password <span className="text-meta-1">*</span>
+                      Password <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="password"
@@ -816,12 +816,12 @@ export default function AllVendors() {
                       }
                       className={`w-full rounded-lg border ${
                         errors.password
-                          ? "border-meta-1"
+                          ? "border-red-500"
                           : "border-stroke dark:border-form-strokedark"
                       } bg-transparent px-5 py-3 text-blue-600 outline-none transition focus:border-blue-600 active:border-blue-600 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                     />
                     {errors.password && (
-                      <p className="mt-1 text-sm text-meta-1">{errors.password}</p>
+                      <p className="mt-1 text-sm text-red-500">{errors.password}</p>
                     )}
                   </div>
                 )}
@@ -829,7 +829,7 @@ export default function AllVendors() {
                 {/* Gender */}
                 <div>
                   <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                    Gender <span className="text-meta-1">*</span>
+                    Gender <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={formData.gender}
@@ -847,7 +847,7 @@ export default function AllVendors() {
                 {/* Date of Birth */}
                 <div>
                   <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                    Date of Birth <span className="text-meta-1">*</span>
+                    Date of Birth <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
@@ -857,19 +857,19 @@ export default function AllVendors() {
                     }
                     className={`w-full rounded-lg border ${
                       errors.dob
-                        ? "border-meta-1"
+                        ? "border-red-500"
                         : "border-stroke dark:border-form-strokedark"
                     } bg-transparent px-5 py-3 text-blue-600 outline-none transition focus:border-blue-600 active:border-blue-600 disabled:cursor-default disabled:bg-white dark:bg-form-input dark:text-white`}
                   />
                   {errors.dob && (
-                    <p className="mt-1 text-sm text-meta-1">{errors.dob}</p>
+                    <p className="mt-1 text-sm text-red-500">{errors.dob}</p>
                   )}
                 </div>
 
                 {/* Shop Address */}
                 <div className="md:col-span-2">
                   <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                    Shop Address <span className="text-meta-1">*</span>
+                    Shop Address <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
@@ -880,12 +880,12 @@ export default function AllVendors() {
                     }
                     className={`w-full rounded-lg border ${
                       errors.address
-                        ? "border-meta-1"
+                        ? "border-red-500"
                         : "border-stroke dark:border-form-strokedark"
                     } bg-transparent px-5 py-3 text-blue outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:bg-form-input dark:text-white`}
                   />
                   {errors.address && (
-                    <p className="mt-1 text-sm text-meta-1">
+                    <p className="mt-1 text-sm text-red-500">
                       {errors.address}
                     </p>
                   )}
@@ -910,7 +910,7 @@ export default function AllVendors() {
                 {/* Shop Logo */}
                 <div>
                   <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                    Shop Logo {modalType === "add" && <span className="text-meta-1">*</span>}
+                    Shop Logo {modalType === "add" && <span className="text-red-500">*</span>}
                   </label>
                   
                   {/* Current Image Preview (edit mode) */}
@@ -937,12 +937,12 @@ export default function AllVendors() {
                     }}
                     className={`w-full rounded-lg border ${
                       errors.shopLogo
-                        ? "border-meta-1"
+                        ? "border-red-500"
                         : "border-stroke dark:border-form-strokedark"
                     } bg-transparent px-5 py-3 text-blue outline-none transition focus:border-primary active:border-primary dark:bg-form-input dark:text-white file:mr-4 file:rounded file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-opacity-90`}
                   />
                   {errors.shopLogo && (
-                    <p className="mt-1 text-sm text-meta-1">{errors.shopLogo}</p>
+                    <p className="mt-1 text-sm text-red-500">{errors.shopLogo}</p>
                   )}
                   {formData.shopLogo && (
                     <p className="mt-2 text-sm text-body">
@@ -959,7 +959,7 @@ export default function AllVendors() {
                 {/* Shop Banner */}
                 <div>
                   <label className="mb-3 block text-sm font-medium text-blue dark:text-white">
-                    Shop Banner {modalType === "add" && <span className="text-meta-1">*</span>}
+                    Shop Banner {modalType === "add" && <span className="text-red-500">*</span>}
                   </label>
                   
                   {/* Current Image Preview (edit mode) */}
@@ -986,12 +986,12 @@ export default function AllVendors() {
                     }}
                     className={`w-full rounded-lg border ${
                       errors.shopBanner
-                        ? "border-meta-1"
+                        ? "border-red-500"
                         : "border-stroke dark:border-form-strokedark"
                     } bg-transparent px-5 py-3 text-blue outline-none transition focus:border-primary active:border-primary dark:bg-form-input dark:text-white file:mr-4 file:rounded file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-opacity-90`}
                   />
                   {errors.shopBanner && (
-                    <p className="mt-1 text-sm text-meta-1">{errors.shopBanner}</p>
+                    <p className="mt-1 text-sm text-red-500">{errors.shopBanner}</p>
                   )}
                   {formData.shopBanner && (
                     <p className="mt-2 text-sm text-body">
@@ -1370,3 +1370,4 @@ export default function AllVendors() {
     </>
   );
 }
+

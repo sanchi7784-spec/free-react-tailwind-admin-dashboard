@@ -3,11 +3,13 @@ const ECOMMERCE_AUTH_KEY = 'ecommerce_auth';
 const ECOMMERCE_TOKEN_KEY = 'ecommerce_token';
 const ECOMMERCE_USER_ID_KEY = 'ecommerce_user_id';
 const ECOMMERCE_DOMAIN_KEY = 'ecommerce_domain';
+const ECOMMERCE_IS_VENDOR_KEY = 'ecommerce_is_vendor';
 
 export const DOMAIN_TYPES = {
   SUPER_ADMIN: 0,
   MPAY_USER: 1,
   ECOM_USER: 2,
+  VENDOR: 3,
 } as const;
 
 export type DomainType = typeof DOMAIN_TYPES[keyof typeof DOMAIN_TYPES];
@@ -92,6 +94,21 @@ export function clearEcommerceAuth(): void {
   localStorage.removeItem(ECOMMERCE_USER_ID_KEY);
   localStorage.removeItem(ECOMMERCE_DOMAIN_KEY);
   localStorage.removeItem(ECOMMERCE_AUTH_KEY);
+  localStorage.removeItem(ECOMMERCE_IS_VENDOR_KEY);
+}
+
+/**
+ * Mark the current user as a vendor (has a shop)
+ */
+export function setVendorFlag(): void {
+  localStorage.setItem(ECOMMERCE_IS_VENDOR_KEY, '1');
+}
+
+/**
+ * Clear the vendor flag
+ */
+export function clearVendorFlag(): void {
+  localStorage.removeItem(ECOMMERCE_IS_VENDOR_KEY);
 }
 
 export function getEcommerceToken(): string | null {
@@ -123,11 +140,19 @@ export function isEcomUser(): boolean {
 }
 
 /**
+ * Check if user is a Vendor (has a shop — detected at login via profile shop_name)
+ */
+export function isVendor(): boolean {
+  return localStorage.getItem(ECOMMERCE_IS_VENDOR_KEY) === '1';
+}
+
+/**
  * Check if user can access Ecommerce features
  */
 export function canAccessEcommerce(): boolean {
   const domain = getEcommerceDomain();
-  return domain === DOMAIN_TYPES.SUPER_ADMIN || domain === DOMAIN_TYPES.ECOM_USER;
+  // Vendors (domain=2 with vendor flag) also count as ecommerce access
+  return domain === DOMAIN_TYPES.SUPER_ADMIN || domain === DOMAIN_TYPES.ECOM_USER || isVendor();
 }
 
 /**
@@ -150,6 +175,8 @@ export function getUserRoleName(): string {
       return 'MPay User';
     case DOMAIN_TYPES.ECOM_USER:
       return 'Ecommerce User';
+    case DOMAIN_TYPES.VENDOR:
+      return 'Vendor';
     default:
       return 'Unknown';
   }

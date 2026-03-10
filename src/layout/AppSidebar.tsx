@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
-import logo from '../icons/ChatGPT Image Nov 5, 2025, 12_41_38 PM.png'
+import goldLogo from '../icons/ChatGPT Image Nov 5, 2025, 12_41_38 PM.png'
+import ecomLogo from '../icons/mkart-Photoroom.png'
 // Assume these icons are imported from an icon library
 import {
   BoxCubeIcon,
@@ -32,7 +33,8 @@ import {
   isEcommerceAuthenticated, 
   canAccessEcommerce, 
   canAccessGold,
-  isSuperAdmin 
+  isSuperAdmin,
+  isVendor,
 } from "../utils/ecommerceAuth";
 
 type NavItem = {
@@ -143,8 +145,8 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
         subItems: [
           { name: "Products Reports", path: "/ecommerce/reports/products" },
           { name: "Order Reports", path: "/ecommerce/reports/orders" },
-          { name: "Admin Tax Reports", path: "/ecommerce/reports/admin-tax" },
-          { name: "Vendor Vat Reports", path: "/ecommerce/reports/vendor-vat" },
+          // { name: "Admin Tax Reports", path: "/ecommerce/reports/admin-tax" },
+          // { name: "Vendor Vat Reports", path: "/ecommerce/reports/vendor-vat" },
           // { name: "Add Category", path: "/ecommerce/category/add" },
         ],
       },
@@ -292,9 +294,61 @@ const goldSidebarSections: { title: string; items: NavItem[] }[] = [
   },
 ];
 
+// Vendor Sidebar Sections (restricted ecommerce view)
+const vendorSidebarSections: { title: string; items: NavItem[] }[] = [
+  {
+    title: "DASHBOARD",
+    items: [
+      {
+        name: "Dashboard Overview",
+        icon: <GridIcon />,
+        subItems: [
+          { name: "Ecommerce", path: "/ecom" },
+        ],
+      },
+    ],
+  },
+  {
+    title: "ECOMMERCE",
+    items: [
+      {
+        name: "Products",
+        icon: <BoxIcon />,
+        subItems: [
+          { name: "All Products", path: "/ecommerce/products/all" },
+          { name: "Add Product", path: "/ecommerce/products/add" },
+          { name: "Categories", path: "/ecommerce/products/categories" },
+        ],
+      },
+      {
+        name: "Staff & Vendors",
+        icon: <GroupIcon />,
+        subItems: [
+          { name: "Staff & Vendor Kyc", path: "/ecommerce/vendors/requests" },
+        ],
+      },
+      {
+        name: "Orders",
+        icon: <ShootingStarIcon />,
+        subItems: [
+          { name: "All Orders", path: "/ecommerce/orders/all" },
+        ],
+      },
+    ],
+  },
+];
+
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered, toggleMobileSidebar } = useSidebar();
   const { dashboardType, setDashboardType } = useDashboard();
+
+  // Logo: ecom users always see mkart logo; gold/BBPS users always see gold logo;
+  // super admin sees logo based on the currently active dashboard type.
+  const logo =
+    (!canAccessGold() && canAccessEcommerce()) ||
+    (isSuperAdmin() && dashboardType === 'ecommerce')
+      ? ecomLogo
+      : goldLogo;
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -302,6 +356,7 @@ const AppSidebar: React.FC = () => {
   // Super Admin (0): Can see all sections
   // MPay User (1): Can only see Gold/BBPS sections
   // Ecom User (2): Can only see Ecommerce sections
+  // Vendor (3): Can only see restricted Ecommerce sections
   let sidebarSections: { title: string; items: NavItem[] }[] = [];
   
   if (isSuperAdmin()) {
@@ -310,6 +365,9 @@ const AppSidebar: React.FC = () => {
       dashboardType === 'ecommerce' ? ecommerceSidebarSections :
       dashboardType === 'bbps' ? bbpsSidebarSections :
       goldSidebarSections;
+  } else if (isVendor()) {
+    // Vendor (domain 3) - restricted ecommerce sections only
+    sidebarSections = vendorSidebarSections;
   } else if (canAccessEcommerce() && !canAccessGold()) {
     // Ecom user (domain 2) - only ecommerce sections
     sidebarSections = ecommerceSidebarSections;

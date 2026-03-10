@@ -119,10 +119,11 @@ export default function AllOrders() {
 
   const getPaymentStatusText = (status: number) => {
     const statusMap: Record<number, string> = {
-      0: "Unpaid",
+      0: "Pending",
       1: "Paid",
       2: "Failed",
       3: "Refunded",
+      4: "Cancelled",
     };
     return statusMap[status] || "Unknown";
   };
@@ -132,7 +133,8 @@ export default function AllOrders() {
       0: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
       1: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
       2: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-      3: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+      3: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+      4: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
     };
     return colorMap[status] || "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
   };
@@ -303,7 +305,7 @@ export default function AllOrders() {
                     alert('No orders to export');
                     return;
                   }
-                  const headers = ['Order ID','Date','Customer','Email','Phone','Items','Amount','Payment Method','Order Status','Delivery Status'];
+                  const headers = ['Order ID','Date','Customer','Email','Phone','Address','Items','Tax','Total Amount','Payment Method','Payment Status','Order Status','Delivery Status'];
                   const esc = (v: any) => {
                     if (v === null || v === undefined) return '';
                     return `"${String(v).replace(/"/g,'""')}"`;
@@ -317,9 +319,12 @@ export default function AllOrders() {
                       o.user_name,
                       o.email,
                       o.phone,
+                      o.address,
                       items,
-                      o.total_amount,
+                      o.tax_amount?.toFixed(2) || '0.00',
+                      o.total_amount?.toFixed(2) || '0.00',
                       getPaymentMethodText(o.payment_method),
+                      getPaymentStatusText(o.payment_status),
                       getOrderStatusText(o.order_status),
                       getDeliveryStatusText(o.delivery_status)
                     ].map(esc).join(',');
@@ -405,9 +410,12 @@ export default function AllOrders() {
                       <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Date</th>
                       <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Customer</th>
                       <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Contact</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Address</th>
                       <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Items</th>
-                      <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Amount</th>
-                      <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Payment</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Tax</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Total</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Payment Method</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Payment Status</th>
                       <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Order Status</th>
                       <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Delivery Status</th>
                       <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Actions</th>
@@ -434,14 +442,23 @@ export default function AllOrders() {
                         <td className="px-2 sm:px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-slate-700 dark:text-white text-xs sm:text-sm">{order.phone}</span>
                         </td>
+                        <td className="px-2 sm:px-4 md:px-6 py-4 max-w-xs">
+                          <span className="text-slate-700 dark:text-white text-xs sm:text-sm line-clamp-2" title={order.address}>{order.address}</span>
+                        </td>
                         <td className="px-2 sm:px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-slate-700 dark:text-white text-xs sm:text-sm">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</span>
+                        </td>
+                        <td className="px-2 sm:px-4 md:px-6 py-4 whitespace-nowrap">
+                          <span className="text-slate-700 dark:text-white text-xs sm:text-sm">₹{order.tax_amount.toFixed(2)}</span>
                         </td>
                         <td className="px-2 sm:px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="font-bold text-emerald-600 dark:text-emerald-300 text-xs sm:text-sm">₹{order.total_amount.toFixed(2)}</span>
                         </td>
                         <td className="px-2 sm:px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className="text-slate-700 dark:text-white text-xs sm:text-sm">{getPaymentMethodText(order.payment_method)}</span>
+                        </td>
+                        <td className="px-2 sm:px-4 md:px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex rounded-full px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold shadow ${getPaymentStatusColor(order.payment_status)}`}>{getPaymentStatusText(order.payment_status)}</span>
                         </td>
                         <td className="px-2 sm:px-4 md:px-6 py-4 whitespace-nowrap">
                           <span className={`inline-flex rounded-full px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold shadow ${getOrderStatusColor(order.order_status)}`}>{getOrderStatusText(order.order_status)}</span>
@@ -582,43 +599,69 @@ export default function AllOrders() {
               {/* Order Items */}
               <div className="space-y-4">
                 <h4 className="text-lg font-semibold text-blue dark:text-white border-b border-stroke dark:border-strokedark pb-2">
-                  Order Items
+                  Order Items ({selectedOrder.items.length})
                 </h4>
                 <div className="space-y-3">
                   {selectedOrder.items.map((item, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-4 p-4 rounded-lg border border-stroke dark:border-strokedark"
+                      className="flex flex-col sm:flex-row items-start gap-4 p-4 rounded-lg border border-stroke dark:border-strokedark bg-gray-50 dark:bg-meta-4"
                     >
                       <img
                         src={item.product_image}
                         alt={item.product_name}
-                        className="h-20 w-20 rounded object-cover"
+                        className="h-24 w-24 rounded-lg object-cover shadow-md"
                       />
-                      <div className="flex-1">
-                        <p className="font-medium text-blue dark:text-white text-lg">
-                          {item.product_name}
-                        </p>
-                        <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                          <div>
-                            <span className="text-body">Unit Price: </span>
-                            <span className="font-medium text-blue dark:text-white">₹{item.unit_price.toFixed(2)}</span>
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                              Product #{item.product_id}
+                            </span>
                           </div>
-                          <div>
-                            <span className="text-body">Quantity: </span>
-                            <span className="font-medium text-blue dark:text-white">{item.quantity}</span>
+                          <p className="font-semibold text-blue dark:text-white text-lg mt-2">
+                            {item.product_name}
+                          </p>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                          <div className="bg-white dark:bg-boxdark p-2 rounded">
+                            <span className="text-body block text-xs">Unit Price</span>
+                            <span className="font-bold text-blue dark:text-white">₹{item.unit_price.toFixed(2)}</span>
                           </div>
-                          <div>
-                            <span className="text-body">Discount: </span>
-                            <span className="font-medium text-blue dark:text-white">{item.discount}%</span>
+                          <div className="bg-white dark:bg-boxdark p-2 rounded">
+                            <span className="text-body block text-xs">Quantity</span>
+                            <span className="font-bold text-blue dark:text-white">×{item.quantity}</span>
+                          </div>
+                          <div className="bg-white dark:bg-boxdark p-2 rounded">
+                            <span className="text-body block text-xs">Discount</span>
+                            <span className="font-bold text-orange-600 dark:text-orange-400">
+                              ₹{item.discount.toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="bg-white dark:bg-boxdark p-2 rounded">
+                            <span className="text-body block text-xs">Item Total</span>
+                            <span className="font-bold text-green-600 dark:text-green-400">₹{item.total_price.toFixed(2)}</span>
                           </div>
                         </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-body">Total</p>
-                        <p className="text-xl font-bold text-blue dark:text-white">
-                          ₹{item.total_price.toFixed(2)}
-                        </p>
+
+                        {/* Product Options */}
+                        {item.options && Object.keys(item.options).length > 0 && (
+                          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                            <p className="text-xs font-semibold text-body mb-2">Product Options:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {Object.entries(item.options).map(([key, value]) => (
+                                <span
+                                  key={key}
+                                  className="inline-flex items-center gap-1 rounded-full bg-white dark:bg-boxdark px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-300 shadow-sm"
+                                >
+                                  <span className="font-semibold">{key}:</span>
+                                  <span>{value}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}

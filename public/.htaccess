@@ -1,0 +1,16 @@
+# Ensure correct MIME types for JS modules
+AddType application/javascript .js
+AddType application/javascript .mjs
+AddType text/css .css
+
+# Enable rewrite engine
+Options -MultiViews
+RewriteEngine On
+
+# Serve existing files and directories directly (assets, images, etc.)
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Redirect all other requests to index.html (for React Router)
+RewriteRule ^ index.html [L]

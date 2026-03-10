@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import PageMeta from "../../../components/common/PageMeta";
 import PageBreadCrumb from "../../../components/common/PageBreadCrumb";
 import Badge from "../../../components/ui/badge/Badge";
-import { fetchProducts, Product as APIProduct, updateProduct, fetchCategories } from "../../../api/products";
+import { fetchProducts, Product as APIProduct, updateProduct, fetchCategories, ProductImage, deleteProductImage } from "../../../api/products";
 import { getProfile } from "../../../api/profile";
 
 type ViewMode = "table" | "grid";
@@ -19,6 +19,11 @@ type EditProductFormData = {
   description: string;
   discount: string;
   status: string;
+  options: {
+    Quantity: string[];
+    Color: string[];
+    Size: string[];
+  };
 };
 
 export default function AllProducts() {
@@ -37,8 +42,8 @@ export default function AllProducts() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [editFormData, setEditFormData] = useState<EditProductFormData>({
     product_name: "",
     category_id: "",
@@ -47,6 +52,7 @@ export default function AllProducts() {
     description: "",
     discount: "",
     status: "1",
+    options: { Quantity: [""], Color: [""], Size: [""] },
   });
   const [isSaving, setIsSaving] = useState(false);
   const [currentUserRoleId, setCurrentUserRoleId] = useState<number | null>(null);
@@ -259,22 +265,67 @@ export default function AllProducts() {
       description: product.description,
       discount: product.discount.toString(),
       status: product.status.toString(),
+      options: {
+        Quantity: product.options?.Quantity ? [...product.options.Quantity] : [""],
+        Color: product.options?.Color ? [...product.options.Color] : [""],
+        Size: product.options?.Size ? [...product.options.Size] : [""],
+      },
     });
-    setImagePreview(product.image_url);
-    setSelectedImage(null);
+    // Set previews to all product images
+    if (product.images && product.images.length > 0) {
+      setImagePreviews(product.images.map(img => img.image_url));
+    } else {
+      setImagePreviews([]);
+    }
+    setSelectedImages([]);
     setIsEditModalOpen(true);
+  };
+  // Option handlers for edit modal
+  const handleEditOptionChange = (optionKey: keyof EditProductFormData["options"], idx: number, value: string) => {
+    setEditFormData(prev => {
+      const updated = [...prev.options[optionKey]];
+      updated[idx] = value;
+      return { ...prev, options: { ...prev.options, [optionKey]: updated } };
+    });
+  };
+
+  const addEditOptionValue = (optionKey: keyof EditProductFormData["options"]) => {
+    setEditFormData(prev => ({
+      ...prev,
+      options: { ...prev.options, [optionKey]: [...prev.options[optionKey], ""] },
+    }));
+  };
+
+  const removeEditOptionValue = (optionKey: keyof EditProductFormData["options"], idx: number) => {
+    setEditFormData(prev => {
+      const updated = prev.options[optionKey].filter((_, i) => i !== idx);
+      return { ...prev, options: { ...prev.options, [optionKey]: updated.length ? updated : [""] } };
+    });
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
+    const files = e.target.files ? Array.from(e.target.files) : [];
+    if (!files.length) return;
+    const newImages = [...selectedImages, ...files];
+    setSelectedImages(newImages);
+    let loaded = 0;
+    const newPreviews: string[] = [];
+    files.forEach((file, idx) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        newPreviews[idx] = reader.result as string;
+        loaded++;
+        if (loaded === files.length) {
+          setImagePreviews(prev => [...prev, ...newPreviews]);
+        }
       };
       reader.readAsDataURL(file);
-    }
+    });
+  };
+
+  const removeImage = (idx: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== idx));
+    setImagePreviews(prev => prev.filter((_, i) => i !== idx));
   };
 
   const handleSaveEdit = async () => {
@@ -287,9 +338,13 @@ export default function AllProducts() {
       console.log('Updating product with data:', {
         id: selectedProduct.product_id,
         ...editFormData,
-        hasImage: !!selectedImage
+        hasImages: selectedImages.length > 0
       });
 
+      // Prepare options: remove empty strings
+      const filteredOptions = Object.fromEntries(
+        Object.entries(editFormData.options).map(([k, arr]) => [k, arr.filter(v => v.trim() !== "")])
+      );
       await updateProduct(selectedProduct.product_id, {
         product_name: editFormData.product_name,
         description: editFormData.description,
@@ -297,7 +352,9 @@ export default function AllProducts() {
         price: editFormData.price,
         discount: editFormData.discount,
         stock_quantity: editFormData.stock_quantity,
-        product_image: selectedImage || undefined,
+        status: editFormData.status,
+        images: selectedImages,
+        options: filteredOptions,
       });
 
       // Reload products after successful update
@@ -320,8 +377,8 @@ export default function AllProducts() {
     setIsViewModalOpen(false);
     setIsEditModalOpen(false);
     setSelectedProduct(null);
-    setSelectedImage(null);
-    setImagePreview(null);
+    setSelectedImages([]);
+    setImagePreviews([]);
   };
 
   const handleEditFormChange = (field: keyof EditProductFormData, value: string) => {
@@ -338,9 +395,13 @@ export default function AllProducts() {
       console.log('Updating product with data:', {
         id: selectedProduct.product_id,
         ...editFormData,
-        hasImage: !!selectedImage
+        hasImages: selectedImages.length > 0
       });
 
+      // Prepare options: remove empty strings
+      const filteredOptions = Object.fromEntries(
+        Object.entries(editFormData.options).map(([k, arr]) => [k, arr.filter(v => v.trim() !== "")])
+      );
       await updateProduct(selectedProduct.product_id, {
         product_name: editFormData.product_name,
         description: editFormData.description,
@@ -349,7 +410,8 @@ export default function AllProducts() {
         discount: editFormData.discount,
         stock_quantity: editFormData.stock_quantity,
         status: editFormData.status,
-        product_image: selectedImage || undefined,
+        options: filteredOptions,
+        images: selectedImages,
       });
 
       // Reload products after successful update
@@ -644,9 +706,9 @@ export default function AllProducts() {
                     >
                       <td className="px-4 py-5">
                         <div className="flex items-center gap-3">
-                          {product.image_url ? (
+                          {product.images && product.images.length > 0 ? (
                             <img
-                              src={product.image_url}
+                              src={product.images.find(img => img.is_primary)?.image_url || product.images[0].image_url}
                               alt={product.product_name}
                               className="h-12 w-12 rounded-lg object-cover"
                             />
@@ -674,7 +736,7 @@ export default function AllProducts() {
                           </span>
                           {product.discount > 0 && (
                             <p className="text-xs text-green-600">
-                              {product.discount}% off
+                              ₹{product.discount.toFixed(2)} off
                             </p>
                           )}
                         </div>
@@ -771,10 +833,10 @@ export default function AllProducts() {
                   className="rounded-lg border border-stroke bg-white transition-shadow hover:shadow-lg dark:border-strokedark dark:bg-boxdark"
                 >
                   {/* Product Image */}
-                  {product.image_url ? (
+                  {product.images && product.images.length > 0 ? (
                     <div className="h-48 overflow-hidden rounded-t-lg">
                       <img
-                        src={product.image_url}
+                        src={product.images.find(img => img.is_primary)?.image_url || product.images[0].image_url}
                         alt={product.product_name}
                         className="h-full w-full object-cover"
                       />
@@ -811,7 +873,7 @@ export default function AllProducts() {
                           {formatPrice(product.price)}
                         </p>
                         {product.discount > 0 && (
-                          <p className="text-xs text-green-600">{product.discount}% off</p>
+                          <p className="text-xs text-green-600">₹{product.discount.toFixed(2)} off</p>
                         )}
                       </div>
                       <div className="text-right">
@@ -989,9 +1051,9 @@ export default function AllProducts() {
 
             <div className="p-6">
               <div className="mb-6 flex items-center gap-4">
-                {selectedProduct.image_url ? (
+                {selectedProduct.images && selectedProduct.images.length > 0 ? (
                   <img
-                    src={selectedProduct.image_url}
+                    src={selectedProduct.images.find(img => img.is_primary)?.image_url || selectedProduct.images[0].image_url}
                     alt={selectedProduct.product_name}
                     className="h-24 w-24 rounded-lg object-cover"
                   />
@@ -1060,7 +1122,7 @@ export default function AllProducts() {
                   <label className="mb-2 block text-sm font-medium text-body">Discount</label>
                   <div className="flex items-center gap-2 rounded-md border border-stroke bg-gray-2 px-4 py-3 dark:border-strokedark dark:bg-meta-4">
                     <p className="text-lg font-semibold text-green-600">
-                      {selectedProduct.discount}%
+                      ₹{selectedProduct.discount.toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -1125,19 +1187,37 @@ export default function AllProducts() {
                 </div>
               </div>
 
-              {selectedProduct.image_url && (
+              {selectedProduct.images && selectedProduct.images.length > 0 && (
                 <div className="mt-6">
-                  <label className="mb-2 block text-sm font-medium text-body">Product Image</label>
-                  <div className="rounded-md border border-stroke p-4 dark:border-strokedark">
-                    <img
-                      src={selectedProduct.image_url}
-                      alt={selectedProduct.product_name}
-                      className="max-h-64 w-full rounded-lg object-contain"
-                    />
-                    <p className="mt-2 text-xs text-body break-all">{selectedProduct.image_url}</p>
+                  <label className="mb-2 block text-sm font-medium text-body">Product Images</label>
+                  <div className="flex flex-wrap gap-4">
+                    {selectedProduct.images.map((img: ProductImage) => (
+                      <div key={img.image_id} className="rounded-md border border-stroke p-2 dark:border-strokedark">
+                        <img
+                          src={img.image_url}
+                          alt={selectedProduct.product_name}
+                          className="max-h-32 w-32 rounded-lg object-contain"
+                        />
+                        {img.is_primary ? <span className="block text-xs text-green-600 mt-1">Primary</span> : null}
+                        <p className="mt-1 text-xs text-body break-all">{img.image_url}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
+                          {/* Product Options */}
+                          {selectedProduct.options && Object.keys(selectedProduct.options).length > 0 && (
+                            <div className="mt-6">
+                              <label className="mb-2 block text-sm font-medium text-body">Options</label>
+                              <div className="rounded-md border border-stroke bg-gray-2 px-4 py-3 dark:border-strokedark dark:bg-meta-4">
+                                {Object.entries(selectedProduct.options).map(([optionName, values]) => (
+                                  <div key={optionName} className="mb-2">
+                                    <span className="font-semibold text-blue dark:text-white">{optionName}:</span> {Array.isArray(values) ? values.join(", ") : String(values)}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
             </div>
 
             <div className="flex justify-end gap-3 border-t border-stroke px-6 py-4 dark:border-strokedark">
@@ -1191,9 +1271,58 @@ export default function AllProducts() {
 
             <div className="p-6">
               <div className="mb-6 flex items-center gap-4 rounded-lg bg-gray-2 p-4 dark:bg-meta-4">
-                {imagePreview ? (
+                {/* Show all images for editing context */}
+                {selectedProduct.images && selectedProduct.images.length > 0 ? (
+                  <div className="flex gap-2 flex-wrap">
+                    {selectedProduct.images.map((img) => (
+                      <div key={img.image_id} className="relative group">
+                        <img
+                          src={img.image_url}
+                          alt={selectedProduct.product_name}
+                          className={`h-16 w-16 rounded-lg object-cover border ${img.is_primary ? 'border-green-500' : 'border-stroke dark:border-strokedark'}`}
+                          title={img.is_primary ? 'Primary Image' : ''}
+                          onError={(e) => {
+                            e.currentTarget.src = 'https://via.placeholder.com/64?text=No+Image';
+                          }}
+                        />
+                        {/* Delete button */}
+                        <button
+                          type="button"
+                          aria-label="Delete image"
+                          className="absolute -top-2 -right-2 bg-meta-1 text-white rounded-full p-1 shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 z-10 bg-red-600"
+                          style={{ minWidth: 24, minHeight: 24 }}
+                          onClick={async () => {
+                            if (window.confirm('Are you sure you want to delete this image?')) {
+                              try {
+                                await deleteProductImage(img.image_id);
+                                // Remove image from selectedProduct in UI
+                                setSelectedProduct((prev) => prev && ({
+                                  ...prev,
+                                  images: prev.images.filter((i) => i.image_id !== img.image_id)
+                                }));
+                                // Remove image from imagePreviews as well
+                                setImagePreviews((prev) => prev.filter((url) => url !== img.image_url));
+                                // Optionally reload products if needed
+                                // await loadProducts();
+                              } catch (err) {
+                                alert(err instanceof Error ? err.message : 'Failed to delete image');
+                              }
+                            }
+                          }}
+                        >
+                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                        {img.is_primary && (
+                          <span className="absolute left-1 bottom-1 bg-green-500 text-white text-xs px-1.5 py-0.5 rounded">Primary</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : imagePreviews.length > 0 ? (
                   <img
-                    src={imagePreview}
+                    src={imagePreviews[0]}
                     alt={selectedProduct.product_name}
                     className="h-16 w-16 rounded-lg object-cover"
                     onError={(e) => {
@@ -1278,7 +1407,7 @@ export default function AllProducts() {
 
                   <div>
                     <label className="mb-2.5 block text-sm font-medium text-blue dark:text-white">
-                      Discount (%)
+                      Discount Amount (₹)
                     </label>
                     <input
                       type="number"
@@ -1321,19 +1450,76 @@ export default function AllProducts() {
 
                 <div>
                   <label className="mb-2.5 block text-sm font-medium text-blue dark:text-white">
-                    Product Image
+                    Product Images
                   </label>
                   <input
                     type="file"
                     accept="image/*"
+                    multiple
                     onChange={handleImageChange}
                     className="w-full cursor-pointer rounded-md border border-stroke bg-transparent px-5 py-3 outline-none transition file:mr-4 file:rounded file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-opacity-90 focus:border-primary dark:border-strokedark"
                   />
                   <p className="mt-1 text-sm text-body">
-                    Upload a new image to replace the current one (JPG, PNG, max 2MB)
+                    Upload new images to add or replace (JPG, PNG, max 2MB each)
                   </p>
+                  {imagePreviews.length > 0 && (
+                    <div className="mt-2 grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {imagePreviews.map((preview, idx) => (
+                        <div key={idx} className="relative inline-block">
+                          <img
+                            src={preview}
+                            alt={`Preview ${idx + 1}`}
+                            className="h-20 w-20 rounded-lg border border-stroke object-cover dark:border-strokedark"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(idx)}
+                            className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-meta-1 text-white hover:bg-opacity-90"
+                          >
+                            <svg
+                              className="h-3 w-3"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M6 18L18 6M6 6l12 12"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
+                {/* Product Options (edit modal, editable) */}
+                <div className="rounded-md bg-blue-50 p-4 dark:bg-blue-900/20">
+                  <div className="mb-2 font-medium text-blue-700 dark:text-blue-400">Product Options</div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {Object.keys(editFormData.options).map((key) => (
+                      <div key={key}>
+                        <label className="mb-2 block text-xs font-medium text-blue dark:text-white">{key}</label>
+                        {editFormData.options[key as keyof EditProductFormData["options"]].map((val, idx) => (
+                          <div className="flex items-center mb-2" key={idx}>
+                            <input
+                              type="text"
+                              value={val}
+                              onChange={e => handleEditOptionChange(key as keyof EditProductFormData["options"], idx, e.target.value)}
+                              placeholder={`Enter ${key} option`}
+                              className="w-full rounded border-[1.5px] border-stroke bg-transparent px-3 py-2 font-normal text-blue outline-none transition focus:border-primary active:border-primary dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary"
+                            />
+                            <button type="button" onClick={() => removeEditOptionValue(key as keyof EditProductFormData["options"], idx)} className="ml-2 text-red-500">&times;</button>
+                          </div>
+                        ))}
+                        <button type="button" onClick={() => addEditOptionValue(key as keyof EditProductFormData["options"])} className="text-xs text-primary underline">+ Add {key}</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
                 <div className="rounded-md bg-blue-50 p-4 dark:bg-blue-900/20">
                   <div className="flex gap-3">
                     <svg

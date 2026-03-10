@@ -8,7 +8,8 @@ import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
 import { loginRequest, LoginResponse } from "../../api/auth";
 import { setAuth } from "../../utils/auth";
-import { storeEcommerceAuth } from "../../utils/ecommerceAuth";
+import { storeEcommerceAuth, setVendorFlag, clearVendorFlag } from "../../utils/ecommerceAuth";
+import { getProfile } from "../../api/profile";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -45,17 +46,34 @@ export default function SignInForm() {
           // For Gold/BBPS users, also store in old format
           localStorage.setItem('mp_user_id', String(res.user_id));
           localStorage.setItem('mp_api_key', res.data.access_token);
-        } else if (res.domain === 2) {
-          // For Ecommerce users, clear old format to prevent conflicts
+        } else if (res.domain === 2 || res.domain === 3) {
+          // For Ecommerce users and Vendors, clear old format to prevent conflicts
           localStorage.removeItem('mp_user_id');
           localStorage.removeItem('mp_api_key');
+        }
+
+        // For domain 2, fetch profile to detect if user is a vendor (has shop_name)
+        if (res.domain === 2) {
+          try {
+            const profile = await getProfile();
+            if (profile?.data?.shop_name) {
+              setVendorFlag();
+            } else {
+              clearVendorFlag();
+            }
+          } catch {
+            clearVendorFlag();
+          }
+        } else {
+          clearVendorFlag();
         }
         
         // Set dashboard type based on domain
         // Domain 0 (Super Admin) -> Gold dashboard (can access all)
         // Domain 1 (MPay User) -> Gold dashboard
-        // Domain 2 (Ecom User) -> Ecommerce dashboard
-        if (res.domain === 2) {
+        // Domain 2 (Ecom User or Vendor) -> Ecommerce dashboard
+        // Domain 3 (Vendor) -> Ecommerce dashboard (restricted)
+        if (res.domain === 2 || res.domain === 3) {
           localStorage.setItem('dashboardType', 'ecommerce');
           window.location.replace("/ecom");
         } else {

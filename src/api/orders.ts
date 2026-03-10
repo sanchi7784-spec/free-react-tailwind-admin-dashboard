@@ -9,6 +9,7 @@ export interface OrderItemDetail {
   quantity: number;
   discount: number;
   total_price: number;
+  options?: Record<string, any>;
 }
 
 export interface Order {
