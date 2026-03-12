@@ -73,7 +73,7 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
         ],
       },
       { 
-        name: "Products", 
+        name: "Inventory", 
         icon: <BoxIcon />, 
         subItems: [
           { name: "All Products", path: "/ecommerce/products/all" },

@@ -170,6 +170,15 @@ export interface EcommerceDashboardOverview {
   total_orders: number;
   total_sell: number;
   total_revenue: number;
+  orders_today: number;
+  order_status_counts: {
+    confirmed: number;
+    cancelled: number;
+    completed: number;
+    returned: number;
+  };
+  total_inventory_value: number;
+  monthly_sales: Array<{ month: string; total_sales: number }>;
 }
 
 export interface EcommerceDashboardOverviewResponse {

@@ -25,6 +25,9 @@ export interface Order {
   delivery_status: number;
   payment_method: number;
   payment_status: number;
+  tracking_number: string | null;
+  tracking_url: string | null;
+  delivery_partner: string | null;
   items: OrderItemDetail[];
 }
 
@@ -46,6 +49,18 @@ export interface CreateOrderRequest {
 export interface CreateOrderResponse {
   detail: string;
   data?: any;
+}
+
+export interface UpdateOrderTrackingRequest {
+  order_status?: number;
+  delivery_status?: number;
+  tracking_number?: string;
+  tracking_url?: string;
+  delivery_partner?: string;
+}
+
+export interface UpdateOrderTrackingResponse {
+  detail: string;
 }
 
 /**
@@ -86,6 +101,38 @@ export async function fetchOrders(): Promise<OrdersResponse> {
   } catch (parseError) {
     throw new Error("Invalid response format from server");
   }
+}
+
+/**
+ * Update order tracking / status
+ */
+export async function updateOrderTracking(
+  orderId: number,
+  data: UpdateOrderTrackingRequest
+): Promise<UpdateOrderTrackingResponse> {
+  const token = localStorage.getItem("ecommerce_token");
+  if (!token) {
+    throw new Error("No authentication token found.");
+  }
+  const res = await fetch(`${BASE}/dashboard/orders/${orderId}/tracking`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      accept: "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    try {
+      const json = JSON.parse(text);
+      throw new Error(json?.detail || json?.message || text || res.statusText);
+    } catch {
+      throw new Error(text || `Server error: ${res.status} ${res.statusText}`);
+    }
+  }
+  return JSON.parse(text);
 }
 
 /**

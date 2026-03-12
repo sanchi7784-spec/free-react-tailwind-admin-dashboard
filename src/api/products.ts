@@ -234,7 +234,7 @@ export async function updateCategory(categoryId: number, data: UpdateCategoryDat
     throw new Error('No authentication token found');
   }
 
-  console.log(`Calling PATCH API for category ${categoryId}:`, data);
+  // console.log(`Calling PATCH API for category ${categoryId}:`, data);
 
   const formData = new FormData();
   
@@ -255,10 +255,10 @@ export async function updateCategory(categoryId: number, data: UpdateCategoryDat
     formData.append('image', data.image);
   }
 
-  console.log('FormData entries:', Array.from(formData.entries()));
+  // console.log('FormData entries:', Array.from(formData.entries()));
 
   const url = `${ECOMMERCE_API_BASE_URL}/categories/update/${categoryId}`;
-  console.log('Request URL:', url);
+  // console.log('Request URL:', url);
 
   const response = await fetch(url, {
     method: 'PATCH',
@@ -268,16 +268,16 @@ export async function updateCategory(categoryId: number, data: UpdateCategoryDat
     body: formData,
   });
 
-  console.log('Response status:', response.status, response.statusText);
+  // console.log('Response status:', response.status, response.statusText);
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    console.error('API Error:', error);
+    // console.error('API Error:', error);
     throw new Error(error.detail || 'Failed to update category');
   }
 
   const result = await response.json();
-  console.log('API Success:', result);
+  // console.log('API Success:', result);
   return result;
 }
 
@@ -305,7 +305,7 @@ export async function updateProduct(productId: number, data: UpdateProductData):
     throw new Error('No authentication token found');
   }
 
-  console.log(`Calling PATCH API for product ${productId}:`, data);
+  // console.log(`Calling PATCH API for product ${productId}:`, data);
 
   const formData = new FormData();
   
@@ -347,10 +347,10 @@ export async function updateProduct(productId: number, data: UpdateProductData):
     formData.append('options', JSON.stringify(data.options));
   }
 
-  console.log('FormData entries:', Array.from(formData.entries()));
+  // console.log('FormData entries:', Array.from(formData.entries()));
 
   const url = `${ECOMMERCE_API_BASE_URL}/products/update/${productId}`;
-  console.log('Request URL:', url);
+  // console.log('Request URL:', url);
 
   const response = await fetch(url, {
     method: 'PATCH',
@@ -360,15 +360,15 @@ export async function updateProduct(productId: number, data: UpdateProductData):
     body: formData,
   });
 
-  console.log('Response status:', response.status, response.statusText);
+  // console.log('Response status:', response.status, response.statusText);
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    console.error('API Error:', error);
+    // console.error('API Error:', error);
     throw new Error(error.detail || 'Failed to update product');
   }
 
   const result = await response.json();
-  console.log('API Success:', result);
+  // console.log('API Success:', result);
   return result;
 }

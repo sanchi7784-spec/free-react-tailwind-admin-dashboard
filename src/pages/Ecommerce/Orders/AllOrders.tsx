@@ -1,43 +1,32 @@
 import { useEffect, useState, useMemo } from "react";
 import PageMeta from "../../../components/common/PageMeta";
 import PageBreadCrumb from "../../../components/common/PageBreadCrumb";
-import { fetchOrders, Order, createOrder, OrderItem } from "../../../api/orders";
-import { fetchProducts, Product } from '../../../api/products';
-
-interface OrderItemForm extends OrderItem {
-  id: string;
-}
+import { fetchOrders, Order, updateOrderTracking, UpdateOrderTrackingRequest } from "../../../api/orders";
+import { isVendor } from "../../../utils/ecommerceAuth";
 
 export default function AllOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [creating, setCreating] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [createSuccess, setCreateSuccess] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  
-  // Form state
-  const [orderItems, setOrderItems] = useState<OrderItemForm[]>([
-    { id: crypto.randomUUID(), product_id: 1, quantity: 1 }
-  ]);
-  const [paymentMethod, setPaymentMethod] = useState<number>(0);
-  const [addressId, setAddressId] = useState<number>(1);
-  // Add products state for price lookup
-  const [products, setProducts] = useState<Product[]>([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editOrder, setEditOrder] = useState<Order | null>(null);
+  const [editForm, setEditForm] = useState<UpdateOrderTrackingRequest>({});
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSuccess, setEditSuccess] = useState<string | null>(null);
 
   // Order status filter state and tab definitions
   const [activeStatus, setActiveStatus] = useState<number | null>(null);
   const statusTabs: { key: string; label: string; value: number | null }[] = [
     { key: 'all', label: 'All', value: null },
-    { key: 'pending', label: 'Pending', value: 0 },
-    { key: 'processing', label: 'Processing', value: 1 },
-    { key: 'shipped', label: 'Shipped', value: 2 },
-    { key: 'delivered', label: 'Delivered', value: 3 },
-    { key: 'cancelled', label: 'Cancelled', value: 4 },
+    { key: 'payment_pending', label: 'Payment Pending', value: 0 },
+    { key: 'confirmed', label: 'Confirmed', value: 1 },
+    { key: 'cancelled', label: 'Cancelled', value: 2 },
+    { key: 'completed', label: 'Completed', value: 3 },
+    { key: 'returned', label: 'Returned', value: 4 },
   ];
 
   const displayedOrders = useMemo(() => {
@@ -50,14 +39,6 @@ export default function AllOrders() {
       return hay.includes(q);
     });
   }, [orders, activeStatus, searchTerm]);
-
-  // Compute subtotal automatically
-  const subtotal = useMemo(() => {
-    return orderItems.reduce((sum, item) => {
-      const product = products.find(p => p.product_id === item.product_id);
-      return sum + (product ? product.price * item.quantity : 0);
-    }, 0);
-  }, [orderItems, products]);
 
   useEffect(() => {
     loadOrders();
@@ -89,11 +70,11 @@ export default function AllOrders() {
 
   const getOrderStatusText = (status: number) => {
     const statusMap: Record<number, string> = {
-      0: "Pending",
-      1: "Processing",
-      2: "Shipped",
-      3: "Delivered",
-      4: "Cancelled",
+      0: "Payment Pending",
+      1: "Confirmed",
+      2: "Cancelled",
+      3: "Completed",
+      4: "Returned",
     };
     return statusMap[status] || "Unknown";
   };
@@ -119,11 +100,11 @@ export default function AllOrders() {
 
   const getPaymentStatusText = (status: number) => {
     const statusMap: Record<number, string> = {
-      0: "Pending",
+      0: "Payment Pending",
       1: "Paid",
       2: "Failed",
-      3: "Refunded",
-      4: "Cancelled",
+      3: "Refund Initiated",
+      4: "Refunded",
     };
     return statusMap[status] || "Unknown";
   };
@@ -170,97 +151,6 @@ export default function AllOrders() {
     return colorMap[status] || "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
   };
 
-  const handleAddItem = () => {
-    setOrderItems([...orderItems, { id: crypto.randomUUID(), product_id: 1, quantity: 1 }]);
-  };
-
-  const handleRemoveItem = (id: string) => {
-    if (orderItems.length > 1) {
-      setOrderItems(orderItems.filter(item => item.id !== id));
-    }
-  };
-
-  const handleItemChange = (id: string, field: 'product_id' | 'quantity', value: number) => {
-    setOrderItems(orderItems.map(item => 
-      item.id === id ? { ...item, [field]: value } : item
-    ));
-  };
-
-  const handleCreateOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setCreating(true);
-      setCreateError(null);
-      setCreateSuccess(null);
-
-      // Validate items
-      const hasInvalidItems = orderItems.some(item => item.product_id < 1 || item.quantity < 1);
-      if (hasInvalidItems) {
-        setCreateError("All items must have valid product ID and quantity (minimum 1)");
-        setCreating(false);
-        return;
-      }
-      if (addressId < 1) {
-        setCreateError("Please select a valid address");
-        setCreating(false);
-        return;
-      }
-
-      const token = localStorage.getItem("ecommerce_token");
-      if (!token) {
-        setCreateError("No authentication token found. Please login first.");
-        setCreating(false);
-        return;
-      }
-
-      const body = {
-        address_id: addressId,
-        items: orderItems.map(({ product_id, quantity }) => ({ product_id, quantity })),
-        subtotal,
-        payment_method: paymentMethod
-      };
-
-      const response = await fetch("https://api.mastrokart.com/dashboard/orders", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify(body)
-      });
-
-      const result = await response.json();
-      if (!response.ok) {
-        throw new Error(result.detail || "Failed to create order");
-      }
-
-      setCreateSuccess("Order created successfully! Order ID: " + result.data.order_id);
-      // Reset form
-      setOrderItems([{ id: crypto.randomUUID(), product_id: 1, quantity: 1 }]);
-      setPaymentMethod(0);
-      setAddressId(1);
-      // Reload orders
-      setTimeout(() => {
-        loadOrders();
-        setShowCreateModal(false);
-        setCreateSuccess(null);
-      }, 1500);
-    } catch (err: any) {
-      setCreateError(err.message || "Failed to create order");
-      console.error("Error creating order:", err);
-    } finally {
-      setCreating(false);
-    }
-  };
-
-  const handleCloseModal = () => {
-    setShowCreateModal(false);
-    setCreateError(null);
-    setCreateSuccess(null);
-    setOrderItems([{ id: crypto.randomUUID(), product_id: 1, quantity: 1 }]);
-    setPaymentMethod(0);
-  };
-
   const handleViewOrder = (order: Order) => {
     setSelectedOrder(order);
     setShowViewModal(true);
@@ -271,13 +161,62 @@ export default function AllOrders() {
     setSelectedOrder(null);
   };
 
-  const handleOpenCreateModal = async () => {
-    setShowCreateModal(true);
+  const handleEditOrder = (order: Order) => {
+    setEditOrder(order);
+    setEditForm({
+      order_status: order.order_status,
+      delivery_status: order.delivery_status,
+      tracking_number: order.tracking_number ?? "",
+      tracking_url: order.tracking_url ?? "",
+      delivery_partner: order.delivery_partner ?? "",
+    });
+    setEditError(null);
+    setEditSuccess(null);
+    setShowEditModal(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false);
+    setEditOrder(null);
+    setEditError(null);
+    setEditSuccess(null);
+  };
+
+  const handleSubmitEdit = async () => {
+    if (!editOrder) return;
+    setEditLoading(true);
+    setEditError(null);
+    setEditSuccess(null);
     try {
-      const productsRes = await fetchProducts();
-      setProducts(productsRes.data);
-    } catch (err) {
-      setCreateError('Failed to load products.');
+      const payload: UpdateOrderTrackingRequest = {
+        order_status: editForm.order_status,
+        delivery_status: editForm.delivery_status,
+        tracking_number: editForm.tracking_number || undefined,
+        tracking_url: editForm.tracking_url || undefined,
+        delivery_partner: editForm.delivery_partner || undefined,
+      };
+      const res = await updateOrderTracking(editOrder.order_id, payload);
+      setEditSuccess(res.detail || "Order updated successfully");
+      // Refresh local orders list
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.order_id === editOrder.order_id
+            ? {
+                ...o,
+                order_status: payload.order_status ?? o.order_status,
+                delivery_status: payload.delivery_status ?? o.delivery_status,
+                tracking_number: payload.tracking_number ?? o.tracking_number,
+                tracking_url: payload.tracking_url ?? o.tracking_url,
+                delivery_partner: payload.delivery_partner ?? o.delivery_partner,
+              }
+            : o
+        )
+      );
+      setTimeout(() => handleCloseEditModal(), 1200);
+    } catch (err: any) {
+      setEditError(err.message || "Failed to update order");
+    } finally {
+      setEditLoading(false);
     }
   };
 
@@ -346,13 +285,7 @@ export default function AllOrders() {
                 Export CSV
               </button>
             </div>
-            <button
-              onClick={handleOpenCreateModal}
-              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500 px-6 py-3 text-center font-semibold text-white shadow-lg hover:from-green-500 hover:to-teal-600 transition-all duration-200 focus:ring-4 focus:ring-green-200 dark:focus:ring-green-800"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-              Create Order
-            </button>
+
             <button
               onClick={loadOrders}
               className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 px-6 py-3 text-center font-semibold text-white shadow-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-800 disabled:opacity-60"
@@ -418,6 +351,9 @@ export default function AllOrders() {
                       <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Payment Status</th>
                       <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Order Status</th>
                       <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Delivery Status</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Delivery Partner</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Tracking Number</th>
+                      <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Tracking URL</th>
                       <th className="px-2 sm:px-4 md:px-6 py-3 sm:py-4 font-bold text-slate-700 dark:text-white whitespace-nowrap">Actions</th>
                     </tr>
                   </thead>
@@ -467,6 +403,20 @@ export default function AllOrders() {
                           <span className={`inline-flex rounded-full px-2 sm:px-3 py-1 text-[10px] sm:text-xs font-bold shadow ${getDeliveryStatusColor(order.delivery_status)}`}>{getDeliveryStatusText(order.delivery_status)}</span>
                         </td>
                         <td className="px-2 sm:px-4 md:px-6 py-4 whitespace-nowrap">
+                          <span className="text-slate-700 dark:text-white text-xs sm:text-sm">{order.delivery_partner || <span className="text-slate-400 italic">—</span>}</span>
+                        </td>
+                        <td className="px-2 sm:px-4 md:px-6 py-4 whitespace-nowrap">
+                          <span className="text-slate-700 dark:text-white text-xs sm:text-sm">{order.tracking_number || <span className="text-slate-400 italic">—</span>}</span>
+                        </td>
+                        <td className="px-2 sm:px-4 md:px-6 py-4 whitespace-nowrap max-w-[160px]">
+                          {order.tracking_url ? (
+                            <a href={order.tracking_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-300 text-xs sm:text-sm underline break-all line-clamp-1" title={order.tracking_url}>{order.tracking_url}</a>
+                          ) : (
+                            <span className="text-slate-400 italic text-xs sm:text-sm">—</span>
+                          )}
+                        </td>
+                        <td className="px-2 sm:px-4 md:px-6 py-4 whitespace-nowrap">
+                          <div className="flex gap-2">
                           <button
                             onClick={() => handleViewOrder(order)}
                             className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 via-fuchsia-500 to-pink-500 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-bold text-white shadow-md hover:from-blue-600 hover:to-pink-600 transition-all duration-200"
@@ -474,6 +424,16 @@ export default function AllOrders() {
                             <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m12 0A9 9 0 11 3 12a9 9 0 0118 0z" /></svg>
                             View
                           </button>
+                          {!isVendor() && (
+                            <button
+                              onClick={() => handleEditOrder(order)}
+                              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-bold text-white shadow-md hover:from-amber-600 hover:to-orange-600 transition-all duration-200"
+                            >
+                              <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                              Edit
+                            </button>
+                          )}
+                        </div>
                         </td>
                       </tr>
                     ))}
@@ -490,6 +450,111 @@ export default function AllOrders() {
           )}
         </div>     </div>
  
+
+      {/* Edit Order Modal */}
+      {showEditModal && editOrder && (
+        <div className="fixed inset-0 z-999999 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl dark:bg-boxdark">
+            <div className="flex items-center justify-between border-b border-stroke dark:border-strokedark px-6 py-4">
+              <h3 className="text-xl font-bold text-slate-800 dark:text-white">
+                Edit Order #{editOrder.order_id}
+              </h3>
+              <button onClick={handleCloseEditModal} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              {editError && (
+                <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900 dark:text-red-300">{editError}</div>
+              )}
+              {editSuccess && (
+                <div className="rounded-lg bg-green-50 p-3 text-sm text-green-700 dark:bg-green-900 dark:text-green-300">{editSuccess}</div>
+              )}
+              {/* Order Status */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-white">Order Status</label>
+                <select
+                  value={editForm.order_status ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, order_status: Number(e.target.value) }))}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:bg-meta-4 dark:border-strokedark dark:text-white"
+                >
+                  <option value={0}>Payment Pending</option>
+                  <option value={1}>Confirmed</option>
+                  <option value={2}>Cancelled</option>
+                  <option value={3}>Completed</option>
+                  <option value={4}>Returned</option>
+                </select>
+              </div>
+              {/* Delivery Status */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-white">Delivery Status</label>
+                <select
+                  value={editForm.delivery_status ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, delivery_status: Number(e.target.value) }))}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:bg-meta-4 dark:border-strokedark dark:text-white"
+                >
+                  <option value={0}>Not Shipped</option>
+                  <option value={1}>Shipped</option>
+                  <option value={2}>Out for Delivery</option>
+                  <option value={3}>Delivered</option>
+                </select>
+              </div>
+              {/* Delivery Partner */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-white">Delivery Partner</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Bluedart"
+                  value={editForm.delivery_partner ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, delivery_partner: e.target.value }))}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:bg-meta-4 dark:border-strokedark dark:text-white"
+                />
+              </div>
+              {/* Tracking Number */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-white">Tracking Number</label>
+                <input
+                  type="text"
+                  placeholder="e.g. ABCDG135"
+                  value={editForm.tracking_number ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, tracking_number: e.target.value }))}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:bg-meta-4 dark:border-strokedark dark:text-white"
+                />
+              </div>
+              {/* Tracking URL */}
+              <div>
+                <label className="mb-1 block text-sm font-semibold text-slate-700 dark:text-white">Tracking URL</label>
+                <input
+                  type="url"
+                  placeholder="https://..."
+                  value={editForm.tracking_url ?? ""}
+                  onChange={(e) => setEditForm((f) => ({ ...f, tracking_url: e.target.value }))}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm dark:bg-meta-4 dark:border-strokedark dark:text-white"
+                />
+              </div>
+            </div>
+            <div className="flex gap-3 border-t border-stroke dark:border-strokedark px-6 py-4">
+              <button
+                onClick={handleCloseEditModal}
+                className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 dark:border-strokedark dark:text-white dark:hover:bg-meta-4"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSubmitEdit}
+                disabled={editLoading}
+                className="flex-1 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-4 py-2 text-sm font-bold text-white hover:from-amber-600 hover:to-orange-600 disabled:opacity-60"
+              >
+                {editLoading ? (
+                  <span className="flex items-center justify-center"><span className="animate-spin h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full"></span>Saving...</span>
+                ) : "Save Changes"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* View Order Modal */}
       {showViewModal && selectedOrder && (
@@ -569,6 +634,31 @@ export default function AllOrders() {
                         {getDeliveryStatusText(selectedOrder.delivery_status)}
                       </span>
                     </div>
+                    {selectedOrder.delivery_partner && (
+                      <div>
+                        <p className="text-sm text-body">Delivery Partner</p>
+                        <p className="font-medium text-blue dark:text-white">{selectedOrder.delivery_partner}</p>
+                      </div>
+                    )}
+                    {selectedOrder.tracking_number && (
+                      <div>
+                        <p className="text-sm text-body">Tracking Number</p>
+                        <p className="font-medium text-blue dark:text-white">{selectedOrder.tracking_number}</p>
+                      </div>
+                    )}
+                    {selectedOrder.tracking_url && (
+                      <div>
+                        <p className="text-sm text-body">Tracking URL</p>
+                        <a
+                          href={selectedOrder.tracking_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-primary underline break-all"
+                        >
+                          {selectedOrder.tracking_url}
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -708,159 +798,6 @@ export default function AllOrders() {
         </div>
       )}
 
-      {/* Create Order Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-999999 flex items-center justify-center bg-blue bg-opacity-50">
-          <div className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-lg bg-white p-8 shadow-lg dark:bg-boxdark">
-            <button
-              onClick={handleCloseModal}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-
-            <h3 className="text-2xl font-bold text-blue dark:text-white mb-6">
-              Create New Order
-            </h3>
-
-            {createError && (
-              <div className="mb-4 rounded-lg bg-red-50 p-4 text-red-800 dark:bg-red-900 dark:text-red-300">
-                <p className="font-medium">Error</p>
-                <p className="text-sm mt-1">{createError}</p>
-              </div>
-            )}
-
-            {createSuccess && (
-              <div className="mb-4 rounded-lg bg-green-50 p-4 text-green-800 dark:bg-green-900 dark:text-green-300">
-                <p className="font-medium">{createSuccess}</p>
-              </div>
-            )}
-
-            <form onSubmit={handleCreateOrder}>
-              {/* Order Items */}
-              <div className="mb-6">
-                <div className="flex justify-between items-center mb-3">
-                  <label className="block text-sm font-medium text-blue dark:text-white">
-                    Order Items
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleAddItem}
-                    className="text-sm text-primary hover:underline"
-                  >
-                    + Add Item
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  {orderItems.map((item, index) => (
-                    <div key={item.id} className="flex gap-3 items-start">
-                      <div className="flex-1">
-                        <label className="block text-xs text-body mb-1">Product ID</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={item.product_id}
-                          onChange={(e) => handleItemChange(item.id, 'product_id', parseInt(e.target.value) || 1)}
-                          className="w-full rounded border border-stroke bg-gray px-4 py-2 text-blue focus:border-primary focus:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white"
-                          required
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <label className="block text-xs text-body mb-1">Quantity</label>
-                        <input
-                          type="number"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) => handleItemChange(item.id, 'quantity', parseInt(e.target.value) || 1)}
-                          className="w-full rounded border border-stroke bg-gray px-4 py-2 text-blue focus:border-primary focus:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white"
-                          required
-                        />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveItem(item.id)}
-                        disabled={orderItems.length === 1}
-                        className="mt-6 text-red-600 hover:text-red-800 disabled:opacity-30 disabled:cursor-not-allowed"
-                        title="Remove item"
-                      >
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Payment Method */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-blue dark:text-white mb-3">
-                  Payment Method
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="payment_method"
-                      value="0"
-                      checked={paymentMethod === 0}
-                      onChange={(e) => setPaymentMethod(parseInt(e.target.value))}
-                      className="mr-2"
-                    />
-                    <span className="text-blue dark:text-white">Cash on Delivery (COD)</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name="payment_method"
-                      value="1"
-                      checked={paymentMethod === 1}
-                      onChange={(e) => setPaymentMethod(parseInt(e.target.value))}
-                      className="mr-2"
-                    />
-                    <span className="text-blue dark:text-white">Online Payment</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* Subtotal */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-blue dark:text-white mb-2">
-                  Subtotal (₹)
-                </label>
-                <input
-                  type="number"
-                  value={subtotal}
-                  readOnly
-                  className="w-full rounded border border-stroke bg-gray px-4 py-3 text-blue focus:border-primary focus:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white"
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="rounded-md border border-stroke px-6 py-2.5 text-blue hover:bg-gray-2 dark:border-strokedark dark:text-white dark:hover:bg-meta-4"
-                  disabled={creating}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="rounded-md bg-blue-600 px-6 py-2.5 text-white hover:bg-opacity-90 disabled:opacity-50"
-                  disabled={creating}
-                >
-                  {creating ? "Creating..." : "Create Order"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </>
   );
 }

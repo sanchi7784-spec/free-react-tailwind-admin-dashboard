@@ -31,9 +31,10 @@ export default function AllProducts() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
-  const [categoriesData, setCategoriesData] = useState<Array<{ category_id: number; category_name: string }>>([]);
+  const [categoriesData, setCategoriesData] = useState<Array<{ category_id: number; category_name: string; parent_id: number | null }>>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [subcategoryFilter, setSubcategoryFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<ViewMode>("table");
@@ -79,7 +80,8 @@ export default function AllProducts() {
       const response = await fetchCategories();
       setCategoriesData(response.data.map(cat => ({
         category_id: cat.category_id,
-        category_name: cat.category_name
+        category_name: cat.category_name,
+        parent_id: cat.parent_id ?? null,
       })));
     } catch (err) {
       console.error("Error loading categories:", err);
@@ -117,8 +119,18 @@ export default function AllProducts() {
         product.added_by.toLowerCase().includes(searchQuery.toLowerCase()) ||
         product.product_id.toString().includes(searchQuery);
 
-      const categoryMatch =
-        categoryFilter === "all" || product.category_name === categoryFilter;
+      const categoryMatch = (() => {
+        if (subcategoryFilter !== "all") {
+          return product.category_id === parseInt(subcategoryFilter);
+        }
+        if (categoryFilter === "all") return true;
+        const parentId = parseInt(categoryFilter);
+        const productCat = categoriesData.find(c => c.category_id === product.category_id);
+        if (productCat) {
+          return productCat.category_id === parentId || productCat.parent_id === parentId;
+        }
+        return false;
+      })();
 
       const statusMatch =
         statusFilter === "all" || 
@@ -151,7 +163,20 @@ export default function AllProducts() {
 
       return searchMatch && categoryMatch && statusMatch && roleMatch;
     });
-  }, [products, searchQuery, categoryFilter, statusFilter, roleFilter]);
+  }, [products, searchQuery, categoryFilter, subcategoryFilter, statusFilter, roleFilter, categoriesData]);
+
+  // Derived category lists
+  const parentCategories = useMemo(
+    () => categoriesData.filter(c => c.parent_id === null),
+    [categoriesData]
+  );
+  const availableSubcategories = useMemo(
+    () =>
+      categoryFilter === "all"
+        ? categoriesData.filter(c => c.parent_id !== null)
+        : categoriesData.filter(c => c.parent_id === parseInt(categoryFilter)),
+    [categoriesData, categoryFilter]
+  );
 
   // Pagination
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
@@ -162,7 +187,7 @@ export default function AllProducts() {
 
   useMemo(() => {
     setCurrentPage(1);
-  }, [searchQuery, categoryFilter, statusFilter, roleFilter]);
+  }, [searchQuery, categoryFilter, subcategoryFilter, statusFilter, roleFilter]);
 
   const getStatusBadge = (status: number) => {
     if (status === 1) {
@@ -452,79 +477,70 @@ export default function AllProducts() {
 
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-gray-600 dark:bg-gray-900">
         {/* Header */}
-        <div className="border-b border-stroke px-7.5 py-6 dark:border-gray-600">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-blue dark:text-white">All Products</h2>
-              <p className="text-sm text-body mt-1 dark:text-white">
-                Manage your product inventory ({filteredProducts.length} of {products.length})
-              </p>
-            </div>
+        <div className="relative overflow-hidden rounded-t-sm bg-gradient-to-r from-blue-600 to-blue-400 px-6 py-5 dark:from-blue-800 dark:to-blue-600">
+          {/* decorative circles */}
+          <div className="pointer-events-none absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
+          <div className="pointer-events-none absolute -bottom-10 right-16 h-24 w-24 rounded-full bg-white/10" />
+
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            {/* Title */}
             <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/20 backdrop-blur-sm">
+                <svg className="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-white">All Products</h2>
+                <p className="text-sm text-blue-100">
+                  {filteredProducts.length} of {products.length} products
+                </p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2">
               {/* View Toggle */}
-              <div className="flex items-center gap-1 rounded-md border border-stroke p-1 dark:border-strokedark">
+              <div className="flex items-center rounded-lg bg-white/20 p-1 backdrop-blur-sm">
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+                  title="Table view"
+                  className={`rounded-md p-1.5 transition-colors ${
                     viewMode === "table"
-                      ? "bg-blue-700 dark:text-white"
-                      : "text-body hover:bg-gray-2 dark:hover:bg-meta-4"
+                      ? "bg-white text-blue-600 shadow"
+                      : "text-white hover:bg-white/20"
                   }`}
                 >
-                  <svg
-                    className="h-4 w-4 dark:text-white "
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                    />
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                 </button>
                 <button
                   onClick={() => setViewMode("grid")}
-                  className={`rounded px-3 py-1.5 text-sm font-medium transition-colors ${
+                  title="Grid view"
+                  className={`rounded-md p-1.5 transition-colors ${
                     viewMode === "grid"
-                      ? "bg-blue-600 dark:text-white"
-                      : "text-body hover:bg-gray-2 dark:hover:bg-meta-4"
+                      ? "bg-white text-blue-600 shadow"
+                      : "text-white hover:bg-white/20"
                   }`}
                 >
-                  <svg
-                    className="h-4 w-4 dark:text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-                    />
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                   </svg>
                 </button>
               </div>
+
               <button
                 onClick={loadProducts}
                 disabled={loading}
-                className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-600 shadow transition hover:bg-blue-50 disabled:opacity-60"
               >
-                <svg
-                  className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                  />
+                <svg className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
                 Refresh
               </button>
@@ -547,60 +563,77 @@ export default function AllProducts() {
         )}
 
         {/* Filters */}
-        <div className="border-b border-stroke px-7.5 py-4 dark:border-strokedark">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-            {/* Search */}
-            <div className="relative flex-1">
-              <input
-                type="text"
-                placeholder="Search by name, category, description..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-md border border-stroke bg-transparent py-2.5 pl-10 pr-4 text-sm outline-none focus:border-gray-700 dark:border-gray-700 dark:text-white"
+        <div className="border-b border-stroke px-4 py-4 dark:border-strokedark sm:px-7.5">
+          {/* Search */}
+          <div className="relative mb-4">
+            <input
+              type="text"
+              placeholder="Search by name, category, description..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-md border border-stroke bg-transparent py-2.5 pl-10 pr-4 text-sm outline-none focus:border-gray-700 dark:border-gray-700 dark:text-white"
+            />
+            <svg
+              className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-body dark:text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
-              <svg
-                className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-body dark:text-white"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </div>
+            </svg>
+          </div>
 
+          {/* Filter dropdowns grid */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
             {/* Category Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-blue dark:text-white whitespace-nowrap">
-                Category:
-              </span>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-blue dark:text-white">Category</label>
               <select
                 value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
-                className="rounded-md border border-stroke bg-transparent px-4 py-2.5 text-sm outline-none focus:border-gray-800 dark:border-gray-800 text-blue dark:text-white"
+                onChange={(e) => {
+                  setCategoryFilter(e.target.value as CategoryFilter);
+                  setSubcategoryFilter("all");
+                }}
+                className="w-full rounded-md border border-stroke bg-transparent px-3 py-2 text-sm outline-none focus:border-gray-800 dark:border-gray-800 text-blue dark:text-white"
               >
-                <option value="all" className="text-blue">All</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat} className="text-blue">
-                    {cat}
+                <option value="all" className="text-blue">All Categories</option>
+                {parentCategories.map((cat) => (
+                  <option key={cat.category_id} value={String(cat.category_id)} className="text-blue">
+                    {cat.category_name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Subcategory Filter */}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-blue dark:text-white">Subcategory</label>
+              <select
+                value={subcategoryFilter}
+                onChange={(e) => setSubcategoryFilter(e.target.value)}
+                className="w-full rounded-md border border-stroke bg-transparent px-3 py-2 text-sm outline-none focus:border-gray-800 dark:border-gray-800 text-blue dark:text-white"
+              >
+                <option value="all" className="text-blue">All Subcategories</option>
+                {availableSubcategories.map((cat) => (
+                  <option key={cat.category_id} value={String(cat.category_id)} className="text-blue">
+                    {cat.category_name}
                   </option>
                 ))}
               </select>
             </div>
 
             {/* Status Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-blue dark:text-white whitespace-nowrap">
-                Status:
-              </span>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-blue dark:text-white">Status</label>
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-                className="rounded-md border border-stroke bg-transparent px-4 py-2.5 text-sm outline-none focus:border-gray-800 dark:border-gray-800 text-blue dark:text-white"
+                className="w-full rounded-md border border-stroke bg-transparent px-3 py-2 text-sm outline-none focus:border-gray-800 dark:border-gray-800 text-blue dark:text-white"
               >
                 <option value="all" className="text-blue">All</option>
                 <option value="active" className="text-blue">Active</option>
@@ -611,12 +644,12 @@ export default function AllProducts() {
             </div>
 
             {/* Role Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-blue dark:text-white whitespace-nowrap">Added By:</span>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-blue dark:text-white">Added By</label>
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="rounded-md border border-stroke bg-transparent px-4 py-2.5 text-sm outline-none focus:border-gray-800 dark:border-gray-800 text-blue dark:text-white"
+                className="w-full rounded-md border border-stroke bg-transparent px-3 py-2 text-sm outline-none focus:border-gray-800 dark:border-gray-800 text-blue dark:text-white"
               >
                 <option value="all" className="text-blue">All</option>
                 <option value="1" className="text-blue">Vendor</option>
@@ -826,15 +859,15 @@ export default function AllProducts() {
               </table>
             </div>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {paginatedProducts.map((product) => (
                 <div
                   key={product.product_id}
-                  className="rounded-lg border border-stroke bg-white transition-shadow hover:shadow-lg dark:border-strokedark dark:bg-boxdark"
+                  className="flex flex-col rounded-xl border border-stroke bg-white transition-shadow hover:shadow-lg dark:border-strokedark dark:bg-boxdark"
                 >
                   {/* Product Image */}
                   {product.images && product.images.length > 0 ? (
-                    <div className="h-48 overflow-hidden rounded-t-lg">
+                    <div className="h-40 overflow-hidden rounded-t-xl sm:h-48">
                       <img
                         src={product.images.find(img => img.is_primary)?.image_url || product.images[0].image_url}
                         alt={product.product_name}
@@ -843,33 +876,36 @@ export default function AllProducts() {
                     </div>
                   ) : (
                     <div
-                      className="flex h-48 items-center justify-center rounded-t-lg text-3xl font-bold text-white"
+                      className="flex h-40 items-center justify-center rounded-t-xl text-3xl font-bold text-white sm:h-48"
                       style={{ backgroundColor: getProductColor(product.product_id) }}
                     >
                       {getProductInitials(product.product_name)}
                     </div>
                   )}
 
-                  <div className="p-5">
-                    <div className="mb-3 flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-blue dark:text-white line-clamp-2">
+                  <div className="flex flex-1 flex-col p-3 sm:p-4">
+                    {/* Name + Status */}
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="line-clamp-2 text-sm font-semibold text-blue dark:text-white sm:text-base">
                           {product.product_name}
                         </h3>
-                        <p className="mt-1 text-xs text-body">{product.added_by}</p>
+                        <p className="mt-0.5 truncate text-xs text-body">{product.added_by}</p>
                       </div>
-                      {getStatusBadge(product.status)}
+                      <div className="shrink-0">{getStatusBadge(product.status)}</div>
                     </div>
 
-                    <div className="mb-3 flex items-center justify-between">
+                    {/* Category + ID */}
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-1">
                       {getCategoryBadge(product.category_name)}
                       <span className="text-xs text-body">ID: {product.product_id}</span>
                     </div>
 
-                    <div className="mb-4 flex items-center justify-between border-t border-stroke pt-3 dark:border-strokedark">
+                    {/* Price + Stock */}
+                    <div className="mb-3 flex items-center justify-between border-t border-stroke pt-2 dark:border-strokedark">
                       <div>
                         <span className="text-xs text-body">Price</span>
-                        <p className="text-lg font-bold text-blue dark:text-white">
+                        <p className="text-base font-bold text-blue dark:text-white sm:text-lg">
                           {formatPrice(product.price)}
                         </p>
                         {product.discount > 0 && (
@@ -879,7 +915,7 @@ export default function AllProducts() {
                       <div className="text-right">
                         <span className="text-xs text-body">Stock</span>
                         <p
-                          className={`font-semibold ${
+                          className={`text-base font-semibold sm:text-lg ${
                             product.stock_quantity === 0
                               ? "text-red-500"
                               : product.stock_quantity < 5
@@ -892,29 +928,21 @@ export default function AllProducts() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
+                    {/* Actions */}
+                    <div className="mt-auto flex flex-wrap gap-2">
                       <button
                         onClick={() => handleViewProduct(product)}
-                        className="flex-1 rounded-md border border-stroke py-2 text-sm font-medium text-body hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
+                        className="flex-1 rounded-md border border-stroke py-1.5 text-xs font-medium text-body hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4 sm:py-2 sm:text-sm"
                       >
                         View
                       </button>
                       <button
                         onClick={() => handleEditProduct(product)}
-                        className="rounded-md border border-stroke px-4 py-2 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
+                        className="rounded-md border border-stroke px-3 py-1.5 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4 sm:px-4 sm:py-2"
                       >
-                        <svg
-                          className="h-4 w-4 text-body"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
+                        <svg className="h-3.5 w-3.5 text-body sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                         </svg>
                       </button>
                       {product.role_id === 1 && currentUserRoleId !== null && [2,4,99].includes(currentUserRoleId) && (
@@ -922,7 +950,7 @@ export default function AllProducts() {
                           value={String(product.status)}
                           onChange={(e) => handleChangeProductStatus(product.product_id, parseInt(e.target.value))}
                           disabled={updatingProductId === product.product_id}
-                          className="rounded-md border border-stroke bg-transparent px-2 py-1 text-sm outline-none"
+                          className="w-full rounded-md border border-stroke bg-transparent px-2 py-1.5 text-xs outline-none sm:w-auto sm:text-sm"
                         >
                           <option value="1">Approve</option>
                           <option value="0">Reject</option>
