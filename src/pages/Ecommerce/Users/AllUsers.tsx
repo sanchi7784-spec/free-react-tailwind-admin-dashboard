@@ -82,6 +82,15 @@ export default function AllUsers() {
   const [isSaving, setIsSaving] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
+  const createName = createFormData.name.trim();
+  const createEmail = createFormData.email.trim();
+  const createPhone = createFormData.phone.trim();
+  const createPassword = createFormData.password.trim();
+  const createPasswordError =
+    createFormData.password.length > 0 && createPassword.length < 8
+      ? "Password must be at least 8 characters"
+      : "";
+
   const loadUsers = async () => {
     setLoading(true);
     setError(null);
@@ -340,11 +349,19 @@ export default function AllUsers() {
         throw new Error('Not authenticated. Please login first.');
       }
 
+      if (!createName || !createEmail || !createPhone || !createPassword) {
+        throw new Error('Please fill all required fields.');
+      }
+
+      if (createPassword.length < 8) {
+        throw new Error('Password must be at least 8 characters.');
+      }
+
       const payload = {
-        name: createFormData.name,
-        email: createFormData.email,
-        password: createFormData.password,
-        phone: createFormData.phone,
+        name: createName,
+        email: createEmail,
+        password: createPassword,
+        phone: createPhone,
         role_id: createFormData.role_id,
       };
 
@@ -1477,11 +1494,19 @@ export default function AllUsers() {
                     value={createFormData.password}
                     onChange={(e) => handleCreateFormChange("password", e.target.value)}
                     placeholder="Enter password"
-                    className="w-full rounded-md border border-stroke bg-transparent px-5 py-3 outline-none transition focus:border-primary dark:border-strokedark dark:text-white"
+                    className={`w-full rounded-md border bg-transparent px-5 py-3 outline-none transition focus:border-primary dark:border-strokedark dark:text-white ${
+                      createPasswordError
+                        ? "border-red-500"
+                        : "border-stroke"
+                    }`}
                   />
-                  <p className="mt-1 text-xs text-body dark:text-bodydark">
-                    Password should be at least 8 characters
-                  </p>
+                  {createPasswordError ? (
+                    <p className="mt-1 text-xs text-red-500">{createPasswordError}</p>
+                  ) : (
+                    <p className="mt-1 text-xs text-body dark:text-bodydark">
+                      Password should be at least 8 characters
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -1520,7 +1545,14 @@ export default function AllUsers() {
               </button>
               <button
                 onClick={handleCreateUser}
-                disabled={isCreating || !createFormData.name || !createFormData.email || !createFormData.password || !createFormData.phone}
+                disabled={
+                  isCreating ||
+                  !createName ||
+                  !createEmail ||
+                  !createPhone ||
+                  !createPassword ||
+                  !!createPasswordError
+                }
                 className="inline-flex items-center gap-2 rounded-md bg-green-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-opacity-90 disabled:opacity-50"
               >
                 {isCreating ? (

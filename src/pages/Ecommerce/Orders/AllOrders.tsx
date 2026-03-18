@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo } from "react";
 import PageMeta from "../../../components/common/PageMeta";
 import PageBreadCrumb from "../../../components/common/PageBreadCrumb";
 import { fetchOrders, Order, updateOrderTracking, UpdateOrderTrackingRequest } from "../../../api/orders";
-import { isVendor } from "../../../utils/ecommerceAuth";
 
 export default function AllOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -424,15 +423,13 @@ export default function AllOrders() {
                             <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m12 0A9 9 0 11 3 12a9 9 0 0118 0z" /></svg>
                             View
                           </button>
-                          {!isVendor() && (
-                            <button
-                              onClick={() => handleEditOrder(order)}
-                              className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-bold text-white shadow-md hover:from-amber-600 hover:to-orange-600 transition-all duration-200"
-                            >
-                              <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                              Edit
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleEditOrder(order)}
+                            className="inline-flex items-center justify-center rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 sm:px-4 py-2 text-[10px] sm:text-xs font-bold text-white shadow-md hover:from-amber-600 hover:to-orange-600 transition-all duration-200"
+                          >
+                            <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            Edit
+                          </button>
                         </div>
                         </td>
                       </tr>

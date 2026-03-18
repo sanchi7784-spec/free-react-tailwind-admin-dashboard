@@ -298,6 +298,11 @@ export interface UpdateProductResponse {
   data?: Product;
 }
 
+export interface UpdateProductStockResponse {
+  detail: string;
+  data?: Product;
+}
+
 export async function updateProduct(productId: number, data: UpdateProductData): Promise<UpdateProductResponse> {
   const token = localStorage.getItem('ecommerce_token');
 
@@ -329,7 +334,7 @@ export async function updateProduct(productId: number, data: UpdateProductData):
     formData.append('discount', data.discount);
   }
   
-  if (data.stock_quantity) {
+  if (data.stock_quantity !== undefined) {
     formData.append('stock_quantity', data.stock_quantity);
   }
   
@@ -371,4 +376,30 @@ export async function updateProduct(productId: number, data: UpdateProductData):
   const result = await response.json();
   // console.log('API Success:', result);
   return result;
+}
+
+export async function updateProductStockQuantity(productId: number, stockQuantity: number): Promise<UpdateProductStockResponse> {
+  const token = localStorage.getItem('ecommerce_token');
+
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
+
+  const formData = new FormData();
+  formData.append('stock_quantity', String(stockQuantity));
+
+  const response = await fetch(`${ECOMMERCE_API_BASE_URL}/products/update/${productId}`, {
+    method: 'PATCH',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.detail || 'Failed to update product stock quantity');
+  }
+
+  return response.json();
 }

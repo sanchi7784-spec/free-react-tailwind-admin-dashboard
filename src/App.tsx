@@ -118,10 +118,38 @@ import OrdersReport from "./pages/Ecommerce/Reports/OrdersReport";
 import AdminTaxReport from "./pages/Ecommerce/Reports/AdminTaxReport";
 import VendorVatReport from "./pages/Ecommerce/Reports/VendorVatReport";
 import EcommerceLogin from "./pages/Ecommerce/EcommerceLogin";
+import EcomInventory from "./pages/Ecommerce/Inventory/Inventory";
+import EcomPayments from "./pages/Ecommerce/Payments/Payments";
 import EcomAllKYC from "./pages/Ecommerce/KYC/AllKYC";
 import BusinessSettings from "./pages/Ecommerce/BasicInfo/BusinessSettings";
 import DeliveryCharges from "./pages/Ecommerce/DeliveryCharges/DeliveryCharges";
 import VatTax from "./pages/Ecommerce/VatTax";
+
+const RESTRICTED_ECOMMERCE_ROLE_REDIRECT_PATHS: Record<number, string> = {
+  3: "/ecommerce/users/all",
+  4: "/ecommerce/products/all",
+  5: "/ecommerce/banners/all",
+  6: "/ecommerce/kyc/all",
+  7: "/ecommerce/basicinfo/business-settings",
+  8: "/ecommerce/orders/all",
+  9: "/ecommerce/vendors/all",
+  10: "/ecommerce/orders/all",
+};
+
+function getRestrictedEcommerceRoleRedirectPath(): string | null {
+  if (typeof window === "undefined") return null;
+
+  const domain = localStorage.getItem("ecommerce_domain");
+  if (domain !== "2") return null;
+
+  const storedRole = localStorage.getItem("ecommerce_role_id");
+  if (!storedRole) return null;
+
+  const roleId = Number(storedRole);
+  if (Number.isNaN(roleId)) return null;
+
+  return RESTRICTED_ECOMMERCE_ROLE_REDIRECT_PATHS[roleId] ?? null;
+}
 
 export default function App() {
   // Route-level guard component
@@ -142,6 +170,23 @@ export default function App() {
     }
     return children;
   }
+
+  function RoleAwareDashboard() {
+    const redirectPath = getRestrictedEcommerceRoleRedirectPath();
+    if (redirectPath) {
+      return <Navigate to={redirectPath} replace />;
+    }
+    return <DynamicDashboard />;
+  }
+
+  function RoleAwareEcomHome() {
+    const redirectPath = getRestrictedEcommerceRoleRedirectPath();
+    if (redirectPath) {
+      return <Navigate to={redirectPath} replace />;
+    }
+    return <Home />;
+  }
+
   return (
     <>
       <Router>
@@ -151,11 +196,11 @@ export default function App() {
             {/* Dashboard Layout (protected) */}
             <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
               {/* Main Dashboard Route - Automatically shows correct dashboard based on user domain */}
-              <Route path="/" element={<DynamicDashboard />} />
-              <Route path="/dashboard" element={<DynamicDashboard />} />
+              <Route path="/" element={<RoleAwareDashboard />} />
+              <Route path="/dashboard" element={<RoleAwareDashboard />} />
               
               {/* Legacy routes for backward compatibility */}
-              <Route index path="/ecom" element={<Home />} />
+              <Route index path="/ecom" element={<RoleAwareEcomHome />} />
               <Route path="/bbps" element={<BBPSDashboard />} />
               <Route path="/gold" element={<GoldDashboard />} />
 
@@ -232,6 +277,8 @@ export default function App() {
             <Route path="/ecommerce/basicinfo/business-settings" element={<RequireEcommerceAuth><BusinessSettings /></RequireEcommerceAuth>} />
             <Route path="/ecommerce/delivery-charges" element={<RequireEcommerceAuth><DeliveryCharges /></RequireEcommerceAuth>} />
             <Route path="/ecommerce/vat-tax" element={<RequireEcommerceAuth><VatTax /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/inventory" element={<RequireEcommerceAuth><EcomInventory /></RequireEcommerceAuth>} />
+            <Route path="/ecommerce/payments" element={<RequireEcommerceAuth><EcomPayments /></RequireEcommerceAuth>} />
 
             {/* Transactions */}
             <Route path="/Transactions" element={<AllTransactions />} />

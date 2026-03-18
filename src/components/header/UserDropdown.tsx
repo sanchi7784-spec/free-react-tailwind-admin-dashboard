@@ -10,6 +10,7 @@ import {
   canAccessEcommerce 
 } from "../../utils/ecommerceAuth";
 import { fetchUser } from "../../api/users";
+import { getProfile } from "../../api/profile";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +28,15 @@ export default function UserDropdown() {
     
     async function loadUser() {
       try {
+        const profile = await getProfile();
+        if (!mounted) return;
+
+        if (profile?.data) {
+          setDisplayName(profile.data.name || profile.data.email || getAuth()?.email || null);
+          setDisplayEmail(profile.data.email || getAuth()?.email || null);
+          return;
+        }
+
         // Use correct user ID based on domain
         const domain = typeof window !== "undefined" ? localStorage.getItem("ecommerce_domain") : null;
         let userId: string | null = null;

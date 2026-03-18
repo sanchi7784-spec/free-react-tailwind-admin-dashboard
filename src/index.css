@@ -863,8 +863,15 @@ span.flatpickr-weekday,
 .blood-sidebar .menu-item-icon {
   color: rgba(255, 255, 255, 0.88) !important;
 }
+.blood-sidebar .menu-item-icon-inactive svg,
+.blood-sidebar .menu-item-icon svg {
+  stroke: rgba(255, 255, 255, 0.88);
+}
 .blood-sidebar .menu-item-icon-active {
   color: var(--blood-accent) !important;
+}
+.blood-sidebar .menu-item-icon-active svg {
+  stroke: var(--blood-accent);
 }
 /* on hover, icons get the blood accent color */
 .blood-sidebar .menu-item-inactive:hover .menu-item-icon-inactive,
@@ -889,11 +896,14 @@ span.flatpickr-weekday,
   fill: currentColor !important;
 }
 
-/* make sure inline SVG paths that use hardcoded fills try to inherit color */
-.blood-header svg path,
+/* Lucide icons are stroke-based — ensure paths are never force-filled */
 .blood-sidebar svg path,
-.blood-content svg path {
-  fill: currentColor !important;
+.blood-sidebar svg circle,
+.blood-sidebar svg rect,
+.blood-sidebar svg line,
+.blood-sidebar svg polyline,
+.blood-sidebar svg polygon {
+  fill: none !important;
 }
 
 /* Header and content blood theme adjustments */

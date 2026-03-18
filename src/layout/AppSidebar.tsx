@@ -4,31 +4,37 @@ import goldLogo from '../icons/ChatGPT Image Nov 5, 2025, 12_41_38 PM.png'
 import ecomLogo from '../icons/mkart-Photoroom.png'
 // Assume these icons are imported from an icon library
 import {
-  BoxCubeIcon,
-  GridIcon,
   ChevronDownIcon,
   HorizontaLDots,
-  ListIcon,
-  BoxIconLine,
-  GroupIcon,
-  LockIcon,
-  FileIcon,
-  DollarLineIcon,
-  BoxIcon,
-  PaperPlaneIcon,
-  AlertIcon,
-  DocsIcon,
-  DownloadIcon,
-  PlugInIcon,
-  ArrowDownIcon,
-  PageIcon,
-  ShootingStarIcon,
-  MailIcon,
-  TimeIcon,
 } from "../icons";
-import { FlagTriangleRight,Users } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Users,
+  Package,
+  UserCheck,
+  FileText,
+  Warehouse,
+  ShoppingCart,
+  RotateCcw,
+  Image,
+  Settings,
+  Truck,
+  Receipt,
+  BarChart2,
+  Lock,
+  CreditCard,
+  Clock,
+  ArrowDownCircle,
+  Briefcase,
+  FlagTriangleRight,
+  BadgePercent,
+  Store,
+  ShieldCheck,
+  Coins,
+} from 'lucide-react'
 import { useSidebar } from "../context/SidebarContext";
 import { useDashboard, DashboardType } from "../context/DashboardContext";
+import { getProfile } from "../api/profile";
 import { 
   isEcommerceAuthenticated, 
   canAccessEcommerce, 
@@ -44,6 +50,95 @@ type NavItem = {
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
 
+const ECOMMERCE_ROLE_ID_KEY = "ecommerce_role_id";
+
+const ECOMMERCE_ALWAYS_ALLOWED_PATHS = ["/ecommerce/vendors/requests"];
+
+const ECOMMERCE_ROLE_ALLOWED_PATHS: Record<number, string[]> = {
+  3: [
+    "/ecommerce/users/all",
+  ],
+  4: [
+    "/ecommerce/products/all",
+    "/ecommerce/products/add",
+    "/ecommerce/products/categories",
+    "/ecommerce/inventory",
+    "/ecommerce/reports/products",
+  ],
+  5: [
+    "/ecommerce/banners/all",
+  ],
+  6: [
+    "/ecommerce/kyc/all",
+  ],
+  7: [
+    "/ecommerce/basicinfo/business-settings",
+  ],
+  8: [
+    "/ecommerce/orders/all",
+    "/ecommerce/reports/orders",
+  ],
+  9: [
+    "/ecommerce/vendors/all",
+    "/ecommerce/vendors/requests",
+  ],
+  10: [
+    "/ecommerce/orders/all",
+    "/ecommerce/delivery-charges",
+  ],
+};
+
+const ECOMMERCE_RESTRICTED_ROLE_IDS = new Set(
+  Object.keys(ECOMMERCE_ROLE_ALLOWED_PATHS).map(Number)
+);
+
+const filterEcommerceSectionsByRole = (
+  sections: { title: string; items: NavItem[] }[],
+  roleId: number | null
+) => {
+  const rolePaths = roleId ? ECOMMERCE_ROLE_ALLOWED_PATHS[roleId] ?? [] : [];
+  const allowedPaths = new Set([...rolePaths, ...ECOMMERCE_ALWAYS_ALLOWED_PATHS]);
+
+  return sections
+    .map((section) => {
+      if (section.title === "DASHBOARD") {
+        return {
+          ...section,
+          items: section.items.filter((item) => item.name !== "Dashboard Overview"),
+        };
+      }
+
+      const filteredItems = section.items
+        .map((item) => {
+          if (item.path) {
+            return allowedPaths.has(item.path) ? item : null;
+          }
+
+          if (item.subItems) {
+            const filteredSubItems = item.subItems.filter((subItem) =>
+              allowedPaths.has(subItem.path)
+            );
+
+            if (filteredSubItems.length > 0) {
+              return {
+                ...item,
+                subItems: filteredSubItems,
+              };
+            }
+          }
+
+          return null;
+        })
+        .filter((item): item is NavItem => item !== null);
+
+      return {
+        ...section,
+        items: filteredItems,
+      };
+    })
+    .filter((section) => section.items.length > 0);
+};
+
 // Ecommerce Sidebar Sections
 const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
   {
@@ -51,7 +146,7 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
     items: [
       {
         name: "Dashboard Overview",
-        icon: <GridIcon />,
+        icon: <LayoutDashboard size={20} />,
         subItems: [
           { name: "Ecommerce", path: "/ecom" },
           { name: "BBPS", path: "/bbps" },
@@ -65,7 +160,7 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
     items: [
       { 
         name: "Users", 
-        icon: <GroupIcon />, 
+        icon: <Users size={20} />, 
         subItems: [
           { name: "All Users", path: "/ecommerce/users/all" },
           // { name: "Active Users", path: "/ecommerce/users/active" },
@@ -73,8 +168,8 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
         ],
       },
       { 
-        name: "Inventory", 
-        icon: <BoxIcon />, 
+        name: "Products", 
+        icon: <Package size={20} />, 
         subItems: [
           { name: "All Products", path: "/ecommerce/products/all" },
           { name: "Add Product", path: "/ecommerce/products/add" },
@@ -83,7 +178,7 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
       },
       { 
         name: "Staff & Vendors", 
-        icon: <GroupIcon />, 
+        icon: <Store size={20} />, 
         subItems: [
           { name: "All Vendors & Staff", path: "/ecommerce/vendors/all" },
           // { name: "Add Vendor", path: "/ecommerce/vendors/add" },
@@ -94,16 +189,21 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
 
        { 
         name: "All KYC", 
-        icon: <DocsIcon />, 
+        icon: <ShieldCheck size={20} />, 
         subItems: [
           { name: "All KYC", path: "/ecommerce/kyc/all" },
           // { name: "Add Vendor", path: "/ecommerce/vendors/add" },
           // { name: "Vendor Kyc", path: "/ecommerce/vendors/requests" },
         ],
       },
+      {
+        name: "Inventory",
+        icon: <Warehouse size={20} />,
+        path: "/ecommerce/inventory",
+      },
       { 
         name: "Orders", 
-        icon: <ShootingStarIcon />, 
+        icon: <ShoppingCart size={20} />, 
         subItems: [
           { name: "All Orders", path: "/ecommerce/orders/all" },
           // { name: "Pending Orders", path: "/ecommerce/orders/pending" },
@@ -112,13 +212,18 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
         ],
       },
       {
+        name: "Payments",
+        icon: <CreditCard size={20} />,
+        path: "/ecommerce/payments",
+      },
+      {
         name: "Refund Requests",
-        icon: <AlertIcon />,
+        icon: <RotateCcw size={20} />,
         path: "/ecommerce/refunds",
       },
       { 
         name: "Ads Banner", 
-        icon: <ListIcon />, 
+        icon: <Image size={20} />, 
         subItems: [
           { name: "Add Banners", path: "/ecommerce/banners/all" },
           // { name: "Add Category", path: "/ecommerce/category/add" },
@@ -126,22 +231,22 @@ const ecommerceSidebarSections: { title: string; items: NavItem[] }[] = [
       },
       { 
         name: "Business Settings",
-        icon: <BoxCubeIcon />,
+        icon: <Settings size={20} />,
         path: "/ecommerce/basicinfo/business-settings"
       },
       { 
         name: "Delivery Charges",
-        icon: <DollarLineIcon />,
+        icon: <Truck size={20} />,
         path: "/ecommerce/delivery-charges"
       },
       { 
         name: "VAT & Tax",
-        icon: <DollarLineIcon />,
+        icon: <BadgePercent size={20} />,
         path: "/ecommerce/vat-tax"
       },
        { 
         name: "Reports", 
-        icon: <FlagTriangleRight />, 
+        icon: <BarChart2 size={20} />, 
         subItems: [
           { name: "Products Reports", path: "/ecommerce/reports/products" },
           { name: "Order Reports", path: "/ecommerce/reports/orders" },
@@ -168,7 +273,7 @@ const bbpsSidebarSections: { title: string; items: NavItem[] }[] = [
     items: [
       {
         name: "Dashboard Overview",
-        icon: <GridIcon />,
+        icon: <LayoutDashboard size={20} />,
         subItems: [
           { name: "Ecommerce", path: "/ecom" },
           { name: "BBPS", path: "/bbps" },
@@ -180,14 +285,14 @@ const bbpsSidebarSections: { title: string; items: NavItem[] }[] = [
   {
     title: "CUSTOMER MANAGEMENT",
     items: [
-      { name: "Customers", icon: <GroupIcon />, 
+      { name: "Customers", icon: <Users size={20} />, 
         subItems: [
           { name: "All Customers", path: "/customers/allcustomers" },
         ],
       },
       {
         name: "KYC Management",
-        icon: <ListIcon />,
+        icon: <FileText size={20} />,
         subItems: [
           { name: "All KYC Logs", path: "/kyc/all" },
         ],
@@ -197,7 +302,7 @@ const bbpsSidebarSections: { title: string; items: NavItem[] }[] = [
   {
     title: "ACCESS MANAGEMENT",
     items: [
-      { name: "System Access", icon: <LockIcon />, 
+      { name: "System Access", icon: <Lock size={20} />, 
         subItems: [
           { name: "Upload Staff KYC", path: "/access/roles" }, 
           { name: "Manage Staff", path: "/access/permissions" }
@@ -208,7 +313,7 @@ const bbpsSidebarSections: { title: string; items: NavItem[] }[] = [
   {
     title: "TRANSACTIONS",
     items: [
-      { name: "Bank Accounts", icon: <FileIcon />, path: "/Transactions" },
+      { name: "Bank Accounts", icon: <CreditCard size={20} />, path: "/Transactions" },
     ],
   },
 ];
@@ -220,7 +325,7 @@ const goldSidebarSections: { title: string; items: NavItem[] }[] = [
     items: [
       {
         name: "Dashboard Overview",
-        icon: <GridIcon />,
+        icon: <LayoutDashboard size={20} />,
         subItems: [
           { name: "Ecommerce", path: "/ecom" },
           { name: "BBPS", path: "/bbps" },
@@ -232,14 +337,14 @@ const goldSidebarSections: { title: string; items: NavItem[] }[] = [
   {
     title: "CUSTOMER MANAGEMENT",
     items: [
-      { name: "Customers", icon: <GroupIcon />, 
+      { name: "Customers", icon: <Users size={20} />, 
         subItems: [
           { name: "All Customers", path: "/customers/allcustomers" },
         ],
       },
       {
         name: "KYC Management",
-        icon: <ListIcon />,
+        icon: <FileText size={20} />,
         subItems: [
           { name: "All KYC Logs", path: "/kyc/all" },
         ],
@@ -249,7 +354,7 @@ const goldSidebarSections: { title: string; items: NavItem[] }[] = [
   {
     title: "ACCESS MANAGEMENT",
     items: [
-      { name: "System Access", icon: <LockIcon />, 
+      { name: "System Access", icon: <Lock size={20} />, 
         subItems: [
           { name: "Upload Staff KYC", path: "/access/roles" }, 
           { name: "Manage Staff", path: "/access/permissions" }
@@ -260,10 +365,10 @@ const goldSidebarSections: { title: string; items: NavItem[] }[] = [
   {
     title: "TRANSACTIONS",
     items: [
-      { name: "Bank Accounts", icon: <FileIcon />, path: "/Transactions" },
+      { name: "Bank Accounts", icon: <CreditCard size={20} />, path: "/Transactions" },
       {
         name: "Gold History",
-        icon: <TimeIcon />,
+        icon: <Clock size={20} />,
         subItems: [
           { name: "Gold Transactions", path: "/gold/redeem", new: true },
           { name: "Charge Limit", path: "/gold/chargelimit" },
@@ -278,12 +383,12 @@ const goldSidebarSections: { title: string; items: NavItem[] }[] = [
     items: [
       {
         name: "Withdraw",
-        icon: <ArrowDownIcon />,
+        icon: <ArrowDownCircle size={20} />,
         subItems: [
            { name: "Withdraw History", path: "/withdraw/withdraw-history" },
         ],
       },
-      { name: "Portfolios", icon: <PageIcon />, 
+      { name: "Portfolios", icon: <Briefcase size={20} />, 
         subItems: [
           { name: "All Portfolios", path: "/portfolio/all" }, 
           { name: "Create Portfolio", path: "/portfolio/allprofileupdates" },
@@ -301,7 +406,7 @@ const vendorSidebarSections: { title: string; items: NavItem[] }[] = [
     items: [
       {
         name: "Dashboard Overview",
-        icon: <GridIcon />,
+        icon: <LayoutDashboard size={20} />,
         subItems: [
           { name: "Ecommerce", path: "/ecom" },
         ],
@@ -313,7 +418,7 @@ const vendorSidebarSections: { title: string; items: NavItem[] }[] = [
     items: [
       {
         name: "Products",
-        icon: <BoxIcon />,
+        icon: <Package size={20} />,
         subItems: [
           { name: "All Products", path: "/ecommerce/products/all" },
           { name: "Add Product", path: "/ecommerce/products/add" },
@@ -321,18 +426,28 @@ const vendorSidebarSections: { title: string; items: NavItem[] }[] = [
         ],
       },
       {
+        name: "Inventory",
+        icon: <Warehouse size={20} />,
+        path: "/ecommerce/inventory",
+      },
+      {
         name: "Staff & Vendors",
-        icon: <GroupIcon />,
+        icon: <Store size={20} />,
         subItems: [
           { name: "Staff & Vendor Kyc", path: "/ecommerce/vendors/requests" },
         ],
       },
       {
         name: "Orders",
-        icon: <ShootingStarIcon />,
+        icon: <ShoppingCart size={20} />,
         subItems: [
           { name: "All Orders", path: "/ecommerce/orders/all" },
         ],
+      },
+      {
+        name: "Payments",
+        icon: <CreditCard size={20} />,
+        path: "/ecommerce/payments",
       },
     ],
   },
@@ -341,6 +456,12 @@ const vendorSidebarSections: { title: string; items: NavItem[] }[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered, toggleMobileSidebar } = useSidebar();
   const { dashboardType, setDashboardType } = useDashboard();
+  const [roleId, setRoleId] = useState<number | null>(() => {
+    const storedRole = localStorage.getItem(ECOMMERCE_ROLE_ID_KEY);
+    if (!storedRole) return null;
+    const parsed = Number(storedRole);
+    return Number.isNaN(parsed) ? null : parsed;
+  });
 
   // Logo: ecom users always see mkart logo; gold/BBPS users always see gold logo;
   // super admin sees logo based on the currently active dashboard type.
@@ -404,6 +525,21 @@ const AppSidebar: React.FC = () => {
     return section;
   });
 
+  const isRestrictedEcommerceUser =
+    !isSuperAdmin() &&
+    !isVendor() &&
+    canAccessEcommerce() &&
+    !canAccessGold();
+
+  const shouldApplyEcommerceRoleFilter =
+    isRestrictedEcommerceUser &&
+    roleId !== null &&
+    ECOMMERCE_RESTRICTED_ROLE_IDS.has(roleId);
+
+  if (shouldApplyEcommerceRoleFilter) {
+    sidebarSections = filterEcommerceSectionsByRole(sidebarSections, roleId);
+  }
+
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: string;
     index: number;
@@ -412,6 +548,37 @@ const AppSidebar: React.FC = () => {
     {}
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  useEffect(() => {
+    if (!isRestrictedEcommerceUser) return;
+
+    let isMounted = true;
+
+    const loadRoleId = async () => {
+      try {
+        const profile = await getProfile();
+        const nextRoleId = profile?.data?.role_id ?? null;
+        if (!isMounted) return;
+        setRoleId(nextRoleId);
+
+        if (nextRoleId !== null && nextRoleId !== undefined) {
+          localStorage.setItem(ECOMMERCE_ROLE_ID_KEY, String(nextRoleId));
+        }
+      } catch {
+        if (!isMounted) return;
+        const storedRole = localStorage.getItem(ECOMMERCE_ROLE_ID_KEY);
+        if (!storedRole) {
+          setRoleId(null);
+        }
+      }
+    };
+
+    loadRoleId();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isRestrictedEcommerceUser]);
 
   // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
@@ -568,8 +735,7 @@ const AppSidebar: React.FC = () => {
             >
               <ul className="mt-2 space-y-1 ml-9">
                 {nav.subItems.map((subItem) => {
-                  // Check if this is a dashboard overview item
-                  const isDashboardItem = sectionKey === '0' && index === 0;
+                  const isDashboardItem = nav.name === "Dashboard Overview";
                   
                   return (
                     <li key={subItem.name}>

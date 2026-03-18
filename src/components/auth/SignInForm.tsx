@@ -56,6 +56,9 @@ export default function SignInForm() {
         if (res.domain === 2) {
           try {
             const profile = await getProfile();
+            if (profile?.data?.role_id !== undefined && profile?.data?.role_id !== null) {
+              localStorage.setItem('ecommerce_role_id', String(profile.data.role_id));
+            }
             if (profile?.data?.shop_name) {
               setVendorFlag();
             } else {
@@ -66,6 +69,7 @@ export default function SignInForm() {
           }
         } else {
           clearVendorFlag();
+          localStorage.removeItem('ecommerce_role_id');
         }
         
         // Set dashboard type based on domain
